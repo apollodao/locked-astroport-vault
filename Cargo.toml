@@ -1,0 +1,25 @@
+[workspace]
+members = []
+resolver = "2"
+
+[workspace.package]
+authors       = ["Apollo Devs <shared@apollo.farm>"]
+edition       = "2021"
+license       = "MPL-2.0"
+homepage      = "https://apollo.farm"
+repository    = "https://github.com/apollodao/apollo-template"
+documentation = ""
+keywords      = ["blockchain", "cosmos", "cosmwasm"]
+rust-version  = "1.64.0"
+
+[workspace.dependencies]
+
+[profile.release]
+codegen-units    = 1
+debug            = false
+debug-assertions = false
+incremental      = false
+lto              = true
+opt-level        = 3
+overflow-checks  = true
+rpath            = false
