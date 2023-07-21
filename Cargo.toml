@@ -1,25 +1,25 @@
-[workspace]
-members = []
-resolver = "2"
-
-[workspace.package]
-authors       = ["Apollo Devs <shared@apollo.farm>"]
+[package]
+name          = "locked-astroport-vault"
+description   = "Description of the contract"
+version       = "0.1.0"  
 edition       = "2021"
-license       = "MPL-2.0"
-homepage      = "https://apollo.farm"
-repository    = "https://github.com/apollodao/apollo-template"
-documentation = ""
-keywords      = ["blockchain", "cosmos", "cosmwasm"]
-rust-version  = "1.64.0"
 
-[workspace.dependencies]
+[lib]
+crate-type = ["cdylib", "rlib"]
 
-[profile.release]
-codegen-units    = 1
-debug            = false
-debug-assertions = false
-incremental      = false
-lto              = true
-opt-level        = 3
-overflow-checks  = true
-rpath            = false
+[features]
+# for more explicit tests, cargo test --features=backtraces
+#backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all instantiate/execute/query exports
+library = []
+
+[dependencies]
+cosmwasm-schema     = "1.1.0"
+cosmwasm-std        = "1.1.0"
+cw-dex              = { path = "../cw-dex/cw-dex", features = ["astroport"] }
+cw-ownable          = "0.5.1"
+cw-storage-plus     = "1.1.0"
+cw-vault-standard   = { version = "0.3.0", features = ["lockup", "force-unlock"] }
+cw2                 = "1.1.0"
+osmosis-std         = "0.14"
+thiserror           = "1.0.43"
