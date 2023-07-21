@@ -1,8 +1,11 @@
 use cosmwasm_schema::cw_serde;
-use cw_dex::traits::{Pool, Staking};
+use cw_dex::{
+    astroport::{AstroportPool, AstroportStaking},
+    traits::{Pool, Staking},
+};
 
 #[cw_serde]
-pub struct InstantiateMsg<P: Pool, S: Staking> {
+pub struct InstantiateMsg {
     /// Contract owner
     pub owner: String,
     /// Denom of vault base token
@@ -12,9 +15,9 @@ pub struct InstantiateMsg<P: Pool, S: Staking> {
     /// Cw20-adaptor contract address.
     pub cw20_adaptor: Option<String>,
     /// Type implementing [`cw_dex::traits::Pool`]
-    pub pool: P,
+    pub pool: AstroportPool,
     /// Type implementing [`cw_dex::traits::Staking`]
-    pub staking: S,
+    pub staking: AstroportStaking,
 }
 
 pub type ExecuteMsg = cw_vault_standard::VaultStandardExecuteMsg;

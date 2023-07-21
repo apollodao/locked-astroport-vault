@@ -14,9 +14,9 @@ use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 
 use crate::{
     error::{ContractError, ContractResponse},
-    execute::VaultContract,
+    execute::execute_deposit,
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::Config,
+    state::{Config, CONFIG, POOL, STAKING},
 };
 
 pub const CONTRACT_NAME: &str = "crates.io:my-contract";
@@ -27,11 +27,32 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg<AstroportPool, AstroportStaking>,
+    msg: InstantiateMsg,
 ) -> ContractResponse {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.owner))?;
 
-    VaultContract::<AstroportPool, AstroportStaking>::default().instantiate(deps, env, info, msg)
+    let vault_token_denom = format!(
+        "factory/{}/{}",
+        env.contract.address, msg.vault_token_subdenom
+    );
+
+    let cw20_adaptor = match msg.cw20_adaptor {
+        Some(adaptor) => Some(deps.api.addr_validate(&adaptor)?),
+        None => None,
+    };
+
+    let config = Config {
+        base_token_denom: msg.base_token_denom,
+        vault_token_denom,
+        cw20_adaptor,
+    };
+
+    CONFIG.save(deps.storage, &config)?;
+    POOL.save(deps.storage, &msg.pool)?;
+    STAKING.save(deps.storage, &msg.staking)?;
+
+    Ok(Response::new())
 }
 
 #[entry_point]
@@ -42,7 +63,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Deposit { amount, recipient } => todo!(),
+        ExecuteMsg::Deposit { amount, recipient } => execute_deposit(deps, env, info, amount),
         ExecuteMsg::Redeem { recipient, amount } => todo!(),
         ExecuteMsg::VaultExtension(msg) => match msg {
             ExtensionExecuteMsg::Lockup(msg) => match msg {
