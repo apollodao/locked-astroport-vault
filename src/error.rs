@@ -15,6 +15,9 @@ pub enum ContractError {
 
     #[error(transparent)]
     Overflow(#[from] OverflowError),
+
+    #[error("Unauthorized")]
+    Unauthorized {},
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;

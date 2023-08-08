@@ -1,22 +1,14 @@
-use std::time::Instant;
-
 use apollo_utils::responses::merge_responses;
-use cosmwasm_schema::serde::{de::DeserializeOwned, Serialize};
 use cosmwasm_std::{
-    coin, to_binary, CosmosMsg, Decimal, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg,
+    to_binary, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdError, Uint128, WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
-use cw_storage_plus::Item;
-use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
-use crate::{
-    error::{ContractResponse, ContractResult},
-    msg::InstantiateMsg,
-    state::{self, Config, VaultState, CONFIG, STAKING, STATE},
-    utils,
-};
+use crate::error::{ContractError, ContractResponse};
+use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens};
+use crate::state::{CLAIMS, CONFIG, STAKING};
 
-use cw_dex::traits::{Pool, Stake, Staking};
+use cw_dex::traits::{Rewards, Stake, Unstake};
 
 pub fn execute_deposit(
     deps: DepsMut,
@@ -49,30 +41,92 @@ pub fn execute_deposit(
     ]))
 }
 
-fn mint_vault_tokens(
+pub fn execute_redeem(
     deps: DepsMut,
     env: Env,
-    deposit_amount: Uint128,
-) -> ContractResult<CosmosMsg> {
-    let mut state = STATE.load(deps.storage)?;
+    info: MessageInfo,
+    amount: Uint128,
+    recipient: Option<String>,
+    emergency: bool,
+) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
+    let unlock_amount = helpers::correct_funds(info, cfg.vault_token_denom, amount)?;
+    let recipient = deps
+        .api
+        .addr_validate(&recipient.unwrap_or(info.sender.to_string()))?;
 
-    let mint_amount =
-        Decimal::from_ratio(deposit_amount, state.staked_base_tokens) * state.vault_token_supply;
+    let (burn_msg, release_amount) = burn_vault_tokens(deps, env, unlock_amount.amount)?;
 
-    state.staked_base_tokens = state.staked_base_tokens.checked_add(deposit_amount)?;
-    state.vault_token_supply = state.vault_token_supply.checked_add(mint_amount)?;
+    CLAIMS.create_claim(
+        deps.storage,
+        &recipient,
+        release_amount,
+        cfg.lock_duration.after(&env.block),
+    );
 
-    STATE.save(deps.storage, &state)?;
+    let res = if emergency {
+        Response::new()
+    } else {
+        STAKING
+            .load(deps.storage)?
+            .claim_rewards(deps.as_ref(), &env)?
+    };
 
-    Ok(MsgMint {
-        sender: env.contract.address.to_string(),
-        amount: Some(coin(mint_amount.u128(), &cfg.vault_token_denom).into()),
-    }
-    .into())
+    Ok(res.add_message(burn_msg))
 }
 
-pub fn execute_unlock(deps: DepsMut, env: Env, info: MessageInfo) -> ContractResponse {
+pub fn execute_withdraw_unlocked(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    recipient: Option<String>,
+) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
-    let unlock_amount = utils::one_coin(info, cfg.vault_token_denom)?;
+    let claim_amount = CLAIMS.claim_tokens(deps.storage, &info.sender, &env.block, None)?;
+
+    let staking = STAKING.load(deps.storage)?;
+    let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
+
+    let send_msg: CosmosMsg = WasmMsg::Execute {
+        contract_addr: cfg.base_token.to_string(),
+        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+            recipient: recipient.unwrap_or(info.sender.to_string()),
+            amount: claim_amount,
+        })?,
+        funds: vec![],
+    }
+    .into();
+
+    Ok(res.add_message(send_msg))
+}
+
+pub fn execute_update_whitelist(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    add_addresses: Vec<String>,
+    remove_addresses: Vec<String>,
+) -> ContractResponse {
+    if !cw_ownable::is_owner(deps.storage, &info.sender)? {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let cfg = CONFIG.load(deps.storage)?;
+    let mut whitelist = cfg.force_withdraw_whitelist;
+
+    for addr in add_addresses {
+        whitelist.insert(deps.api.addr_validate(&addr)?);
+    }
+
+    for addr in remove_addresses {
+        let addr = deps.api.addr_validate(&addr)?;
+        if !whitelist.contains(&addr) {
+            return Err(ContractError::Std(StdError::generic_err(
+                "Address not in whitelist",
+            )));
+        }
+        whitelist.remove(&addr);
+    }
+
+    Ok(Response::new())
 }

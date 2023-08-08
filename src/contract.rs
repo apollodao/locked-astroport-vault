@@ -1,23 +1,15 @@
-use cosmwasm_std::{
-    entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
-};
-use cw_dex::{
-    astroport::{AstroportPool, AstroportStaking},
-    traits::{Pool, Staking},
-};
-use cw_ownable::OwnershipError;
-use cw_vault_standard::{
-    extensions::{force_unlock::ForceUnlockExecuteMsg, lockup::LockupExecuteMsg},
-    ExtensionExecuteMsg,
-};
-use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
+use std::collections::HashSet;
 
-use crate::{
-    error::{ContractError, ContractResponse},
-    execute::execute_deposit,
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::{Config, CONFIG, POOL, STAKING},
-};
+use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cw_utils::Duration;
+use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
+use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
+use cw_vault_standard::ExtensionExecuteMsg;
+
+use crate::error::{ContractError, ContractResponse};
+use crate::execute::{execute_deposit, execute_redeem, execute_update_whitelist};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{Config, CONFIG, POOL, STAKING};
 
 pub const CONTRACT_NAME: &str = "crates.io:my-contract";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -43,9 +35,16 @@ pub fn instantiate(
     };
 
     let config = Config {
-        base_token_denom: msg.base_token_denom,
         vault_token_denom,
         cw20_adaptor,
+        base_token: deps.api.addr_validate(&msg.base_token_addr)?,
+        lock_duration: Duration::Time(msg.lock_duration),
+        reward_tokens: msg
+            .reward_tokens
+            .iter()
+            .map(|asset_info| asset_info.check(deps.api))
+            .collect::<StdResult<Vec<_>>>()?,
+        force_withdraw_whitelist: HashSet::new(),
     };
 
     CONFIG.save(deps.storage, &config)?;
@@ -64,12 +63,13 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => execute_deposit(deps, env, info, amount),
-        ExecuteMsg::Redeem { recipient, amount } => todo!(),
+        ExecuteMsg::Redeem { recipient, amount } => {
+            execute_redeem(deps, env, info, amount, recipient, false)
+        }
+        // TODO: add emergency redeem
         ExecuteMsg::VaultExtension(msg) => match msg {
             ExtensionExecuteMsg::Lockup(msg) => match msg {
-                LockupExecuteMsg::Unlock { amount } => {
-                    todo!()
-                }
+                LockupExecuteMsg::Unlock { amount } => unimplemented!("use redeem instead"),
                 LockupExecuteMsg::EmergencyUnlock { amount } => todo!(),
                 LockupExecuteMsg::WithdrawUnlocked {
                     recipient,
@@ -86,7 +86,7 @@ pub fn execute(
                 ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
                     add_addresses,
                     remove_addresses,
-                } => todo!(),
+                } => execute_update_whitelist(deps, env, info, add_addresses, remove_addresses),
             },
         },
     }
@@ -111,10 +111,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{
-        testing::{mock_dependencies, mock_env, mock_info},
-        Addr,
-    };
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::Addr;
     use cw2::ContractVersion;
     use cw_ownable::Ownership;
 
