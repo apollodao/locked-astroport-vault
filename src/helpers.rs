@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, CosmosMsg, Decimal, DepsMut, Env, Uint128};
+use cosmwasm_std::{coin, Addr, Api, CosmosMsg, Decimal, DepsMut, Env, Uint128};
 use cw_dex::traits::Rewards;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
@@ -7,9 +7,9 @@ use crate::state::{CONFIG, STAKING, STATE};
 
 use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
 
-/// Return the `denom` from `info.funds` if it is the only coin in the funds.
+/// Return the `Coin` from `info.funds` if it is the only denom in the funds.
 /// Otherwise, return an error.
-pub fn one_coin(info: MessageInfo, denom: String) -> StdResult<Coin> {
+pub fn one_coin(info: &MessageInfo, denom: &str) -> StdResult<Coin> {
     if info.funds.len() != 1 && info.funds[0].denom != denom {
         Err(StdError::generic_err("Must deposit exactly one token"))
     } else {
@@ -17,9 +17,9 @@ pub fn one_coin(info: MessageInfo, denom: String) -> StdResult<Coin> {
     }
 }
 
-/// Return the `denom` from `info.funds` if it is the only coin in the funds
+/// Return the `Coin` from `info.funds` if it is the only denom in the funds
 /// and the amount is exactly `amount`. Otherwise, return an error.
-pub fn correct_funds(info: MessageInfo, denom: String, amount: Uint128) -> StdResult<Coin> {
+pub fn correct_funds(info: &MessageInfo, denom: &str, amount: Uint128) -> StdResult<Coin> {
     let coin = one_coin(info, denom)?;
     if coin.amount != amount {
         Err(StdError::generic_err(format!(
@@ -29,6 +29,16 @@ pub fn correct_funds(info: MessageInfo, denom: String, amount: Uint128) -> StdRe
     } else {
         Ok(coin)
     }
+}
+
+/// Converts an `Option<String>` to an `Addr` by unwrapping the string and verifying the address,
+/// or using the sender address if the supplied Option is `None`.
+pub fn unwrap_recipient(
+    recipient: Option<String>,
+    info: &MessageInfo,
+    api: &dyn Api,
+) -> StdResult<Addr> {
+    recipient.map_or(Ok(info.sender.clone()), |x| api.addr_validate(&x))
 }
 
 /// Return a token factory mint message to mint `amount` of vault tokens to
@@ -61,7 +71,7 @@ pub(crate) fn mint_vault_tokens(
 /// that should be released.
 pub(crate) fn burn_vault_tokens(
     deps: DepsMut,
-    env: Env,
+    env: &Env,
     burn_amount: Uint128,
 ) -> ContractResult<(CosmosMsg, Uint128)> {
     let mut state = STATE.load(deps.storage)?;

@@ -18,6 +18,12 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+
+    #[error("Deposits are disabled")]
+    DepositsDisabled {},
+
+    #[error("Performance fee can't be higher than 100%")]
+    PerformanceFeeTooHigh {},
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;
