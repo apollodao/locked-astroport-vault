@@ -1,18 +1,21 @@
 use std::collections::HashSet;
 
 use cosmwasm_std::{
-    entry_point, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    entry_point, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult,
+    SubMsg,
 };
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
-use cw_vault_standard::ExtensionExecuteMsg;
 
 use crate::error::{ContractError, ContractResponse};
-use crate::execute::{
-    execute_deposit, execute_redeem, execute_update_whitelist, execute_withdraw_unlocked,
+use crate::execute::{execute_compound, execute_update_whitelist, execute_withdraw_unlocked};
+use crate::execute_internal::{self};
+use crate::helpers::IntoInternalCall;
+use crate::msg::{
+    ApolloExtensionExecuteMsg, ExecuteMsg, ExtensionExecuteMsg, InstantiateMsg, InternalMsg,
+    QueryMsg,
 };
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, POOL, STAKING};
 
 pub const CONTRACT_NAME: &str = "crates.io:my-contract";
@@ -71,10 +74,33 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
-            execute_deposit(deps, env, info, amount, recipient)
+            // Call contract itself first to compound, but as a SubMsg so that we can still deposit
+            // if the compound fails
+            let compound_msg = SubMsg::reply_always(
+                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env)?,
+                0,
+            );
+
+            let deposit_msg =
+                InternalMsg::Deposit { amount, recipient }.into_internal_call(&env)?;
+
+            Ok(Response::new()
+                .add_submessage(compound_msg)
+                .add_message(deposit_msg))
         }
         ExecuteMsg::Redeem { recipient, amount } => {
-            execute_redeem(deps, env, info, amount, recipient, false)
+            // Call contract itself first to compound, but as a SubMsg so that we can still redeem
+            // if the compound fails
+            let compound_msg = SubMsg::reply_always(
+                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env)?,
+                0,
+            );
+
+            let redeem_msg = InternalMsg::Redeem { amount, recipient }.into_internal_call(&env)?;
+
+            Ok(Response::new()
+                .add_submessage(compound_msg)
+                .add_message(redeem_msg))
         }
         // TODO: add emergency redeem
         ExecuteMsg::VaultExtension(msg) => match msg {
@@ -98,6 +124,35 @@ pub fn execute(
                     remove_addresses,
                 } => execute_update_whitelist(deps, env, info, add_addresses, remove_addresses),
             },
+            ExtensionExecuteMsg::Internal(msg) => {
+                // Assert that only the contract itself can call internal messages
+                if info.sender != env.contract.address {
+                    return Err(ContractError::Unauthorized {});
+                }
+
+                match msg {
+                    InternalMsg::SellTokens {} => execute_internal::sell_tokens(deps, env),
+                    InternalMsg::ProvideLiquidity {} => {
+                        execute_internal::provide_liquidity(deps, env)
+                    }
+                    InternalMsg::StakeLps {} => execute_internal::stake_lps(deps, env),
+                    InternalMsg::Deposit { amount, recipient } => {
+                        execute_internal::deposit(deps, env, info, amount, recipient)
+                    }
+                    InternalMsg::Redeem { recipient, amount } => {
+                        execute_internal::redeem(deps, env, info, amount, recipient, false)
+                    }
+                }
+            }
+            ExtensionExecuteMsg::UpdateOwnership(action) => {
+                let ownership =
+                    cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
+                Ok(Response::new().add_attributes(ownership.into_attributes()))
+            }
+            ExtensionExecuteMsg::Apollo(msg) => match msg {
+                ApolloExtensionExecuteMsg::UpdateConfig {} => todo!(),
+                ApolloExtensionExecuteMsg::Compound {} => execute_compound(deps, env),
+            },
         },
     }
 }
@@ -115,6 +170,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::ConvertToAssets { amount } => todo!(),
         QueryMsg::VaultExtension(_) => todo!(),
     }
+}
+
+#[entry_point]
+pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> Result<Response, ContractError> {
+    Ok(Response::new())
 }
 
 // ----------------------------------- Tests -----------------------------------

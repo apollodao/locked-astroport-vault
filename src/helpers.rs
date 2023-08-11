@@ -1,9 +1,9 @@
-use cosmwasm_std::{coin, Addr, Api, CosmosMsg, Decimal, DepsMut, Env, Uint128};
-use cw_dex::traits::Rewards;
+use cosmwasm_std::{coin, to_binary, Addr, Api, CosmosMsg, Decimal, DepsMut, Env, Uint128};
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
 use crate::error::ContractResult;
-use crate::state::{CONFIG, STAKING, STATE};
+use crate::state::{CONFIG, STATE};
+use cosmwasm_schema::serde::Serialize;
 
 use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
 
@@ -93,4 +93,23 @@ pub(crate) fn burn_vault_tokens(
         .into(),
         release_amount,
     ))
+}
+
+/// A trait to convert a type into a `CosmosMsg` Execute variant that calls the contract itself.
+pub trait IntoInternalCall {
+    fn into_internal_call(&self, env: &Env) -> StdResult<CosmosMsg>;
+}
+
+/// Implement the trait for any type that implements `Serialize`.
+impl<T> IntoInternalCall for T
+where
+    T: Serialize,
+{
+    fn into_internal_call(&self, env: &Env) -> StdResult<CosmosMsg> {
+        Ok(CosmosMsg::Wasm(cosmwasm_std::WasmMsg::Execute {
+            contract_addr: env.contract.address.to_string(),
+            msg: to_binary(self)?,
+            funds: vec![],
+        }))
+    }
 }
