@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
+use crate::claims::Claims;
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal, Uint128};
-use cw_controllers::Claims;
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_dex_router::helpers::CwDexRouter;
 use cw_storage_plus::Item;
@@ -13,7 +13,10 @@ pub const CONFIG: Item<Config> = Item::new("config");
 pub const POOL: Item<AstroportPool> = Item::new("pool");
 pub const STAKING: Item<AstroportStaking> = Item::new("staking");
 pub const STATE: Item<VaultState> = Item::new("state");
-pub const CLAIMS: Claims = Claims::new("claims");
+
+pub fn claims() -> Claims<'static> {
+    Claims::new("claims", "claims_index", "num_claims")
+}
 
 #[cw_serde]
 pub struct Config {

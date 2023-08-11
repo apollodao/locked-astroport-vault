@@ -1,3 +1,4 @@
+pub mod claims;
 pub mod contract;
 pub mod error;
 pub mod execute;

@@ -1,14 +1,13 @@
 use apollo_cw_asset::{Asset, AssetInfo, AssetList};
 use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{
-    coins, to_binary, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
-    WasmMsg,
+    coins, to_binary, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient};
-use crate::state::{CLAIMS, CONFIG, POOL, STAKING};
+use crate::state::{self, CONFIG, POOL, STAKING};
 
 use cw_dex::traits::{Pool, Rewards, Stake};
 
@@ -131,7 +130,7 @@ pub fn redeem(
     let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
 
     // Create claim for recipient
-    CLAIMS.create_claim(
+    state::claims().create_claim(
         deps.storage,
         &recipient,
         release_amount,

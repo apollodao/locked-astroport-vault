@@ -10,7 +10,8 @@ use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute::{
-    execute_compound, execute_force_redeem, execute_update_whitelist, execute_withdraw_unlocked,
+    execute_compound, execute_force_redeem, execute_force_withdraw_unlocking,
+    execute_update_whitelist, execute_withdraw_unlocked,
 };
 use crate::execute_internal::{self};
 use crate::helpers::IntoInternalCall;
@@ -129,7 +130,9 @@ pub fn execute(
                     lockup_id,
                     amount,
                     recipient,
-                } => todo!(),
+                } => {
+                    execute_force_withdraw_unlocking(deps, env, info, amount, recipient, lockup_id)
+                }
                 ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
                     add_addresses,
                     remove_addresses,
@@ -184,7 +187,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[entry_point]
-pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> Result<Response, ContractError> {
+pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
     Ok(Response::new())
 }
 
