@@ -1,8 +1,8 @@
-use cosmwasm_std::{to_binary, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdError, WasmMsg};
-use cw20::Cw20ExecuteMsg;
+use apollo_cw_asset::Asset;
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
 
 use crate::error::{ContractError, ContractResponse};
-use crate::helpers::{unwrap_recipient, IntoInternalCall};
+use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
 use crate::msg::InternalMsg;
 use crate::state::{CLAIMS, CONFIG, STAKING};
 
@@ -47,15 +47,7 @@ pub fn execute_withdraw_unlocked(
     let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg: CosmosMsg = WasmMsg::Execute {
-        contract_addr: cfg.base_token.to_string(),
-        msg: to_binary(&Cw20ExecuteMsg::Transfer {
-            recipient: recipient.to_string(),
-            amount: claim_amount,
-        })?,
-        funds: vec![],
-    }
-    .into();
+    let send_msg = Asset::cw20(cfg.base_token, claim_amount).transfer_msg(&recipient)?;
 
     Ok(res.add_message(send_msg))
 }
@@ -89,4 +81,57 @@ pub fn execute_update_whitelist(
     }
 
     Ok(Response::new())
+}
+
+pub fn execute_force_redeem(
+    mut deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    amount: Uint128,
+    recipient: Option<String>,
+) -> ContractResponse {
+    let cfg = CONFIG.load(deps.storage)?;
+    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
+
+    // Check that the sender is whitelisted
+    if !cfg.force_withdraw_whitelist.contains(&info.sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Check that only vault tokens were sent and that the amount is correct
+    // TODO: Check for amount == zero?
+    let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
+
+    // Calculate claim amount and create msg to burn vault tokens
+    let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
+
+    // Unstake LP tokens
+    let staking = STAKING.load(deps.storage)?;
+    let staking_res = staking.unstake(deps.as_ref(), &env, release_amount)?;
+
+    // Send LP tokens to recipient
+    let send_msg = Asset::cw20(cfg.base_token, release_amount).transfer_msg(&recipient)?;
+
+    Ok(staking_res.add_message(burn_msg).add_message(send_msg))
+}
+
+pub fn execute_force_withdraw_unlocking(
+    mut deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    amount: Uint128,
+    recipient: Option<String>,
+    lockup_id: u64,
+) -> ContractResponse {
+    let cfg = CONFIG.load(deps.storage)?;
+    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
+
+    // Check that the sender is whitelisted
+    if !cfg.force_withdraw_whitelist.contains(&info.sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Find claim based on ID
+
+    Ok(Response::default())
 }

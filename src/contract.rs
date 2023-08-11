@@ -9,7 +9,9 @@ use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 
 use crate::error::{ContractError, ContractResponse};
-use crate::execute::{execute_compound, execute_update_whitelist, execute_withdraw_unlocked};
+use crate::execute::{
+    execute_compound, execute_force_redeem, execute_update_whitelist, execute_withdraw_unlocked,
+};
 use crate::execute_internal::{self};
 use crate::helpers::IntoInternalCall;
 use crate::msg::{
@@ -105,15 +107,24 @@ pub fn execute(
         // TODO: add emergency redeem
         ExecuteMsg::VaultExtension(msg) => match msg {
             ExtensionExecuteMsg::Lockup(msg) => match msg {
-                LockupExecuteMsg::Unlock { amount } => unimplemented!("use redeem instead"), // TODO: Why not also call execute_redeem here?
-                LockupExecuteMsg::EmergencyUnlock { amount } => todo!(),
+                LockupExecuteMsg::Unlock { amount } => {
+                    // TODO: Remove Unlock in favor of Redeem?
+                    let recipient = Some(info.sender.to_string());
+                    execute_internal::redeem(deps, env, info, amount, recipient, false)
+                }
+                LockupExecuteMsg::EmergencyUnlock { amount } => {
+                    let recipient = Some(info.sender.to_string()); // TODO: Add recipient field to LockupExecuteMsg?
+                    execute_internal::redeem(deps, env, info, amount, recipient, true)
+                }
                 LockupExecuteMsg::WithdrawUnlocked {
                     recipient,
                     lockup_id,
                 } => execute_withdraw_unlocked(deps, env, info, recipient, lockup_id),
             },
             ExtensionExecuteMsg::ForceUnlock(msg) => match msg {
-                ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => todo!(),
+                ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
+                    execute_force_redeem(deps, env, info, amount, recipient)
+                }
                 ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
                     lockup_id,
                     amount,
