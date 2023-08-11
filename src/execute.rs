@@ -4,7 +4,7 @@ use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
 use crate::msg::InternalMsg;
-use crate::state::{CLAIMS, CONFIG, STAKING};
+use crate::state::{self, CONFIG, STAKING};
 
 use cw_dex::traits::{Rewards, Unstake};
 
@@ -40,7 +40,7 @@ pub fn execute_withdraw_unlocked(
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Calculate amount of LP tokens available to claim
-    let claim_amount = CLAIMS.claim_tokens(deps.storage, &info.sender, &env.block, None)?;
+    let claim_amount = state::claims().claim_tokens(deps.storage, &env.block, &info, lockup_id)?;
 
     // Unstake LP tokens
     let staking = STAKING.load(deps.storage)?;
@@ -116,10 +116,10 @@ pub fn execute_force_redeem(
 }
 
 pub fn execute_force_withdraw_unlocking(
-    mut deps: DepsMut,
+    deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    amount: Uint128,
+    amount: Option<Uint128>,
     recipient: Option<String>,
     lockup_id: u64,
 ) -> ContractResponse {
@@ -131,7 +131,16 @@ pub fn execute_force_withdraw_unlocking(
         return Err(ContractError::Unauthorized {});
     }
 
-    // Find claim based on ID
+    // Get the claimed amount and update the claim in storage, deleting it if
+    // all of the tokens are claimed, or updating it with the remaining amount.
+    let claimed_amount = state::claims().force_claim(deps.storage, &info, lockup_id, amount)?;
 
-    Ok(Response::default())
+    // Unstake LP tokens
+    let staking = STAKING.load(deps.storage)?;
+    let res = staking.unstake(deps.as_ref(), &env, claimed_amount)?;
+
+    // Send LP tokens to recipient
+    let send_msg = Asset::cw20(cfg.base_token, claimed_amount).transfer_msg(&recipient)?;
+
+    Ok(res.add_message(send_msg))
 }
