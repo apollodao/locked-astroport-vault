@@ -43,18 +43,11 @@ pub fn sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
 
 pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
     let pool = POOL.load(deps.storage)?;
-    let pool_asset_balances: AssetList = pool
-        .pool_assets
-        .clone()
-        .into_iter()
-        .map(|asset_info| {
-            Ok(Asset::new(
-                asset_info.clone(),
-                asset_info.query_balance(&deps.querier, &env.contract.address)?,
-            ))
-        })
-        .collect::<StdResult<Vec<Asset>>>()
-        .map(Into::into)?;
+    let pool_asset_balances = AssetList::query_asset_info_balances(
+        pool.pool_assets.clone(),
+        &deps.querier,
+        &env.contract.address,
+    )?;
 
     let provide_res =
         pool.provide_liquidity(deps.as_ref(), &env, pool_asset_balances, Uint128::zero())?; // TODO: Set slippage?
