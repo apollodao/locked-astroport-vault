@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use cosmwasm_std::{
-    entry_point, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult,
-    SubMsg,
+    entry_point, to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response,
+    StdResult, SubMsg,
 };
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
@@ -14,12 +14,16 @@ use crate::execute::{
     execute_update_whitelist, execute_withdraw_unlocked,
 };
 use crate::execute_internal::{self};
-use crate::helpers::IntoInternalCall;
+use crate::helpers::{self, IntoInternalCall};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ExecuteMsg, ExtensionExecuteMsg, InstantiateMsg, InternalMsg,
     QueryMsg,
 };
-use crate::state::{Config, CONFIG, POOL, STAKING};
+use crate::query::{
+    query_unlocking_position, query_unlocking_positions, query_vault_info,
+    query_vault_standard_info,
+};
+use crate::state::{Config, CONFIG, POOL, STAKING, STATE};
 
 pub const CONTRACT_NAME: &str = "crates.io:my-contract";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -174,15 +178,40 @@ pub fn execute(
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::VaultStandardInfo {} => todo!(),
-        QueryMsg::Info {} => todo!(),
-        QueryMsg::PreviewDeposit { amount } => todo!(),
-        QueryMsg::PreviewRedeem { amount } => todo!(),
-        QueryMsg::TotalAssets {} => todo!(),
-        QueryMsg::TotalVaultTokenSupply {} => todo!(),
-        QueryMsg::ConvertToShares { amount } => todo!(),
-        QueryMsg::ConvertToAssets { amount } => todo!(),
-        QueryMsg::VaultExtension(_) => todo!(),
+        QueryMsg::VaultStandardInfo {} => to_binary(&query_vault_standard_info(deps)?),
+        QueryMsg::Info {} => to_binary(&query_vault_info(deps)?),
+        QueryMsg::PreviewDeposit { .. } => unimplemented!("Cannot reliably preview deposit"),
+        QueryMsg::PreviewRedeem { .. } => unimplemented!("Cannot reliably preview redeem"),
+        QueryMsg::TotalAssets {} => {
+            let state = STATE.load(deps.storage)?;
+            to_binary(&state.staked_base_tokens)
+        }
+        QueryMsg::TotalVaultTokenSupply {} => {
+            let state = STATE.load(deps.storage)?;
+            to_binary(&state.vault_token_supply)
+        }
+        QueryMsg::ConvertToShares { amount } => {
+            to_binary(&helpers::convert_to_shares(deps, amount))
+        }
+        QueryMsg::ConvertToAssets { amount } => {
+            to_binary(&helpers::convert_to_assets(deps, amount))
+        }
+        QueryMsg::VaultExtension(ext_msg) => match ext_msg {
+            cw_vault_standard::ExtensionQueryMsg::Lockup(lockup_msg) => match lockup_msg {
+                cw_vault_standard::extensions::lockup::LockupQueryMsg::UnlockingPositions {
+                    owner,
+                    start_after,
+                    limit,
+                } => to_binary(&query_unlocking_positions(deps, owner, start_after, limit)?),
+                cw_vault_standard::extensions::lockup::LockupQueryMsg::UnlockingPosition {
+                    lockup_id,
+                } => to_binary(&query_unlocking_position(deps, lockup_id)?),
+                cw_vault_standard::extensions::lockup::LockupQueryMsg::LockupDuration {} => {
+                    let cfg = CONFIG.load(deps.storage)?;
+                    to_binary(&cfg.lock_duration)
+                }
+            },
+        },
     }
 }
 
