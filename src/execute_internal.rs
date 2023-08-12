@@ -84,22 +84,17 @@ pub fn deposit(
     }
 
     // Transfer LP tokens from sender
-    let transfer_from_res = Response::new().add_message(WasmMsg::Execute {
-        contract_addr: cfg.base_token.to_string(),
-        msg: to_binary(&Cw20ExecuteMsg::TransferFrom {
-            owner: info.sender.to_string(),
-            recipient: env.contract.address.to_string(),
-            amount,
-        })?,
-        funds: vec![],
-    });
+    let transfer_from_res = Response::new().add_message(
+        Asset::cw20(cfg.base_token, amount)
+            .transfer_from_msg(info.sender, &env.contract.address)?,
+    );
 
     // Stake deposited LP tokens
     let staking = STAKING.load(deps.storage)?;
     let staking_res = staking.stake(deps.as_ref(), &env, amount)?;
 
     // Mint vault tokens
-    let mint_res = Response::new().add_message(mint_vault_tokens(deps, env, amount)?);
+    let mint_msg = mint_vault_tokens(deps, env, amount)?;
 
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
@@ -108,7 +103,9 @@ pub fn deposit(
     }
     .into();
 
-    Ok(merge_responses(vec![transfer_from_res, staking_res, mint_res]).add_message(send_msg))
+    Ok(merge_responses(vec![transfer_from_res, staking_res])
+        .add_message(mint_msg)
+        .add_message(send_msg))
 }
 
 pub fn redeem(

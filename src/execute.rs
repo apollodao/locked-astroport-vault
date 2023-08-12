@@ -34,7 +34,7 @@ pub fn execute_withdraw_unlocked(
     env: Env,
     info: MessageInfo,
     recipient: Option<String>,
-    lockup_id: u64, // TODO: use lockup_id
+    lockup_id: u64,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
@@ -99,7 +99,6 @@ pub fn execute_force_redeem(
     }
 
     // Check that only vault tokens were sent and that the amount is correct
-    // TODO: Check for amount == zero?
     let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
