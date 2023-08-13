@@ -29,7 +29,7 @@ use crate::state::{Config, CONFIG, POOL, STAKING, STATE};
 pub const CONTRACT_NAME: &str = "crates.io:my-contract";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -81,7 +81,7 @@ pub fn instantiate(
     Ok(Response::new().add_message(create_denom_msg))
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -196,7 +196,7 @@ pub fn execute(
     }
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::VaultStandardInfo {} => to_binary(&query_vault_standard_info(deps)?),
@@ -236,7 +236,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
     Ok(Response::new())
 }
