@@ -292,6 +292,7 @@ mod tests {
                 pool_addr: todo!(),
                 astro_token: todo!(),
                 astroport_generator: todo!(),
+                liquidity_helper: todo!(),
             },
         )
         .unwrap();
