@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, to_binary, Addr, Api, CosmosMsg, Decimal, DepsMut, Env, Uint128};
+use cosmwasm_std::{coin, to_binary, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
 use crate::error::ContractResult;
@@ -41,6 +41,20 @@ pub fn unwrap_recipient(
     recipient.map_or(Ok(info.sender.clone()), |x| api.addr_validate(&x))
 }
 
+/// Returns the number of vault tokens that will be minted for `base_token_amount`
+/// base tokens.
+pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint128 {
+    let state = STATE.load(deps.storage).unwrap();
+    Decimal::from_ratio(base_token_amount, state.staked_base_tokens) * state.vault_token_supply
+}
+
+/// Returns the number of base tokens that will be released for `vault_token_amount`
+/// vault tokens.
+pub(crate) fn convert_to_assets(deps: Deps, vault_token_amount: Uint128) -> Uint128 {
+    let state = STATE.load(deps.storage).unwrap();
+    Decimal::from_ratio(vault_token_amount, state.vault_token_supply) * state.staked_base_tokens
+}
+
 /// Return a token factory mint message to mint `amount` of vault tokens to
 /// `env.contract.address`.
 pub(crate) fn mint_vault_tokens(
@@ -51,8 +65,7 @@ pub(crate) fn mint_vault_tokens(
     let mut state = STATE.load(deps.storage)?;
     let cfg = CONFIG.load(deps.storage)?;
 
-    let mint_amount =
-        Decimal::from_ratio(deposit_amount, state.staked_base_tokens) * state.vault_token_supply;
+    let mint_amount = convert_to_shares(deps.as_ref(), deposit_amount);
 
     state.staked_base_tokens = state.staked_base_tokens.checked_add(deposit_amount)?;
     state.vault_token_supply = state.vault_token_supply.checked_add(mint_amount)?;
@@ -77,8 +90,7 @@ pub(crate) fn burn_vault_tokens(
     let mut state = STATE.load(deps.storage)?;
     let cfg = CONFIG.load(deps.storage)?;
 
-    let release_amount =
-        Decimal::from_ratio(burn_amount, state.vault_token_supply) * state.staked_base_tokens;
+    let release_amount = convert_to_assets(deps.as_ref(), burn_amount);
 
     state.staked_base_tokens = state.staked_base_tokens.checked_sub(release_amount)?;
     state.vault_token_supply = state.vault_token_supply.checked_sub(burn_amount)?;

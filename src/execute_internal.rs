@@ -1,9 +1,6 @@
 use apollo_cw_asset::{Asset, AssetInfo, AssetList};
 use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{
-    coins, to_binary, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg,
-};
-use cw20::Cw20ExecuteMsg;
+use cosmwasm_std::{coins, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
 
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient};

@@ -7,6 +7,7 @@ use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::{
     force_unlock::ForceUnlockExecuteMsg, lockup::LockupExecuteMsg,
 };
+use strum::EnumVariantNames;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -77,6 +78,8 @@ pub enum ApolloExtensionExecuteMsg {
 }
 
 #[cw_serde]
+#[derive(EnumVariantNames)]
+#[strum(serialize_all = "kebab-case")]
 pub enum ExtensionExecuteMsg {
     /// Execute an internal message (can only be called by the contract itself
     Internal(InternalMsg),
