@@ -34,19 +34,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         );
         let init_msg = InstantiateMsg {
             owner: signer.address().to_string(),
-            base_token_addr: todo!(),
             vault_token_subdenom: "testVaultToken".to_string(),
-            pool: AstroportPool {
-                pair_addr: todo!(),
-                lp_token_addr: todo!(),
-                pool_assets: todo!(),
-                pair_type: todo!(),
-            },
-            staking: AstroportStaking {
-                lp_token_addr: todo!(),
-                generator_addr: todo!(),
-                astro_addr: todo!(),
-            },
+            pool_addr: todo!(),
             lock_duration: TWO_WEEKS_IN_SECS,
             reward_tokens: todo!(),
             deposits_enabled: todo!(),
@@ -54,6 +43,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             performance_fee: todo!(),
             router: todo!(),
             reward_liquidation_target: todo!(),
+            astro_token: todo!(),
+            astroport_generator: todo!(),
             liquidity_helper: todo!(),
         };
 

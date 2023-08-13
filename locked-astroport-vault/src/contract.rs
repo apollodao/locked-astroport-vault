@@ -1,9 +1,11 @@
 use std::collections::HashSet;
 
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Reply,
-    Response, StdResult, SubMsg,
+    entry_point, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
+    QueryRequest, Reply, Response, StdResult, SubMsg, WasmQuery,
 };
+use cw_dex::astroport::astroport;
+use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
@@ -49,9 +51,17 @@ pub fn instantiate(
         return Err(ContractError::PerformanceFeeTooHigh {});
     }
 
+    // Query pair info from astroport pair
+    let pair_info = deps
+        .querier
+        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
+            contract_addr: msg.pool_addr.clone(),
+            msg: to_binary(&astroport::pair::QueryMsg::Pair {})?,
+        }))?;
+
     let config = Config {
         vault_token_denom,
-        base_token: deps.api.addr_validate(&msg.base_token_addr)?,
+        base_token: pair_info.liquidity_token.clone(),
         lock_duration: Duration::Time(msg.lock_duration),
         reward_tokens: msg
             .reward_tokens
@@ -67,9 +77,17 @@ pub fn instantiate(
         liquidity_helper: msg.liquidity_helper.check(deps.api)?,
     };
 
+    let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?)?;
+
+    let staking = AstroportStaking {
+        lp_token_addr: pair_info.liquidity_token,
+        generator_addr: deps.api.addr_validate(&msg.astroport_generator)?,
+        astro_token: msg.astro_token.check(deps.api)?,
+    };
+
     CONFIG.save(deps.storage, &config)?;
-    POOL.save(deps.storage, &msg.pool)?;
-    STAKING.save(deps.storage, &msg.staking)?;
+    POOL.save(deps.storage, &pool)?;
+    STAKING.save(deps.storage, &staking)?;
 
     // Create vault token
     let create_denom_msg: CosmosMsg = MsgCreateDenom {
@@ -264,9 +282,6 @@ mod tests {
             InstantiateMsg {
                 owner: "pumpkin".into(),
                 vault_token_subdenom: todo!(),
-                pool: todo!(),
-                staking: todo!(),
-                base_token_addr: todo!(),
                 lock_duration: todo!(),
                 reward_tokens: todo!(),
                 deposits_enabled: todo!(),
@@ -274,7 +289,9 @@ mod tests {
                 performance_fee: todo!(),
                 router: todo!(),
                 reward_liquidation_target: todo!(),
-                liquidity_helper: todo!(),
+                pool_addr: todo!(),
+                astro_token: todo!(),
+                astroport_generator: todo!(),
             },
         )
         .unwrap();
