@@ -1,11 +1,10 @@
-use cosmwasm_std::{Deps, StdError, StdResult};
+use cosmwasm_std::{Deps, StdResult};
 use cw_vault_standard::{
     extensions::lockup::UnlockingPosition, VaultInfoResponse, VaultStandardInfoResponse,
 };
 use strum::VariantNames;
 
 use crate::{
-    helpers::mint_vault_tokens,
     msg::ExtensionExecuteMsg,
     state::{self, CONFIG},
 };
@@ -42,24 +41,10 @@ pub fn query_unlocking_positions(
         limit,
     )?;
 
-    Ok(claims
-        .into_iter()
-        .map(|(id, claim)| UnlockingPosition {
-            id,
-            owner: claim.owner,
-            release_at: claim.release_at,
-            base_token_amount: claim.base_token_amount,
-        })
-        .collect())
+    Ok(claims.into_iter().map(|(_id, claim)| claim).collect())
 }
 
 pub fn query_unlocking_position(deps: Deps, id: u64) -> StdResult<UnlockingPosition> {
     let claim = state::claims().query_claim_by_id(deps, id)?;
-
-    Ok(UnlockingPosition {
-        id,
-        owner: claim.owner,
-        release_at: claim.release_at,
-        base_token_amount: claim.base_token_amount,
-    })
+    Ok(claim)
 }
