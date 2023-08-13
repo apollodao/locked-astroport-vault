@@ -4,6 +4,7 @@ use cosmwasm_std::{
     entry_point, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
     QueryRequest, Reply, Response, StdResult, SubMsg, WasmQuery,
 };
+use cw_dex::astroport::astroport;
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
