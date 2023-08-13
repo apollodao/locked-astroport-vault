@@ -3,10 +3,10 @@ use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{coins, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
 
 use crate::error::{ContractError, ContractResponse};
-use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient};
+use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient, IsZero};
 use crate::state::{self, CONFIG, POOL, STAKING};
 
-use cw_dex::traits::{Pool, Rewards, Stake};
+use cw_dex::traits::{Pool, Stake, Unstake};
 
 pub fn sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
@@ -111,7 +111,6 @@ pub fn redeem(
     info: MessageInfo,
     amount: Uint128,
     recipient: Option<String>,
-    emergency: bool,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
@@ -121,23 +120,28 @@ pub fn redeem(
     let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
-    let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
+    let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
 
-    // Create claim for recipient
-    state::claims().create_claim(
-        deps.storage,
-        &recipient,
-        release_amount,
-        cfg.lock_duration.after(&env.block),
-    )?;
+    // If lock duration is zero, unstake LP tokens and send them to recipient,
+    // else create a claim for recipient so they can call `WithdrawUnlocked` later.
+    let res = if cfg.lock_duration.is_zero() {
+        // Unstake LP tokens
+        let staking = STAKING.load(deps.storage)?;
+        let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
-    // If emergency, only burn vault tokens, otherwise also claim rewards
-    let res = if emergency {
-        Response::new()
+        // Send LP tokens to recipient
+        let send_msg = Asset::cw20(cfg.base_token, claim_amount).transfer_msg(&recipient)?;
+
+        res.add_message(send_msg)
     } else {
-        STAKING
-            .load(deps.storage)?
-            .claim_rewards(deps.as_ref(), &env)?
+        // Create claim for recipient
+        state::claims().create_claim(
+            deps.storage,
+            &recipient,
+            claim_amount,
+            cfg.lock_duration.after(&env.block),
+        )?;
+        Response::new()
     };
 
     Ok(res.add_message(burn_msg))

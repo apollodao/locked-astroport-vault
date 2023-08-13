@@ -1,12 +1,13 @@
 use std::collections::HashSet;
 
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response,
-    StdResult, SubMsg,
+    entry_point, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Reply,
+    Response, StdResult, SubMsg,
 };
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
+use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute::{
@@ -14,7 +15,7 @@ use crate::execute::{
     execute_update_whitelist, execute_withdraw_unlocked,
 };
 use crate::execute_internal::{self};
-use crate::helpers::{self, IntoInternalCall};
+use crate::helpers::{self, IntoInternalCall, IsZero};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ExecuteMsg, ExtensionExecuteMsg, InstantiateMsg, InternalMsg,
     QueryMsg,
@@ -69,7 +70,14 @@ pub fn instantiate(
     POOL.save(deps.storage, &msg.pool)?;
     STAKING.save(deps.storage, &msg.staking)?;
 
-    Ok(Response::new())
+    // Create vault token
+    let create_denom_msg: CosmosMsg = MsgCreateDenom {
+        sender: env.contract.address.to_string(),
+        subdenom: msg.vault_token_subdenom,
+    }
+    .into();
+
+    Ok(Response::new().add_message(create_denom_msg))
 }
 
 #[entry_point]
@@ -79,6 +87,7 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let cfg = CONFIG.load(deps.storage)?;
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
             // Call contract itself first to compound, but as a SubMsg so that we can still deposit
@@ -109,39 +118,50 @@ pub fn execute(
                 .add_submessage(compound_msg)
                 .add_message(redeem_msg))
         }
-        // TODO: add emergency redeem
         ExecuteMsg::VaultExtension(msg) => match msg {
-            ExtensionExecuteMsg::Lockup(msg) => match msg {
-                LockupExecuteMsg::Unlock { amount } => {
-                    // TODO: Remove Unlock in favor of Redeem?
-                    let recipient = Some(info.sender.to_string());
-                    execute_internal::redeem(deps, env, info, amount, recipient, false)
+            ExtensionExecuteMsg::Lockup(msg) => {
+                if cfg.lock_duration.is_zero() {
+                    return Err(ContractError::LockupDisabled {});
                 }
-                LockupExecuteMsg::EmergencyUnlock { amount } => {
-                    let recipient = Some(info.sender.to_string()); // TODO: Add recipient field to LockupExecuteMsg?
-                    execute_internal::redeem(deps, env, info, amount, recipient, true)
+
+                match msg {
+                    LockupExecuteMsg::Unlock { amount } => {
+                        // TODO: Remove Unlock in favor of Redeem?
+                        let recipient = Some(info.sender.to_string());
+                        execute_internal::redeem(deps, env, info, amount, recipient)
+                    }
+                    LockupExecuteMsg::EmergencyUnlock { amount } => {
+                        let recipient = Some(info.sender.to_string()); // TODO: Add recipient field to LockupExecuteMsg?
+                        execute_internal::redeem(deps, env, info, amount, recipient)
+                    }
+                    LockupExecuteMsg::WithdrawUnlocked {
+                        recipient,
+                        lockup_id,
+                    } => execute_withdraw_unlocked(deps, env, info, recipient, lockup_id),
                 }
-                LockupExecuteMsg::WithdrawUnlocked {
-                    recipient,
-                    lockup_id,
-                } => execute_withdraw_unlocked(deps, env, info, recipient, lockup_id),
-            },
-            ExtensionExecuteMsg::ForceUnlock(msg) => match msg {
-                ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
-                    execute_force_redeem(deps, env, info, amount, recipient)
+            }
+            ExtensionExecuteMsg::ForceUnlock(msg) => {
+                if cfg.lock_duration.is_zero() {
+                    return Err(ContractError::LockupDisabled {});
                 }
-                ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
-                    lockup_id,
-                    amount,
-                    recipient,
-                } => {
-                    execute_force_withdraw_unlocking(deps, env, info, amount, recipient, lockup_id)
+
+                match msg {
+                    ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
+                        execute_force_redeem(deps, env, info, amount, recipient)
+                    }
+                    ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
+                        lockup_id,
+                        amount,
+                        recipient,
+                    } => execute_force_withdraw_unlocking(
+                        deps, env, info, amount, recipient, lockup_id,
+                    ),
+                    ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
+                        add_addresses,
+                        remove_addresses,
+                    } => execute_update_whitelist(deps, env, info, add_addresses, remove_addresses),
                 }
-                ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
-                    add_addresses,
-                    remove_addresses,
-                } => execute_update_whitelist(deps, env, info, add_addresses, remove_addresses),
-            },
+            }
             ExtensionExecuteMsg::Internal(msg) => {
                 // Assert that only the contract itself can call internal messages
                 if info.sender != env.contract.address {
@@ -158,7 +178,7 @@ pub fn execute(
                         execute_internal::deposit(deps, env, info, amount, recipient)
                     }
                     InternalMsg::Redeem { recipient, amount } => {
-                        execute_internal::redeem(deps, env, info, amount, recipient, false)
+                        execute_internal::redeem(deps, env, info, amount, recipient)
                     }
                 }
             }
