@@ -45,7 +45,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             staking: AstroportStaking {
                 lp_token_addr: todo!(),
                 generator_addr: todo!(),
-                astro_token: todo!(),
+                astro_addr: todo!(),
             },
             lock_duration: TWO_WEEKS_IN_SECS,
             reward_tokens: todo!(),
