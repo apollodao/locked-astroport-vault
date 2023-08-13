@@ -529,8 +529,6 @@ dependencies = [
 [[package]]
 name = "cw-it"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e3120d46b30b900c4b9ab0f996ce527c1187095c75ffa61d9ea5aa6d1e93b41"
 dependencies = [
  "anyhow",
  "astroport",
@@ -539,6 +537,26 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw20 0.15.1",
+ "osmosis-std 0.16.2",
+ "prost",
+ "serde",
+ "serde_json",
+ "strum 0.24.1",
+ "test-tube",
+ "thiserror",
+]
+
+[[package]]
+name = "cw-it"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e3120d46b30b900c4b9ab0f996ce527c1187095c75ffa61d9ea5aa6d1e93b41"
+dependencies = [
+ "anyhow",
+ "config",
+ "cosmrs",
+ "cosmwasm-schema",
+ "cosmwasm-std",
  "osmosis-std 0.16.2",
  "prost",
  "serde",
@@ -659,7 +677,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36e92f9cd3164c6ada7be42f4ee2918229f5086380d0c0245683371c754a7b9e"
 dependencies = [
  "cosmwasm-std",
- "cw-it",
+ "cw-it 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 1.0.1",
  "cw-vault-standard 0.4.0-rc.2",
 ]
@@ -1349,7 +1367,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-dex 0.3.1",
  "cw-dex-router",
- "cw-it",
+ "cw-it 0.1.0",
  "cw-ownable",
  "cw-storage-plus 1.1.0",
  "cw-utils 1.0.1",

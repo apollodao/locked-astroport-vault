@@ -31,7 +31,8 @@ cw-dex-router       = { version = "0.1.0", features = ["library"] }
 strum               = { version = "0.25.0", features = ["derive"] }
 
 [dev-dependencies]
-cw-it                           = { version = "0.1.0", features = ["astroport"] }
+# cw-it                           = { version = "0.1.0", features = ["astroport"] }
+cw-it = { path = "../cw-it", features = ["astroport"] }
 cw-vault-standard-test-helpers  = { version = "0.4.0-rc.2", features = ["lockup", "force-unlock"] }
 proptest                        = "1.2.0"
 test-case                       = "3.1.0"
