@@ -27,6 +27,9 @@ pub enum ContractError {
 
     #[error("Unknown reply ID: {id}")]
     UnknownReplyId { id: u64 },
+
+    #[error("Lockup is disabled for this vault")]
+    LockupDisabled {},
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;
