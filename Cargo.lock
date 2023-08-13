@@ -1360,6 +1360,7 @@ version = "0.1.0"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
+ "astroport",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-dex 0.3.1",
