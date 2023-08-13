@@ -79,6 +79,7 @@ pub enum ApolloExtensionExecuteMsg {
 
 #[cw_serde]
 #[derive(EnumVariantNames)]
+#[strum(serialize_all = "kebab-case")]
 pub enum ExtensionExecuteMsg {
     /// Execute an internal message (can only be called by the contract itself
     Internal(InternalMsg),
