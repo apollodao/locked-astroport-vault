@@ -1,4 +1,5 @@
 use cosmwasm_std::{coin, to_binary, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
+use cw_utils::Duration;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
 use crate::error::ContractResult;
@@ -123,5 +124,20 @@ where
             msg: to_binary(self)?,
             funds: vec![],
         }))
+    }
+}
+
+/// A trait to check if a type is zero.
+pub trait IsZero {
+    fn is_zero(&self) -> bool;
+}
+
+/// Implement the trait `IsZero` for `Duration`.
+impl IsZero for Duration {
+    fn is_zero(&self) -> bool {
+        match self {
+            Duration::Time(t) => t == &0,
+            Duration::Height(h) => h == &0,
+        }
     }
 }
