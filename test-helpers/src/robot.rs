@@ -54,6 +54,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             performance_fee: todo!(),
             router: todo!(),
             reward_liquidation_target: todo!(),
+            liquidity_helper: todo!(),
         };
 
         Self::new_with_instantiate_msg(runner, vault_contract, token_factory_fee, &init_msg, signer)

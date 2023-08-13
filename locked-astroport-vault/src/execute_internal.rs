@@ -1,6 +1,8 @@
 use apollo_cw_asset::{Asset, AssetInfo, AssetList};
 use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{coins, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
+use cosmwasm_std::{
+    coins, to_binary, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128,
+};
 
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient, IsZero};
@@ -38,6 +40,8 @@ pub fn sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
 }
 
 pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
+    let cfg = CONFIG.load(deps.storage)?;
+
     let pool = POOL.load(deps.storage)?;
     let pool_asset_balances = AssetList::query_asset_info_balances(
         pool.pool_assets.clone(),
@@ -45,10 +49,14 @@ pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
         &env.contract.address,
     )?;
 
-    let provide_res =
-        pool.provide_liquidity(deps.as_ref(), &env, pool_asset_balances, Uint128::zero())?; // TODO: Set slippage?
+    let provide_liquidity_msgs = cfg.liquidity_helper.balancing_provide_liquidity(
+        pool_asset_balances,
+        Uint128::zero(), // TODO: Set slippage?
+        to_binary(&pool)?,
+        None,
+    )?;
 
-    Ok(provide_res)
+    Ok(Response::new().add_messages(provide_liquidity_msgs))
 }
 
 pub fn stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
