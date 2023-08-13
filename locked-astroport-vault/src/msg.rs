@@ -7,6 +7,7 @@ use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::{
     force_unlock::ForceUnlockExecuteMsg, lockup::LockupExecuteMsg,
 };
+use liquidity_helper::LiquidityHelperUnchecked;
 use strum::EnumVariantNames;
 
 #[cw_serde]
@@ -36,6 +37,8 @@ pub struct InstantiateMsg {
     /// The asset to which we should swap reward_assets into before providing
     /// liquidity. Should be one of the assets in the pool.
     pub reward_liquidation_target: AssetInfoUnchecked,
+    /// Helper for providing liquidity with unbalanced assets.
+    pub liquidity_helper: LiquidityHelperUnchecked,
 }
 
 #[cw_serde]

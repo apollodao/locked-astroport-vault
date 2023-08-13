@@ -29,6 +29,7 @@ osmosis-std         = { workspace = true }
 thiserror           = { workspace = true }
 cw-dex-router       = { workspace = true, features = ["library"] }
 strum               = { workspace = true, features = ["derive"] }
+liquidity-helper    = { workspace = true }
 
 [dev-dependencies]
 # cw-it                           = { version = "0.1.0", features = ["astroport"] }
