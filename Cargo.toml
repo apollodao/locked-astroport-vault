@@ -8,6 +8,7 @@ members = [
 edition = "2021"
 
 [workspace.dependencies]
+astroport               = "2.8.0"
 apollo-cw-asset         = "0.1.2"
 apollo-utils            = "0.1.1"
 cosmwasm-schema         = "1.1.0"

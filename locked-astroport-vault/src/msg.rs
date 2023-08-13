@@ -1,7 +1,6 @@
 use apollo_cw_asset::AssetInfoUnchecked;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Uint128};
-use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
 use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::{
@@ -13,14 +12,14 @@ use strum::EnumVariantNames;
 pub struct InstantiateMsg {
     /// Contract owner
     pub owner: String,
-    /// Denom of vault base token
-    pub base_token_addr: String,
     /// Vault token sub-denom
     pub vault_token_subdenom: String,
-    /// Type implementing [`cw_dex::traits::Pool`]
-    pub pool: AstroportPool,
-    /// Type implementing [`cw_dex::traits::Staking`]
-    pub staking: AstroportStaking,
+    /// Address of the pool.
+    pub pool_addr: String,
+    /// Astroport token
+    pub astro_token: AssetInfoUnchecked,
+    /// Astroport generator address
+    pub astroport_generator: String,
     /// Lock duration in seconds
     pub lock_duration: u64,
     /// Reward tokens
