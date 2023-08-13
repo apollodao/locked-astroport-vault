@@ -1,6 +1,6 @@
 use cosmwasm_std::{Coin, Uint128};
 use cw20::Cw20QueryMsg;
-use cw_dex::astroport::{self, AstroportPool, AstroportStaking};
+use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_it::{
     astroport::utils::AstroportContracts,
     robot::TestRobot,
@@ -25,7 +25,13 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         token_factory_fee: Coin,
         signer: &SigningAccount,
     ) -> Self {
-        let astroport_contracts = AstroportContracts::new_from_local_contracts(runner);
+        let astroport_contracts = AstroportContracts::new_from_local_contracts(
+            runner,
+            &Some("astroport-artifacts"),
+            false,
+            &None,
+            signer,
+        );
         let init_msg = InstantiateMsg {
             owner: signer.address().to_string(),
             base_token_addr: todo!(),
