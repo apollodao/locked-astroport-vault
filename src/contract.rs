@@ -109,16 +109,14 @@ pub fn execute(
                 .add_submessage(compound_msg)
                 .add_message(redeem_msg))
         }
-        // TODO: add emergency redeem
         ExecuteMsg::VaultExtension(msg) => match msg {
             ExtensionExecuteMsg::Lockup(msg) => match msg {
                 LockupExecuteMsg::Unlock { amount } => {
-                    // TODO: Remove Unlock in favor of Redeem?
                     let recipient = Some(info.sender.to_string());
                     execute_internal::redeem(deps, env, info, amount, recipient, false)
                 }
                 LockupExecuteMsg::EmergencyUnlock { amount } => {
-                    let recipient = Some(info.sender.to_string()); // TODO: Add recipient field to LockupExecuteMsg?
+                    let recipient = Some(info.sender.to_string());
                     execute_internal::redeem(deps, env, info, amount, recipient, true)
                 }
                 LockupExecuteMsg::WithdrawUnlocked {

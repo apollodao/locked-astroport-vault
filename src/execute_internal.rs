@@ -117,7 +117,6 @@ pub fn redeem(
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that only vault tokens were sent and that the amount is correct
-    // TODO: Check for amount == zero?
     let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
