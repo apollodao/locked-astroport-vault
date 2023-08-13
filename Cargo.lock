@@ -306,7 +306,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex"
-version = "0.2.0"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b25ff7cf4e15288be9021a797eb1074cfa97ccb2152d1c645ba9b5d6b31a82c"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -701,7 +703,7 @@ dependencies = [
  "apollo-utils",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex 0.2.0",
+ "cw-dex 0.3.1",
  "cw-dex-router",
  "cw-ownable",
  "cw-storage-plus 1.1.0",

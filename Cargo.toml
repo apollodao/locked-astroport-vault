@@ -18,7 +18,7 @@ apollo-cw-asset     = "0.1.2"
 apollo-utils        = "0.1.1"
 cosmwasm-schema     = "1.1.0"
 cosmwasm-std        = "1.1.0"
-cw-dex              = { path = "../cw-dex/cw-dex", features = ["astroport"] }
+cw-dex              = { version = "0.3.1", features = ["astroport"] }
 cw-ownable          = "0.5.1"
 cw-storage-plus     = "1.1.0"
 cw-utils            = "1.0.1"

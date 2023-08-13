@@ -7,7 +7,7 @@ use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::{
     force_unlock::ForceUnlockExecuteMsg, lockup::LockupExecuteMsg,
 };
-use strum::{EnumIter, EnumVariantNames};
+use strum::EnumVariantNames;
 
 #[cw_serde]
 pub struct InstantiateMsg {
