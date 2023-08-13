@@ -8,6 +8,7 @@ use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_dex_router::helpers::CwDexRouter;
 use cw_storage_plus::Item;
 use cw_utils::Duration;
+use liquidity_helper::LiquidityHelper;
 
 pub const CONFIG: Item<Config> = Item::new("config");
 pub const POOL: Item<AstroportPool> = Item::new("pool");
@@ -36,6 +37,8 @@ pub struct Config {
     /// The asset to which we should swap reward_assets into before providing
     /// liquidity. Should be one of the assets in the pool.
     pub reward_liquidation_target: AssetInfo,
+    /// Helper for providing liquidity with unbalanced assets.
+    pub liquidity_helper: LiquidityHelper,
 }
 
 #[cw_serde]

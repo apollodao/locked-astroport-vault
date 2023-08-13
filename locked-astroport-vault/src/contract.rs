@@ -64,6 +64,7 @@ pub fn instantiate(
         performance_fee: msg.performance_fee,
         router: msg.router.check(deps.api)?,
         reward_liquidation_target: msg.reward_liquidation_target.check(deps.api)?,
+        liquidity_helper: msg.liquidity_helper.check(deps.api)?,
     };
 
     CONFIG.save(deps.storage, &config)?;
@@ -273,6 +274,7 @@ mod tests {
                 performance_fee: todo!(),
                 router: todo!(),
                 reward_liquidation_target: todo!(),
+                liquidity_helper: todo!(),
             },
         )
         .unwrap();
