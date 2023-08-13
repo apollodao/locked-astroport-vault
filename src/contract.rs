@@ -1,15 +1,29 @@
 use std::collections::HashSet;
 
-use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    entry_point, to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response,
+    StdResult, SubMsg,
+};
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
-use cw_vault_standard::ExtensionExecuteMsg;
 
 use crate::error::{ContractError, ContractResponse};
-use crate::execute::{execute_deposit, execute_redeem, execute_update_whitelist};
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, POOL, STAKING};
+use crate::execute::{
+    execute_compound, execute_force_redeem, execute_force_withdraw_unlocking,
+    execute_update_whitelist, execute_withdraw_unlocked,
+};
+use crate::execute_internal::{self};
+use crate::helpers::{self, IntoInternalCall};
+use crate::msg::{
+    ApolloExtensionExecuteMsg, ExecuteMsg, ExtensionExecuteMsg, InstantiateMsg, InternalMsg,
+    QueryMsg,
+};
+use crate::query::{
+    query_unlocking_position, query_unlocking_positions, query_vault_info,
+    query_vault_standard_info,
+};
+use crate::state::{Config, CONFIG, POOL, STAKING, STATE};
 
 pub const CONTRACT_NAME: &str = "crates.io:my-contract";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -18,7 +32,7 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> ContractResponse {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -29,14 +43,13 @@ pub fn instantiate(
         env.contract.address, msg.vault_token_subdenom
     );
 
-    let cw20_adaptor = match msg.cw20_adaptor {
-        Some(adaptor) => Some(deps.api.addr_validate(&adaptor)?),
-        None => None,
-    };
+    // Validate performance fee
+    if msg.performance_fee > Decimal::one() {
+        return Err(ContractError::PerformanceFeeTooHigh {});
+    }
 
     let config = Config {
         vault_token_denom,
-        cw20_adaptor,
         base_token: deps.api.addr_validate(&msg.base_token_addr)?,
         lock_duration: Duration::Time(msg.lock_duration),
         reward_tokens: msg
@@ -45,6 +58,11 @@ pub fn instantiate(
             .map(|asset_info| asset_info.check(deps.api))
             .collect::<StdResult<Vec<_>>>()?,
         force_withdraw_whitelist: HashSet::new(),
+        deposits_enabled: msg.deposits_enabled,
+        treasury: deps.api.addr_validate(&msg.treasury)?,
+        performance_fee: msg.performance_fee,
+        router: msg.router.check(deps.api)?,
+        reward_liquidation_target: msg.reward_liquidation_target.check(deps.api)?,
     };
 
     CONFIG.save(deps.storage, &config)?;
@@ -62,31 +80,94 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Deposit { amount, recipient } => execute_deposit(deps, env, info, amount),
-        ExecuteMsg::Redeem { recipient, amount } => {
-            execute_redeem(deps, env, info, amount, recipient, false)
+        ExecuteMsg::Deposit { amount, recipient } => {
+            // Call contract itself first to compound, but as a SubMsg so that we can still deposit
+            // if the compound fails
+            let compound_msg = SubMsg::reply_always(
+                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env)?,
+                0,
+            );
+
+            let deposit_msg =
+                InternalMsg::Deposit { amount, recipient }.into_internal_call(&env)?;
+
+            Ok(Response::new()
+                .add_submessage(compound_msg)
+                .add_message(deposit_msg))
         }
-        // TODO: add emergency redeem
+        ExecuteMsg::Redeem { recipient, amount } => {
+            // Call contract itself first to compound, but as a SubMsg so that we can still redeem
+            // if the compound fails
+            let compound_msg = SubMsg::reply_always(
+                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env)?,
+                0,
+            );
+
+            let redeem_msg = InternalMsg::Redeem { amount, recipient }.into_internal_call(&env)?;
+
+            Ok(Response::new()
+                .add_submessage(compound_msg)
+                .add_message(redeem_msg))
+        }
         ExecuteMsg::VaultExtension(msg) => match msg {
             ExtensionExecuteMsg::Lockup(msg) => match msg {
-                LockupExecuteMsg::Unlock { amount } => unimplemented!("use redeem instead"),
-                LockupExecuteMsg::EmergencyUnlock { amount } => todo!(),
+                LockupExecuteMsg::Unlock { amount } => {
+                    let recipient = Some(info.sender.to_string());
+                    execute_internal::redeem(deps, env, info, amount, recipient, false)
+                }
+                LockupExecuteMsg::EmergencyUnlock { amount } => {
+                    let recipient = Some(info.sender.to_string());
+                    execute_internal::redeem(deps, env, info, amount, recipient, true)
+                }
                 LockupExecuteMsg::WithdrawUnlocked {
                     recipient,
                     lockup_id,
-                } => todo!(),
+                } => execute_withdraw_unlocked(deps, env, info, recipient, lockup_id),
             },
             ExtensionExecuteMsg::ForceUnlock(msg) => match msg {
-                ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => todo!(),
+                ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
+                    execute_force_redeem(deps, env, info, amount, recipient)
+                }
                 ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
                     lockup_id,
                     amount,
                     recipient,
-                } => todo!(),
+                } => {
+                    execute_force_withdraw_unlocking(deps, env, info, amount, recipient, lockup_id)
+                }
                 ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
                     add_addresses,
                     remove_addresses,
                 } => execute_update_whitelist(deps, env, info, add_addresses, remove_addresses),
+            },
+            ExtensionExecuteMsg::Internal(msg) => {
+                // Assert that only the contract itself can call internal messages
+                if info.sender != env.contract.address {
+                    return Err(ContractError::Unauthorized {});
+                }
+
+                match msg {
+                    InternalMsg::SellTokens {} => execute_internal::sell_tokens(deps, env),
+                    InternalMsg::ProvideLiquidity {} => {
+                        execute_internal::provide_liquidity(deps, env)
+                    }
+                    InternalMsg::StakeLps {} => execute_internal::stake_lps(deps, env),
+                    InternalMsg::Deposit { amount, recipient } => {
+                        execute_internal::deposit(deps, env, info, amount, recipient)
+                    }
+                    InternalMsg::Redeem { recipient, amount } => {
+                        execute_internal::redeem(deps, env, info, amount, recipient, false)
+                    }
+                }
+            }
+            ExtensionExecuteMsg::UpdateOwnership(action) => {
+                let ownership =
+                    cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
+                Ok(Response::new().add_attributes(ownership.into_attributes()))
+            }
+            ExtensionExecuteMsg::Apollo(msg) => match msg {
+                ApolloExtensionExecuteMsg::UpdateConfig {} => todo!(),
+                ApolloExtensionExecuteMsg::Compound {} => execute_compound(deps, env),
             },
         },
     }
@@ -95,16 +176,46 @@ pub fn execute(
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::VaultStandardInfo {} => todo!(),
-        QueryMsg::Info {} => todo!(),
-        QueryMsg::PreviewDeposit { amount } => todo!(),
-        QueryMsg::PreviewRedeem { amount } => todo!(),
-        QueryMsg::TotalAssets {} => todo!(),
-        QueryMsg::TotalVaultTokenSupply {} => todo!(),
-        QueryMsg::ConvertToShares { amount } => todo!(),
-        QueryMsg::ConvertToAssets { amount } => todo!(),
-        QueryMsg::VaultExtension(_) => todo!(),
+        QueryMsg::VaultStandardInfo {} => to_binary(&query_vault_standard_info(deps)?),
+        QueryMsg::Info {} => to_binary(&query_vault_info(deps)?),
+        QueryMsg::PreviewDeposit { .. } => unimplemented!("Cannot reliably preview deposit"),
+        QueryMsg::PreviewRedeem { .. } => unimplemented!("Cannot reliably preview redeem"),
+        QueryMsg::TotalAssets {} => {
+            let state = STATE.load(deps.storage)?;
+            to_binary(&state.staked_base_tokens)
+        }
+        QueryMsg::TotalVaultTokenSupply {} => {
+            let state = STATE.load(deps.storage)?;
+            to_binary(&state.vault_token_supply)
+        }
+        QueryMsg::ConvertToShares { amount } => {
+            to_binary(&helpers::convert_to_shares(deps, amount))
+        }
+        QueryMsg::ConvertToAssets { amount } => {
+            to_binary(&helpers::convert_to_assets(deps, amount))
+        }
+        QueryMsg::VaultExtension(ext_msg) => match ext_msg {
+            cw_vault_standard::ExtensionQueryMsg::Lockup(lockup_msg) => match lockup_msg {
+                cw_vault_standard::extensions::lockup::LockupQueryMsg::UnlockingPositions {
+                    owner,
+                    start_after,
+                    limit,
+                } => to_binary(&query_unlocking_positions(deps, owner, start_after, limit)?),
+                cw_vault_standard::extensions::lockup::LockupQueryMsg::UnlockingPosition {
+                    lockup_id,
+                } => to_binary(&query_unlocking_position(deps, lockup_id)?),
+                cw_vault_standard::extensions::lockup::LockupQueryMsg::LockupDuration {} => {
+                    let cfg = CONFIG.load(deps.storage)?;
+                    to_binary(&cfg.lock_duration)
+                }
+            },
+        },
     }
+}
+
+#[entry_point]
+pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
+    Ok(Response::new())
 }
 
 // ----------------------------------- Tests -----------------------------------
@@ -129,11 +240,17 @@ mod tests {
             mock_info("larry", &[]),
             InstantiateMsg {
                 owner: "pumpkin".into(),
-                base_token_denom: todo!(),
                 vault_token_subdenom: todo!(),
                 pool: todo!(),
                 staking: todo!(),
-                cw20_adaptor: todo!(),
+                base_token_addr: todo!(),
+                lock_duration: todo!(),
+                reward_tokens: todo!(),
+                deposits_enabled: todo!(),
+                treasury: todo!(),
+                performance_fee: todo!(),
+                router: todo!(),
+                reward_liquidation_target: todo!(),
             },
         )
         .unwrap();

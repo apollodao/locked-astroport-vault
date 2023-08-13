@@ -1,15 +1,15 @@
-use cosmwasm_std::{coin, CosmosMsg, Decimal, DepsMut, Env, Uint128};
-use cw_dex::traits::Rewards;
+use cosmwasm_std::{coin, to_binary, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
 use crate::error::ContractResult;
-use crate::state::{CONFIG, STAKING, STATE};
+use crate::state::{CONFIG, STATE};
+use cosmwasm_schema::serde::Serialize;
 
 use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
 
-/// Return the `denom` from `info.funds` if it is the only coin in the funds.
+/// Return the `Coin` from `info.funds` if it is the only denom in the funds.
 /// Otherwise, return an error.
-pub fn one_coin(info: MessageInfo, denom: String) -> StdResult<Coin> {
+pub fn one_coin(info: &MessageInfo, denom: &str) -> StdResult<Coin> {
     if info.funds.len() != 1 && info.funds[0].denom != denom {
         Err(StdError::generic_err("Must deposit exactly one token"))
     } else {
@@ -17,9 +17,9 @@ pub fn one_coin(info: MessageInfo, denom: String) -> StdResult<Coin> {
     }
 }
 
-/// Return the `denom` from `info.funds` if it is the only coin in the funds
+/// Return the `Coin` from `info.funds` if it is the only denom in the funds
 /// and the amount is exactly `amount`. Otherwise, return an error.
-pub fn correct_funds(info: MessageInfo, denom: String, amount: Uint128) -> StdResult<Coin> {
+pub fn correct_funds(info: &MessageInfo, denom: &str, amount: Uint128) -> StdResult<Coin> {
     let coin = one_coin(info, denom)?;
     if coin.amount != amount {
         Err(StdError::generic_err(format!(
@@ -29,6 +29,30 @@ pub fn correct_funds(info: MessageInfo, denom: String, amount: Uint128) -> StdRe
     } else {
         Ok(coin)
     }
+}
+
+/// Converts an `Option<String>` to an `Addr` by unwrapping the string and verifying the address,
+/// or using the sender address if the supplied Option is `None`.
+pub fn unwrap_recipient(
+    recipient: Option<String>,
+    info: &MessageInfo,
+    api: &dyn Api,
+) -> StdResult<Addr> {
+    recipient.map_or(Ok(info.sender.clone()), |x| api.addr_validate(&x))
+}
+
+/// Returns the number of vault tokens that will be minted for `base_token_amount`
+/// base tokens.
+pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint128 {
+    let state = STATE.load(deps.storage).unwrap();
+    Decimal::from_ratio(base_token_amount, state.staked_base_tokens) * state.vault_token_supply
+}
+
+/// Returns the number of base tokens that will be released for `vault_token_amount`
+/// vault tokens.
+pub(crate) fn convert_to_assets(deps: Deps, vault_token_amount: Uint128) -> Uint128 {
+    let state = STATE.load(deps.storage).unwrap();
+    Decimal::from_ratio(vault_token_amount, state.vault_token_supply) * state.staked_base_tokens
 }
 
 /// Return a token factory mint message to mint `amount` of vault tokens to
@@ -41,8 +65,7 @@ pub(crate) fn mint_vault_tokens(
     let mut state = STATE.load(deps.storage)?;
     let cfg = CONFIG.load(deps.storage)?;
 
-    let mint_amount =
-        Decimal::from_ratio(deposit_amount, state.staked_base_tokens) * state.vault_token_supply;
+    let mint_amount = convert_to_shares(deps.as_ref(), deposit_amount);
 
     state.staked_base_tokens = state.staked_base_tokens.checked_add(deposit_amount)?;
     state.vault_token_supply = state.vault_token_supply.checked_add(mint_amount)?;
@@ -61,14 +84,13 @@ pub(crate) fn mint_vault_tokens(
 /// that should be released.
 pub(crate) fn burn_vault_tokens(
     deps: DepsMut,
-    env: Env,
+    env: &Env,
     burn_amount: Uint128,
 ) -> ContractResult<(CosmosMsg, Uint128)> {
     let mut state = STATE.load(deps.storage)?;
     let cfg = CONFIG.load(deps.storage)?;
 
-    let release_amount =
-        Decimal::from_ratio(burn_amount, state.vault_token_supply) * state.staked_base_tokens;
+    let release_amount = convert_to_assets(deps.as_ref(), burn_amount);
 
     state.staked_base_tokens = state.staked_base_tokens.checked_sub(release_amount)?;
     state.vault_token_supply = state.vault_token_supply.checked_sub(burn_amount)?;
@@ -83,4 +105,23 @@ pub(crate) fn burn_vault_tokens(
         .into(),
         release_amount,
     ))
+}
+
+/// A trait to convert a type into a `CosmosMsg` Execute variant that calls the contract itself.
+pub trait IntoInternalCall {
+    fn into_internal_call(&self, env: &Env) -> StdResult<CosmosMsg>;
+}
+
+/// Implement the trait for any type that implements `Serialize`.
+impl<T> IntoInternalCall for T
+where
+    T: Serialize,
+{
+    fn into_internal_call(&self, env: &Env) -> StdResult<CosmosMsg> {
+        Ok(CosmosMsg::Wasm(cosmwasm_std::WasmMsg::Execute {
+            contract_addr: env.contract.address.to_string(),
+            msg: to_binary(self)?,
+            funds: vec![],
+        }))
+    }
 }

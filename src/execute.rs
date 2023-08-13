@@ -1,78 +1,32 @@
-use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{
-    to_binary, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdError, Uint128, WasmMsg,
-};
-use cw20::Cw20ExecuteMsg;
+use apollo_cw_asset::Asset;
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
 
 use crate::error::{ContractError, ContractResponse};
-use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens};
-use crate::state::{CLAIMS, CONFIG, STAKING};
+use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
+use crate::msg::InternalMsg;
+use crate::state::{self, CONFIG, STAKING};
 
-use cw_dex::traits::{Rewards, Stake, Unstake};
+use cw_dex::traits::{Rewards, Unstake};
 
-pub fn execute_deposit(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    amount: Uint128,
-) -> ContractResponse {
-    let cfg = CONFIG.load(deps.storage)?;
-
-    let transfer_from_res = Response::new().add_message(WasmMsg::Execute {
-        contract_addr: cfg.base_token.to_string(),
-        msg: to_binary(&Cw20ExecuteMsg::TransferFrom {
-            owner: info.sender.to_string(),
-            recipient: env.contract.address.to_string(),
-            amount,
-        })?,
-        funds: vec![],
-    });
-
+pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
 
-    let staking_res = staking.stake(deps.as_ref(), &env, amount)?;
+    // Claim any pending rewards
+    let claim_rewards_res = staking.claim_rewards(deps.as_ref(), &env)?;
 
-    let mint_res = Response::new().add_message(mint_vault_tokens(deps, env, amount)?);
+    // Sell rewards
+    let sell_msg = InternalMsg::SellTokens {}.into_internal_call(&env)?;
 
-    Ok(merge_responses(vec![
-        transfer_from_res,
-        staking_res,
-        mint_res,
-    ]))
-}
+    // Provide Liquidity
+    let provide_msg = InternalMsg::ProvideLiquidity {}.into_internal_call(&env)?;
 
-pub fn execute_redeem(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    amount: Uint128,
-    recipient: Option<String>,
-    emergency: bool,
-) -> ContractResponse {
-    let cfg = CONFIG.load(deps.storage)?;
-    let unlock_amount = helpers::correct_funds(info, cfg.vault_token_denom, amount)?;
-    let recipient = deps
-        .api
-        .addr_validate(&recipient.unwrap_or(info.sender.to_string()))?;
+    // Stake LP tokens
+    let stake_msg = InternalMsg::StakeLps {}.into_internal_call(&env)?;
 
-    let (burn_msg, release_amount) = burn_vault_tokens(deps, env, unlock_amount.amount)?;
-
-    CLAIMS.create_claim(
-        deps.storage,
-        &recipient,
-        release_amount,
-        cfg.lock_duration.after(&env.block),
-    );
-
-    let res = if emergency {
-        Response::new()
-    } else {
-        STAKING
-            .load(deps.storage)?
-            .claim_rewards(deps.as_ref(), &env)?
-    };
-
-    Ok(res.add_message(burn_msg))
+    Ok(claim_rewards_res
+        .add_message(sell_msg)
+        .add_message(provide_msg)
+        .add_message(stake_msg))
 }
 
 pub fn execute_withdraw_unlocked(
@@ -80,22 +34,20 @@ pub fn execute_withdraw_unlocked(
     env: Env,
     info: MessageInfo,
     recipient: Option<String>,
+    lockup_id: u64,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
-    let claim_amount = CLAIMS.claim_tokens(deps.storage, &info.sender, &env.block, None)?;
+    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
+    // Calculate amount of LP tokens available to claim
+    let claim_amount = state::claims().claim_tokens(deps.storage, &env.block, &info, lockup_id)?;
+
+    // Unstake LP tokens
     let staking = STAKING.load(deps.storage)?;
     let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
-    let send_msg: CosmosMsg = WasmMsg::Execute {
-        contract_addr: cfg.base_token.to_string(),
-        msg: to_binary(&Cw20ExecuteMsg::Transfer {
-            recipient: recipient.unwrap_or(info.sender.to_string()),
-            amount: claim_amount,
-        })?,
-        funds: vec![],
-    }
-    .into();
+    // Send LP tokens to recipient
+    let send_msg = Asset::cw20(cfg.base_token, claim_amount).transfer_msg(&recipient)?;
 
     Ok(res.add_message(send_msg))
 }
@@ -129,4 +81,65 @@ pub fn execute_update_whitelist(
     }
 
     Ok(Response::new())
+}
+
+pub fn execute_force_redeem(
+    mut deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    amount: Uint128,
+    recipient: Option<String>,
+) -> ContractResponse {
+    let cfg = CONFIG.load(deps.storage)?;
+    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
+
+    // Check that the sender is whitelisted
+    if !cfg.force_withdraw_whitelist.contains(&info.sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Check that only vault tokens were sent and that the amount is correct
+    let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
+
+    // Calculate claim amount and create msg to burn vault tokens
+    let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
+
+    // Unstake LP tokens
+    let staking = STAKING.load(deps.storage)?;
+    let staking_res = staking.unstake(deps.as_ref(), &env, release_amount)?;
+
+    // Send LP tokens to recipient
+    let send_msg = Asset::cw20(cfg.base_token, release_amount).transfer_msg(&recipient)?;
+
+    Ok(staking_res.add_message(burn_msg).add_message(send_msg))
+}
+
+pub fn execute_force_withdraw_unlocking(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    amount: Option<Uint128>,
+    recipient: Option<String>,
+    lockup_id: u64,
+) -> ContractResponse {
+    let cfg = CONFIG.load(deps.storage)?;
+    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
+
+    // Check that the sender is whitelisted
+    if !cfg.force_withdraw_whitelist.contains(&info.sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Get the claimed amount and update the claim in storage, deleting it if
+    // all of the tokens are claimed, or updating it with the remaining amount.
+    let claimed_amount = state::claims().force_claim(deps.storage, &info, lockup_id, amount)?;
+
+    // Unstake LP tokens
+    let staking = STAKING.load(deps.storage)?;
+    let res = staking.unstake(deps.as_ref(), &env, claimed_amount)?;
+
+    // Send LP tokens to recipient
+    let send_msg = Asset::cw20(cfg.base_token, claimed_amount).transfer_msg(&recipient)?;
+
+    Ok(res.add_message(send_msg))
 }
