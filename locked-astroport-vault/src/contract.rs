@@ -1,12 +1,13 @@
 use std::collections::HashSet;
 
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response,
-    StdResult, SubMsg,
+    entry_point, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Reply,
+    Response, StdResult, SubMsg,
 };
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
+use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute::{
@@ -69,7 +70,14 @@ pub fn instantiate(
     POOL.save(deps.storage, &msg.pool)?;
     STAKING.save(deps.storage, &msg.staking)?;
 
-    Ok(Response::new())
+    // Create vault token
+    let create_denom_msg: CosmosMsg = MsgCreateDenom {
+        sender: env.contract.address.to_string(),
+        subdenom: msg.vault_token_subdenom,
+    }
+    .into();
+
+    Ok(Response::new().add_message(create_denom_msg))
 }
 
 #[entry_point]
