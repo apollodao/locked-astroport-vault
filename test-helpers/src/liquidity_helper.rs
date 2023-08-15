@@ -8,7 +8,7 @@ use cw_it::{
 use liquidity_helper::LiquidityHelper;
 
 pub struct AstroportLiquidityHelperRobot<'a> {
-    runner: &'a TestRunner<'a>,
+    pub runner: &'a TestRunner<'a>,
     pub liquidity_helper: LiquidityHelper,
 }
 

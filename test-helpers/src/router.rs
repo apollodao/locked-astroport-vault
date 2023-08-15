@@ -1,11 +1,12 @@
-use apollo_cw_asset::{Asset, AssetInfo, AssetInfoUnchecked};
-use cosmwasm_std::{Addr, Coin};
+use apollo_cw_asset::AssetInfoUnchecked;
+use cosmwasm_std::Addr;
 use cw_dex_router::{
     helpers::{CwDexRouter, CwDexRouterUnchecked},
     msg::InstantiateMsg,
     operations::SwapOperationsListUnchecked,
 };
 use cw_it::{
+    robot::TestRobot,
     test_tube::{Account, Module, SigningAccount, Wasm},
     traits::CwItRunner,
     ContractType, TestRunner,
@@ -54,19 +55,19 @@ impl<'a> CwDexRouterRobot<'a> {
         bidirectional: bool,
         signer: &SigningAccount,
     ) {
-        let wasm = Wasm::new(self.runner);
-        wasm.execute(
-            &self.cw_dex_router.0.to_string(),
-            &cw_dex_router::msg::ExecuteMsg::SetPath {
-                offer_asset: from,
-                ask_asset: to,
-                path,
-                bidirectional,
-            },
-            &[],
-            signer,
-        )
-        .unwrap();
+        self.wasm()
+            .execute(
+                &self.cw_dex_router.0.to_string(),
+                &cw_dex_router::msg::ExecuteMsg::SetPath {
+                    offer_asset: from,
+                    ask_asset: to,
+                    path,
+                    bidirectional,
+                },
+                &[],
+                signer,
+            )
+            .unwrap();
     }
 }
 
@@ -79,5 +80,11 @@ impl<'a> From<CwDexRouterRobot<'a>> for CwDexRouter {
 impl<'a> From<CwDexRouterRobot<'a>> for CwDexRouterUnchecked {
     fn from(value: CwDexRouterRobot) -> Self {
         value.cw_dex_router.into()
+    }
+}
+
+impl<'a> TestRobot<'a, TestRunner<'a>> for CwDexRouterRobot<'a> {
+    fn runner(&self) -> &'a TestRunner<'a> {
+        self.runner
     }
 }

@@ -8,7 +8,7 @@ use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient, IsZero};
 use crate::state::{self, CONFIG, POOL, STAKING};
 
-use cw_dex::traits::{Pool, Stake, Unstake};
+use cw_dex::traits::{Stake, Unstake};
 
 pub fn sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
