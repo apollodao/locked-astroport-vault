@@ -1500,6 +1500,7 @@ dependencies = [
  "cw-dex",
  "cw-dex-router",
  "cw-it",
+ "cw-ownable",
  "cw-vault-standard-test-helpers",
  "cw20 1.1.0",
  "liquidity-helper",

@@ -14,17 +14,19 @@ use cw_it::{
     traits::CwItRunner,
     Artifact, ContractType, TestRunner,
 };
+use cw_ownable::Ownership;
 use cw_vault_standard_test_helpers::traits::{
     force_unlock::ForceUnlockVaultRobot, lockup::LockedVaultRobot, CwVaultStandardRobot,
 };
 use liquidity_helper::LiquidityHelperUnchecked;
-use locked_astroport_vault::msg::InstantiateMsg;
+use locked_astroport_vault::msg::{ApolloExtensionQueryMsg, InstantiateMsg};
 
 use crate::router::CwDexRouterRobot;
 
-const CW_DEX_ROUTER_WASM_PATH: &str = "artifacts/cw_dex_router.wasm";
-const ASTROPORT_LIQUIDITY_HELPER_WASM_PATH: &str = "artifacts/astroport_liquidity_helper.wasm";
-const ASTROPORT_ARTIFACTS_DIR: &str = "artifacts/astroport-artifacts";
+const LOCKED_ASTROPORT_VAULT_WASM_NAME: &str = "locked_astroport_vault.wasm";
+const CW_DEX_ROUTER_WASM_NAME: &str = "cw_dex_router_astroport.wasm";
+const ASTROPORT_LIQUIDITY_HELPER_WASM_NAME: &str = "astroport_liquidity_helper.wasm";
+const ASTROPORT_ARTIFACTS_DIR: &str = "astroport-artifacts";
 
 const TWO_WEEKS_IN_SECS: u64 = 1_209_600;
 
@@ -34,6 +36,9 @@ const ASTRO_DENOM: &str = "uastro";
 const USDC_DENOM: &str = "uusdc";
 const AXL_DENOM: &str = "uaxl";
 const NTRN_DENOM: &str = "untrn";
+
+/// The default coins to fund new accounts with
+pub const DEFAULT_COINS: &str = "1000000000000000000uosmo,1000000000000000000uwsteth,1000000000000000000ueth,1000000000000000000uastro,1000000000000000000uusdc,1000000000000000000uaxl,1000000000000000000untrn";
 
 #[cw_serde]
 struct AstroportLiquidityHelperInstantiateMsg {
@@ -46,13 +51,25 @@ pub struct LockedAstroportVaultRobot<'a> {
 }
 
 impl<'a> LockedAstroportVaultRobot<'a> {
+    /// Returns a `ContractType` representing a local wasm file of the contract.
+    /// If `artifacts_dir` is `None`, the default path of `artifacts` will be used.
+    pub fn local_contract(artifacts_dir: Option<&str>) -> ContractType {
+        let dir = artifacts_dir.unwrap_or_else(|| "artifacts").to_string();
+        let path = format!("{}/{}", dir, LOCKED_ASTROPORT_VAULT_WASM_NAME);
+        println!("Loading contract from {}", path);
+        ContractType::Artifact(Artifact::Local(path))
+    }
+
     pub fn new_wsteth_eth_vault(
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
         treasury_addr: String,
+        dependency_contracts_dir: Option<&str>,
         signer: &SigningAccount,
     ) -> Self {
+        let artifacts_dir = dependency_contracts_dir.unwrap_or_else(|| "tests/test_artifacts");
+
         let wsteth = AssetInfo::native(WSTETH_DENOM.to_string());
         let eth = AssetInfo::native(ETH_DENOM.to_string());
         let astro = AssetInfo::native(ASTRO_DENOM.to_string());
@@ -63,7 +80,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         // Deploy astroport contracts
         let astroport_contracts = AstroportContracts::new_from_local_contracts(
             runner,
-            &Some(ASTROPORT_ARTIFACTS_DIR),
+            &Some(&format!("{}/{}", artifacts_dir, ASTROPORT_ARTIFACTS_DIR)),
             false,
             &None,
             signer,
@@ -140,7 +157,10 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         // TODO: Support multi-test
         let cw_dex_router_robot = CwDexRouterRobot::new(
             runner,
-            ContractType::Artifact(Artifact::Local(CW_DEX_ROUTER_WASM_PATH.to_string())),
+            ContractType::Artifact(Artifact::Local(format!(
+                "{}/{}",
+                artifacts_dir, CW_DEX_ROUTER_WASM_NAME
+            ))),
             signer,
         );
 
@@ -219,9 +239,10 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let wasm = Wasm::new(runner);
         let code_id = runner
             .store_code(
-                ContractType::Artifact(Artifact::Local(
-                    ASTROPORT_LIQUIDITY_HELPER_WASM_PATH.to_string(),
-                )),
+                ContractType::Artifact(Artifact::Local(format!(
+                    "{}/{}",
+                    artifacts_dir, ASTROPORT_LIQUIDITY_HELPER_WASM_NAME
+                ))),
                 signer,
             )
             .unwrap();
@@ -283,6 +304,19 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .address;
 
         Self { runner, vault_addr }
+    }
+
+    pub fn query_ownership(&self) -> Ownership<Addr> {
+        self.wasm()
+            .query::<_, cw_ownable::Ownership<Addr>>(
+                &self.vault_addr,
+                &locked_astroport_vault::msg::QueryMsg::VaultExtension(
+                    locked_astroport_vault::msg::ExtensionQueryMsg::Apollo(
+                        ApolloExtensionQueryMsg::Ownership {},
+                    ),
+                ),
+            )
+            .unwrap()
     }
 }
 

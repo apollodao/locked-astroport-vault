@@ -14,3 +14,4 @@ cw-it                           = { workspace = true, features = ["astroport"] }
 cw-vault-standard-test-helpers  = { workspace = true, features = ["lockup", "force-unlock"] }
 locked-astroport-vault          = { workspace = true }
 liquidity-helper                = { workspace = true }
+cw-ownable                      = { workspace = true }
