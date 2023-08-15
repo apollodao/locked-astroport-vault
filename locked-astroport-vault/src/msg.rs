@@ -1,13 +1,16 @@
 use apollo_cw_asset::AssetInfoUnchecked;
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Decimal, Uint128};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
 use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::{
-    force_unlock::ForceUnlockExecuteMsg, lockup::LockupExecuteMsg,
+    force_unlock::ForceUnlockExecuteMsg,
+    lockup::{LockupExecuteMsg, LockupQueryMsg},
 };
 use liquidity_helper::LiquidityHelperUnchecked;
 use strum::EnumVariantNames;
+
+use crate::state::Config;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -99,5 +102,24 @@ pub enum ExtensionExecuteMsg {
     UpdateOwnership(OwnerAction),
 }
 
+#[cw_ownable::cw_ownable_query]
+#[cw_serde]
+#[derive(QueryResponses)]
+pub enum ApolloExtensionQueryMsg {
+    /// Returns the current config.
+    #[returns(Config)]
+    Config {},
+}
+
+#[cw_serde]
+pub enum ExtensionQueryMsg {
+    /// Execute an Apollo extension query.
+    Apollo(ApolloExtensionQueryMsg),
+
+    /// Execute a message from the lockup extension.
+    Lockup(LockupQueryMsg),
+}
+
 pub type ExecuteMsg = cw_vault_standard::VaultStandardExecuteMsg<ExtensionExecuteMsg>;
-pub type QueryMsg = cw_vault_standard::VaultStandardQueryMsg;
+
+pub type QueryMsg = cw_vault_standard::VaultStandardQueryMsg<ExtensionQueryMsg>;

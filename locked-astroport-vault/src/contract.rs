@@ -1,8 +1,11 @@
 use std::collections::HashSet;
 
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
+
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
-    QueryRequest, Reply, Response, StdResult, SubMsg, WasmQuery,
+    to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, QueryRequest, Reply,
+    Response, StdResult, SubMsg, WasmQuery,
 };
 use cw_dex::astroport::astroport;
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
@@ -19,8 +22,8 @@ use crate::execute::{
 use crate::execute_internal::{self};
 use crate::helpers::{self, IntoInternalCall, IsZero};
 use crate::msg::{
-    ApolloExtensionExecuteMsg, ExecuteMsg, ExtensionExecuteMsg, InstantiateMsg, InternalMsg,
-    QueryMsg,
+    ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
+    ExtensionQueryMsg, InstantiateMsg, InternalMsg, QueryMsg,
 };
 use crate::query::{
     query_unlocking_position, query_unlocking_positions, query_vault_info,
@@ -28,7 +31,7 @@ use crate::query::{
 };
 use crate::state::{Config, CONFIG, POOL, STAKING, STATE};
 
-pub const CONTRACT_NAME: &str = "crates.io:my-contract";
+pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -235,7 +238,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_binary(&helpers::convert_to_assets(deps, amount))
         }
         QueryMsg::VaultExtension(ext_msg) => match ext_msg {
-            cw_vault_standard::ExtensionQueryMsg::Lockup(lockup_msg) => match lockup_msg {
+            ExtensionQueryMsg::Lockup(lockup_msg) => match lockup_msg {
                 cw_vault_standard::extensions::lockup::LockupQueryMsg::UnlockingPositions {
                     owner,
                     start_after,
@@ -247,6 +250,16 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 cw_vault_standard::extensions::lockup::LockupQueryMsg::LockupDuration {} => {
                     let cfg = CONFIG.load(deps.storage)?;
                     to_binary(&cfg.lock_duration)
+                }
+            },
+            ExtensionQueryMsg::Apollo(msg) => match msg {
+                ApolloExtensionQueryMsg::Config {} => {
+                    let cfg = CONFIG.load(deps.storage)?;
+                    to_binary(&cfg)
+                }
+                ApolloExtensionQueryMsg::Ownership {} => {
+                    let ownership = cw_ownable::get_ownership(deps.storage)?;
+                    to_binary(&ownership)
                 }
             },
         },

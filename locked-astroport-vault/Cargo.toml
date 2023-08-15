@@ -32,8 +32,8 @@ strum               = { workspace = true, features = ["derive"] }
 liquidity-helper    = { workspace = true }
 
 [dev-dependencies]
-# cw-it                           = { version = "0.1.0", features = ["astroport"] }
-cw-it                           = { workspace = true, features = ["astroport"] }
+cw-it                           = { workspace = true, features = ["astroport", "osmosis-test-tube"] }
 cw-vault-standard-test-helpers  = { workspace = true, features = ["lockup", "force-unlock"] }
 proptest                        = { workspace = true }
 test-case                       = { workspace = true }
+locked-astroport-vault-test-helpers = { workspace = true }

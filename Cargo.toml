@@ -29,6 +29,6 @@ locked-astroport-vault  = { version = "0.1.0", path = "./locked-astroport-vault"
 # Dev dependencies
 cw-it                               = { version = "0.1.1", features = ["astroport"] }
 cw-vault-standard-test-helpers      = { version = "0.3.3-rc.1", features = ["lockup", "force-unlock"] }
-locked-astroport-vault-test-helpers = { version = "0.1.0", path = "../test-helpers" }
+locked-astroport-vault-test-helpers = { version = "0.1.0", path = "./test-helpers" }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
