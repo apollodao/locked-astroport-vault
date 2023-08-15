@@ -145,12 +145,11 @@ pub fn execute(
 
                 match msg {
                     LockupExecuteMsg::Unlock { amount } => {
-                        // TODO: Remove Unlock in favor of Redeem?
                         let recipient = Some(info.sender.to_string());
                         execute_internal::redeem(deps, env, info, amount, recipient)
                     }
                     LockupExecuteMsg::EmergencyUnlock { amount } => {
-                        let recipient = Some(info.sender.to_string()); // TODO: Add recipient field to LockupExecuteMsg?
+                        let recipient = Some(info.sender.to_string());
                         execute_internal::redeem(deps, env, info, amount, recipient)
                     }
                     LockupExecuteMsg::WithdrawUnlocked {

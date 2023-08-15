@@ -16,7 +16,7 @@ cw-dex                  = { version = "0.4.0-rc.1", features = ["astroport"] }
 cw-ownable              = "0.5.1"
 cw-storage-plus         = "1.1.0"
 cw-utils                = "1.0.1"
-cw-vault-standard       = { version = "0.3.2", features = ["lockup", "force-unlock"] }
+cw-vault-standard       = { version = "0.3.3-rc.1", features = ["lockup", "force-unlock"] }
 cw2                     = "1.1.0"
 cw20                    = "1.1.0"
 osmosis-std             = "0.14"
@@ -28,7 +28,7 @@ locked-astroport-vault  = { version = "0.1.0", path = "./locked-astroport-vault"
 
 # Dev dependencies
 cw-it                               = { version = "0.1.1", features = ["astroport"] }
-cw-vault-standard-test-helpers      = { version = "0.4.0-rc.2", features = ["lockup", "force-unlock"] }
+cw-vault-standard-test-helpers      = { version = "0.3.3-rc.1", features = ["lockup", "force-unlock"] }
 locked-astroport-vault-test-helpers = { version = "0.1.0", path = "../test-helpers" }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"

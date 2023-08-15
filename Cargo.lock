@@ -612,22 +612,9 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard"
-version = "0.3.2"
+version = "0.3.3-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cc4f7b369e98e059cf5011ca7dfa7489d08e85ae1ab2e02d404afcfa071627d"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-utils 1.0.1",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "cw-vault-standard"
-version = "0.4.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c255f8e6490cbdc4e265cac7ae8d6fcb949d20a8439f8d93cbd6d5ad72eec534"
+checksum = "12a9e148a205aebfb2bf069a5c3756617411c0d8a250f29ec800fa5811090e91"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -638,14 +625,14 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard-test-helpers"
-version = "0.4.0-rc.2"
+version = "0.3.3-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36e92f9cd3164c6ada7be42f4ee2918229f5086380d0c0245683371c754a7b9e"
+checksum = "ced655dc9025a028e0c76ea713ac3196b77e02c2442800f0510a9546c12413cd"
 dependencies = [
  "cosmwasm-std",
  "cw-it",
  "cw-utils 1.0.1",
- "cw-vault-standard 0.4.0-rc.3",
+ "cw-vault-standard",
 ]
 
 [[package]]
@@ -1352,7 +1339,7 @@ dependencies = [
  "cw-ownable",
  "cw-storage-plus 1.1.0",
  "cw-utils 1.0.1",
- "cw-vault-standard 0.3.2",
+ "cw-vault-standard",
  "cw-vault-standard-test-helpers",
  "cw2 1.1.0",
  "cw20 1.1.0",
