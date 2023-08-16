@@ -20,3 +20,4 @@ liquidity-helper                = { workspace = true }
 cw-ownable                      = { workspace = true }
 cw2                             = { workspace = true }
 astroport-liquidity-helper      = { workspace = true }
+cw-vault-standard               = { workspace = true }

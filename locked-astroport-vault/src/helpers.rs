@@ -10,8 +10,13 @@ use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
 /// Return the `Coin` from `info.funds` if it is the only denom in the funds.
 /// Otherwise, return an error.
 pub fn one_coin(info: &MessageInfo, denom: &str) -> StdResult<Coin> {
-    if info.funds.len() != 1 && info.funds[0].denom != denom {
+    if info.funds.len() != 1 {
         Err(StdError::generic_err("Must deposit exactly one token"))
+    } else if info.funds[0].denom != denom {
+        Err(StdError::generic_err(format!(
+            "Must deposit denom {}",
+            denom
+        )))
     } else {
         Ok(info.funds[0].clone())
     }

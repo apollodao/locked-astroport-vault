@@ -1864,6 +1864,7 @@ dependencies = [
  "cw-dex-router",
  "cw-it",
  "cw-ownable",
+ "cw-vault-standard",
  "cw-vault-standard-test-helpers",
  "cw2 1.1.0",
  "cw20 1.1.0",

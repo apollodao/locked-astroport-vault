@@ -1,7 +1,7 @@
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Coin, Decimal, Uint128};
-use cw20::Cw20QueryMsg;
+use cosmwasm_std::{coin, Addr, Coin, Decimal, Uint128};
+use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::{
     astroport::{astroport::factory::PairType, AstroportPool},
     Pool,
@@ -19,6 +19,7 @@ use cw_it::{
     Artifact, ContractType, TestRunner,
 };
 use cw_ownable::Ownership;
+use cw_vault_standard::extensions::lockup::{LockupQueryMsg, UnlockingPosition};
 use cw_vault_standard_test_helpers::traits::{
     force_unlock::ForceUnlockVaultRobot, lockup::LockedVaultRobot, CwVaultStandardRobot,
 };
@@ -28,9 +29,9 @@ use locked_astroport_vault::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
     ExtensionQueryMsg, InstantiateMsg, QueryMsg,
 };
-use locked_astroport_vault::state::ConfigUpdates;
+use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates};
 
-use crate::router::CwDexRouterRobot;
+use crate::{helpers::Unwrap, router::CwDexRouterRobot};
 
 pub const LOCKED_ASTROPORT_VAULT_WASM_NAME: &str = "locked_astroport_vault.wasm";
 pub const ASTROPORT_LIQUIDITY_HELPER_WASM_NAME: &str = "astroport_liquidity_helper.wasm";
@@ -221,6 +222,49 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 Uint128::from(1_000_000_000u128),
                 Uint128::from(1_000_000_000u128),
             ]),
+        );
+
+        // Create ASTRO/NTRN astroport pool
+        let (astro_ntrn_pair, _astro_ntrn_lp) = create_astroport_pair(
+            runner,
+            &dependencies.astroport_contracts.factory.address,
+            PairType::Xyk {},
+            [astro.clone().into(), ntrn.clone().into()],
+            None,
+            signer,
+            Some([
+                Uint128::from(1_000_000_000u128),
+                Uint128::from(1_000_000_000u128),
+            ]),
+        );
+
+        // Set routes in cw-dex-router
+        // AXL <-> NTRN
+        dependencies.cw_dex_router_robot.set_path(
+            axl.clone().into(),
+            ntrn.clone().into(),
+            SwapOperationsListUnchecked::new(vec![swap_operation(
+                &axl_ntrn_pair,
+                &_axl_ntrn_lp,
+                &axl,
+                &ntrn,
+            )]),
+            true,
+            signer,
+        );
+
+        // ASTRO <-> NTRN
+        dependencies.cw_dex_router_robot.set_path(
+            astro.clone().into(),
+            ntrn.clone().into(),
+            SwapOperationsListUnchecked::new(vec![swap_operation(
+                &astro_ntrn_pair,
+                &_astro_ntrn_lp,
+                &astro,
+                &ntrn,
+            )]),
+            true,
+            signer,
         );
 
         let instantiate_msg = InstantiateMsg {
@@ -421,6 +465,44 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         )
     }
 
+    pub fn send_cw20(
+        &self,
+        amount: Uint128,
+        token_addr: &str,
+        recipient: &str,
+        signer: &SigningAccount,
+    ) -> &Self {
+        self.wasm()
+            .execute(
+                token_addr,
+                &Cw20ExecuteMsg::Transfer {
+                    recipient: recipient.to_string(),
+                    amount,
+                },
+                &[],
+                signer,
+            )
+            .unwrap();
+        self
+    }
+
+    /// Create a new testing account with some base token balance.
+    pub fn new_user(&self, admin: &SigningAccount) -> SigningAccount {
+        let user = self
+            .runner
+            .init_account(&[coin(1000000000, "uosmo")])
+            .unwrap();
+
+        self.send_cw20(
+            Uint128::new(1000000),
+            &self.base_token(),
+            &user.address(),
+            admin,
+        );
+
+        user
+    }
+
     /// Increase CW20 allowance and deposit into the vault.
     pub fn deposit_cw20(
         &self,
@@ -447,6 +529,22 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
+    pub fn redeem(
+        &self,
+        amount: Uint128,
+        recipient: Option<String>,
+        unwrap_choice: Unwrap,
+        signer: &SigningAccount,
+    ) -> &Self {
+        unwrap_choice.unwrap(self.wasm().execute(
+            &self.vault_addr,
+            &ExecuteMsg::Redeem { amount, recipient },
+            &[coin(amount.u128(), self.vault_token())],
+            signer,
+        ));
+        self
+    }
+
     // Queries //
 
     pub fn query_ownership(&self) -> Ownership<Addr> {
@@ -469,6 +567,36 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 )),
             )
             .unwrap()
+    }
+
+    pub fn query_unlocking_positions(&self, owner: &str) -> Vec<UnlockingPosition> {
+        self.wasm()
+            .query::<_, Vec<UnlockingPosition>>(
+                &self.vault_addr,
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Lockup(
+                    LockupQueryMsg::UnlockingPositions {
+                        owner: owner.to_string(),
+                        start_after: None,
+                        limit: None,
+                    },
+                )),
+            )
+            .unwrap()
+    }
+
+    pub fn query_config(&self) -> ConfigBase<Addr> {
+        self.wasm()
+            .query::<_, Config>(
+                &self.vault_addr,
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
+                    ApolloExtensionQueryMsg::Config {},
+                )),
+            )
+            .unwrap()
+    }
+
+    pub fn query_block_time_seconds(&self) -> u64 {
+        self.runner.query_block_time_nanos() / 1_000_000_000
     }
 }
 

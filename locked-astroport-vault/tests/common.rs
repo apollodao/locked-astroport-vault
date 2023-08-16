@@ -59,3 +59,24 @@ pub fn default_instantiate<'a>(
 
     (robot, treasury_addr)
 }
+
+pub fn instantiate_unlocked_vault<'a>(
+    runner: &'a TestRunner<'a>,
+    admin: &SigningAccount,
+    dependencies: &'a LockedVaultDependencies<'a>,
+) -> (LockedAstroportVaultRobot<'a>, SigningAccount) {
+    let vault_contract = LockedAstroportVaultRobot::contract(&runner, Some(UNOPTIMIZED_PATH));
+    let treasury_addr = runner.init_account(&[]).unwrap();
+    let token_factory_fee = Coin::from_str(DENOM_CREATION_FEE).unwrap();
+
+    let robot = LockedAstroportVaultRobot::new_unlocked_axlr_ntrn_vault(
+        &runner,
+        vault_contract,
+        token_factory_fee,
+        treasury_addr.address(),
+        &dependencies,
+        &admin,
+    );
+
+    (robot, treasury_addr)
+}
