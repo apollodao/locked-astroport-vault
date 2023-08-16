@@ -25,8 +25,10 @@ use cw_vault_standard_test_helpers::traits::{
 use liquidity_helper::LiquidityHelperUnchecked;
 use locked_astroport_vault;
 use locked_astroport_vault::msg::{
-    ApolloExtensionQueryMsg, ExtensionQueryMsg, InstantiateMsg, QueryMsg,
+    ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
+    ExtensionQueryMsg, InstantiateMsg, QueryMsg,
 };
+use locked_astroport_vault::state::ConfigUpdates;
 
 use crate::router::CwDexRouterRobot;
 
@@ -390,7 +392,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         );
 
         let init_msg = InstantiateMsg {
-            owner: signer.address().to_string(),
+            owner: signer.address(),
             vault_token_subdenom: "testVaultToken".to_string(),
             lock_duration: TWO_WEEKS_IN_SECS,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.into()],
@@ -418,6 +420,34 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             signer,
         )
     }
+
+    /// Increase CW20 allowance and deposit into the vault.
+    pub fn deposit_cw20(
+        &self,
+        amount: Uint128,
+        recipient: Option<String>,
+        signer: &SigningAccount,
+    ) -> &Self {
+        self.increase_cw20_allowance(&self.base_token(), &self.vault_addr, amount, &signer)
+            .deposit(amount, recipient, &[], signer)
+    }
+
+    /// Update the config of the vault and return a reference to the robot.
+    pub fn update_config(&self, updates: ConfigUpdates<String>, signer: &SigningAccount) -> &Self {
+        self.wasm()
+            .execute(
+                &self.vault_addr,
+                &ExecuteMsg::VaultExtension(ExtensionExecuteMsg::Apollo(
+                    ApolloExtensionExecuteMsg::UpdateConfig { updates },
+                )),
+                &[],
+                signer,
+            )
+            .unwrap();
+        self
+    }
+
+    // Queries //
 
     pub fn query_ownership(&self) -> Ownership<Addr> {
         self.wasm()
