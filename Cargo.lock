@@ -1502,6 +1502,7 @@ dependencies = [
  "cw-it",
  "cw-ownable",
  "cw-vault-standard-test-helpers",
+ "cw2 1.1.0",
  "cw20 1.1.0",
  "liquidity-helper",
  "locked-astroport-vault",

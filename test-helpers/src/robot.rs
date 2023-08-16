@@ -19,7 +19,9 @@ use cw_vault_standard_test_helpers::traits::{
     force_unlock::ForceUnlockVaultRobot, lockup::LockedVaultRobot, CwVaultStandardRobot,
 };
 use liquidity_helper::LiquidityHelperUnchecked;
-use locked_astroport_vault::msg::{ApolloExtensionQueryMsg, InstantiateMsg};
+use locked_astroport_vault::msg::{
+    ApolloExtensionQueryMsg, ExtensionQueryMsg, InstantiateMsg, QueryMsg,
+};
 
 use crate::router::CwDexRouterRobot;
 
@@ -310,11 +312,20 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self.wasm()
             .query::<_, cw_ownable::Ownership<Addr>>(
                 &self.vault_addr,
-                &locked_astroport_vault::msg::QueryMsg::VaultExtension(
-                    locked_astroport_vault::msg::ExtensionQueryMsg::Apollo(
-                        ApolloExtensionQueryMsg::Ownership {},
-                    ),
-                ),
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
+                    ApolloExtensionQueryMsg::Ownership {},
+                )),
+            )
+            .unwrap()
+    }
+
+    pub fn query_contract_version(&self) -> cw2::ContractVersion {
+        self.wasm()
+            .query::<_, cw2::ContractVersion>(
+                &self.vault_addr,
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
+                    ApolloExtensionQueryMsg::ContractVersion {},
+                )),
             )
             .unwrap()
     }

@@ -261,6 +261,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                     let ownership = cw_ownable::get_ownership(deps.storage)?;
                     to_binary(&ownership)
                 }
+                ApolloExtensionQueryMsg::ContractVersion {} => {
+                    let version = cw2::get_contract_version(deps.storage)?;
+                    to_binary(&version)
+                }
             },
         },
     }

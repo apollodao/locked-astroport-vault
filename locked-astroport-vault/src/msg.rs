@@ -10,8 +10,6 @@ use cw_vault_standard::extensions::{
 use liquidity_helper::LiquidityHelperUnchecked;
 use strum::EnumVariantNames;
 
-use crate::state::Config;
-
 #[cw_serde]
 pub struct InstantiateMsg {
     /// Contract owner
@@ -107,8 +105,11 @@ pub enum ExtensionExecuteMsg {
 #[derive(QueryResponses)]
 pub enum ApolloExtensionQueryMsg {
     /// Returns the current config.
-    #[returns(Config)]
+    #[returns(crate::state::Config)]
     Config {},
+
+    #[returns(cw2::ContractVersion)]
+    ContractVersion {},
 }
 
 #[cw_serde]

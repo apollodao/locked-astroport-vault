@@ -42,4 +42,14 @@ fn test_instantiation() {
             pending_expiry: None,
         },
     ));
+
+    // Query contract version
+    let version = robot.query_contract_version();
+    assert_eq!(
+        version,
+        cw2::ContractVersion {
+            contract: locked_astroport_vault::contract::CONTRACT_NAME.to_string(),
+            version: locked_astroport_vault::contract::CONTRACT_VERSION.to_string(),
+        }
+    );
 }
