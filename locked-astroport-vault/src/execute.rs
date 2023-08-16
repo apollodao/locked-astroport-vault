@@ -4,7 +4,7 @@ use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
 use crate::msg::InternalMsg;
-use crate::state::{self, CONFIG, STAKING};
+use crate::state::{self, BASE_TOKEN, CONFIG, STAKING, VAULT_TOKEN_DENOM};
 
 use cw_dex::traits::{Rewards, Unstake};
 
@@ -36,7 +36,7 @@ pub fn execute_withdraw_unlocked(
     recipient: Option<String>,
     lockup_id: u64,
 ) -> ContractResponse {
-    let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Calculate amount of LP tokens available to claim
@@ -47,7 +47,7 @@ pub fn execute_withdraw_unlocked(
     let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(cfg.base_token, claim_amount).transfer_msg(&recipient)?;
+    let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(&recipient)?;
 
     Ok(res.add_message(send_msg))
 }
@@ -91,6 +91,8 @@ pub fn execute_force_redeem(
     recipient: Option<String>,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
+    let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that the sender is whitelisted
@@ -99,17 +101,18 @@ pub fn execute_force_redeem(
     }
 
     // Check that only vault tokens were sent and that the amount is correct
-    let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
+    let unlock_amount = helpers::correct_funds(&info, &vt_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
-    let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
+    let (burn_msg, release_amount) =
+        burn_vault_tokens(deps.branch(), &env, unlock_amount.amount, &vt_denom)?;
 
     // Unstake LP tokens
     let staking = STAKING.load(deps.storage)?;
     let staking_res = staking.unstake(deps.as_ref(), &env, release_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(cfg.base_token, release_amount).transfer_msg(&recipient)?;
+    let send_msg = Asset::cw20(base_token, release_amount).transfer_msg(&recipient)?;
 
     Ok(staking_res.add_message(burn_msg).add_message(send_msg))
 }
@@ -123,6 +126,7 @@ pub fn execute_force_withdraw_unlocking(
     lockup_id: u64,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that the sender is whitelisted
@@ -139,7 +143,7 @@ pub fn execute_force_withdraw_unlocking(
     let res = staking.unstake(deps.as_ref(), &env, claimed_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(cfg.base_token, claimed_amount).transfer_msg(&recipient)?;
+    let send_msg = Asset::cw20(base_token, claimed_amount).transfer_msg(&recipient)?;
 
     Ok(res.add_message(send_msg))
 }

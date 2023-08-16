@@ -6,7 +6,7 @@ use cosmwasm_std::{
 
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient, IsZero};
-use crate::state::{self, CONFIG, POOL, STAKING};
+use crate::state::{self, BASE_TOKEN, CONFIG, POOL, STAKING, VAULT_TOKEN_DENOM};
 
 use cw_dex::traits::{Stake, Unstake};
 
@@ -60,12 +60,12 @@ pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
 }
 
 pub fn stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
-    let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
     let staking = STAKING.load(deps.storage)?;
 
     // Query LP token balance
     let lp_token_balance =
-        AssetInfo::cw20(cfg.base_token).query_balance(&deps.querier, &env.contract.address)?;
+        AssetInfo::cw20(base_token).query_balance(&deps.querier, &env.contract.address)?;
 
     // Stake LP tokens
     let staking_res = staking.stake(deps.as_ref(), &env, lp_token_balance)?;
@@ -81,6 +81,8 @@ pub fn deposit(
     recipient: Option<String>,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
+    let vault_token_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
     let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that deposits are enabled
@@ -90,8 +92,7 @@ pub fn deposit(
 
     // Transfer LP tokens from sender
     let transfer_from_res = Response::new().add_message(
-        Asset::cw20(cfg.base_token, amount)
-            .transfer_from_msg(info.sender, &env.contract.address)?,
+        Asset::cw20(base_token, amount).transfer_from_msg(info.sender, &env.contract.address)?,
     );
 
     // Stake deposited LP tokens
@@ -99,12 +100,12 @@ pub fn deposit(
     let staking_res = staking.stake(deps.as_ref(), &env, amount)?;
 
     // Mint vault tokens
-    let mint_msg = mint_vault_tokens(deps, env, amount)?;
+    let mint_msg = mint_vault_tokens(deps, env, amount, &vault_token_denom)?;
 
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
         to_address: recipient.to_string(),
-        amount: coins(amount.u128(), cfg.vault_token_denom),
+        amount: coins(amount.u128(), vault_token_denom),
     }
     .into();
 
@@ -121,13 +122,16 @@ pub fn redeem(
     recipient: Option<String>,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
+    let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that only vault tokens were sent and that the amount is correct
-    let unlock_amount = helpers::correct_funds(&info, &cfg.vault_token_denom, amount)?;
+    let unlock_amount = helpers::correct_funds(&info, &vt_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
-    let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, unlock_amount.amount)?;
+    let (burn_msg, claim_amount) =
+        burn_vault_tokens(deps.branch(), &env, unlock_amount.amount, &vt_denom)?;
 
     // If lock duration is zero, unstake LP tokens and send them to recipient,
     // else create a claim for recipient so they can call `WithdrawUnlocked` later.
@@ -137,7 +141,7 @@ pub fn redeem(
         let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
         // Send LP tokens to recipient
-        let send_msg = Asset::cw20(cfg.base_token, claim_amount).transfer_msg(&recipient)?;
+        let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(&recipient)?;
 
         res.add_message(send_msg)
     } else {

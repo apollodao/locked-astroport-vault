@@ -29,7 +29,7 @@ use crate::query::{
     query_unlocking_position, query_unlocking_positions, query_vault_info,
     query_vault_standard_info,
 };
-use crate::state::{Config, CONFIG, POOL, STAKING, STATE};
+use crate::state::{Config, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM};
 
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -44,27 +44,13 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.owner))?;
 
-    let vault_token_denom = format!(
-        "factory/{}/{}",
-        env.contract.address, msg.vault_token_subdenom
-    );
-
     // Validate performance fee
     if msg.performance_fee > Decimal::one() {
         return Err(ContractError::PerformanceFeeTooHigh {});
     }
 
-    // Query pair info from astroport pair
-    let pair_info = deps
-        .querier
-        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: msg.pool_addr.clone(),
-            msg: to_binary(&astroport::pair::QueryMsg::Pair {})?,
-        }))?;
-
+    // Store config
     let config = Config {
-        vault_token_denom,
-        base_token: pair_info.liquidity_token.clone(),
         lock_duration: Duration::Time(msg.lock_duration),
         reward_tokens: msg
             .reward_tokens
@@ -79,17 +65,34 @@ pub fn instantiate(
         reward_liquidation_target: msg.reward_liquidation_target.check(deps.api)?,
         liquidity_helper: msg.liquidity_helper.check(deps.api)?,
     };
+    CONFIG.save(deps.storage, &config)?;
 
+    // Query pair info from astroport pair
+    let pair_info = deps
+        .querier
+        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
+            contract_addr: msg.pool_addr.clone(),
+            msg: to_binary(&astroport::pair::QueryMsg::Pair {})?,
+        }))?;
+
+    // Store pool info
     let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?)?;
+    POOL.save(deps.storage, &pool)?;
 
+    // Store base token and vault token denom
+    let vault_token_denom = format!(
+        "factory/{}/{}",
+        env.contract.address, msg.vault_token_subdenom
+    );
+    BASE_TOKEN.save(deps.storage, &pair_info.liquidity_token)?;
+    VAULT_TOKEN_DENOM.save(deps.storage, &vault_token_denom)?;
+
+    // Store staking info
     let staking = AstroportStaking {
         lp_token_addr: pair_info.liquidity_token,
         generator_addr: deps.api.addr_validate(&msg.astroport_generator)?,
         astro_token: msg.astro_token.check(deps.api)?,
     };
-
-    CONFIG.save(deps.storage, &config)?;
-    POOL.save(deps.storage, &pool)?;
     STAKING.save(deps.storage, &staking)?;
 
     // Create vault token
@@ -273,65 +276,4 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
     Ok(Response::new())
-}
-
-// ----------------------------------- Tests -----------------------------------
-
-#[cfg(test)]
-mod tests {
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::Addr;
-    use cw2::ContractVersion;
-    use cw_ownable::Ownership;
-
-    use super::*;
-
-    #[test]
-    fn proper_initialization() {
-        let mut deps = mock_dependencies();
-
-        // run instantiation logic
-        instantiate(
-            deps.as_mut(),
-            mock_env(),
-            mock_info("larry", &[]),
-            InstantiateMsg {
-                owner: "pumpkin".into(),
-                vault_token_subdenom: todo!(),
-                lock_duration: todo!(),
-                reward_tokens: todo!(),
-                deposits_enabled: todo!(),
-                treasury: todo!(),
-                performance_fee: todo!(),
-                router: todo!(),
-                reward_liquidation_target: todo!(),
-                pool_addr: todo!(),
-                astro_token: todo!(),
-                astroport_generator: todo!(),
-                liquidity_helper: todo!(),
-            },
-        )
-        .unwrap();
-
-        // correct cw2 version info should have been stored
-        let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
-        assert_eq!(
-            version,
-            ContractVersion {
-                contract: CONTRACT_NAME.into(),
-                version: CONTRACT_VERSION.into(),
-            },
-        );
-
-        // correct ownership info should have been stored
-        let ownership = cw_ownable::get_ownership(deps.as_ref().storage).unwrap();
-        assert_eq!(
-            ownership,
-            Ownership {
-                owner: Some(Addr::unchecked("pumpkin")),
-                pending_owner: None,
-                pending_expiry: None,
-            },
-        );
-    }
 }

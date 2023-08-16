@@ -3,7 +3,7 @@ use cw_utils::Duration;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
 use crate::error::ContractResult;
-use crate::state::{CONFIG, STATE};
+use crate::state::STATE;
 use cosmwasm_schema::serde::Serialize;
 
 use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
@@ -62,9 +62,9 @@ pub(crate) fn mint_vault_tokens(
     deps: DepsMut,
     env: Env,
     deposit_amount: Uint128,
+    vault_token_denom: &str,
 ) -> ContractResult<CosmosMsg> {
     let mut state = STATE.load(deps.storage)?;
-    let cfg = CONFIG.load(deps.storage)?;
 
     let mint_amount = convert_to_shares(deps.as_ref(), deposit_amount);
 
@@ -75,7 +75,7 @@ pub(crate) fn mint_vault_tokens(
 
     Ok(MsgMint {
         sender: env.contract.address.to_string(),
-        amount: Some(coin(mint_amount.u128(), &cfg.vault_token_denom).into()),
+        amount: Some(coin(mint_amount.u128(), vault_token_denom).into()),
     }
     .into())
 }
@@ -87,9 +87,9 @@ pub(crate) fn burn_vault_tokens(
     deps: DepsMut,
     env: &Env,
     burn_amount: Uint128,
+    vault_token_denom: &str,
 ) -> ContractResult<(CosmosMsg, Uint128)> {
     let mut state = STATE.load(deps.storage)?;
-    let cfg = CONFIG.load(deps.storage)?;
 
     let release_amount = convert_to_assets(deps.as_ref(), burn_amount);
 
@@ -101,7 +101,7 @@ pub(crate) fn burn_vault_tokens(
     Ok((
         MsgBurn {
             sender: env.contract.address.to_string(),
-            amount: Some(coin(burn_amount.u128(), &cfg.vault_token_denom).into()),
+            amount: Some(coin(burn_amount.u128(), vault_token_denom).into()),
         }
         .into(),
         release_amount,

@@ -10,22 +10,33 @@ use cw_storage_plus::Item;
 use cw_utils::Duration;
 use liquidity_helper::LiquidityHelper;
 
+/// Stores the configurable values for the contract.
 pub const CONFIG: Item<Config> = Item::new("config");
+
+/// Stores the Astroport pool that the vault compounds.
 pub const POOL: Item<AstroportPool> = Item::new("pool");
+
+/// Stores the Astroport staking contract that the vault uses to stake the LP tokens.
 pub const STAKING: Item<AstroportStaking> = Item::new("staking");
+
+/// The base token that is accepted for deposits and that the vault accrues more of over time.
+/// In this case it is an Astroport CW20 LP token.
+pub const BASE_TOKEN: Item<Addr> = Item::new("base_token");
+
+/// The denom of the native vault token that represents shares of the vault.
+pub const VAULT_TOKEN_DENOM: Item<String> = Item::new("vault_token_denom");
+
+/// Stores the state of the vault.
 pub const STATE: Item<VaultState> = Item::new("state");
 
+/// Stores unlocking positions that are created upon redeeming vault tokens if the vault has a
+/// lockup duration.
 pub fn claims() -> Claims<'static> {
     Claims::new("claims", "claims_index", "num_claims")
 }
 
 #[cw_serde]
 pub struct Config {
-    /// The base token that is accepted for deposits and that the vault accrues more of over time.
-    /// In this case it is an Astroport CW20 LP token.
-    pub base_token: Addr,
-    /// The denom of the native vault token that represents shares of the vault.
-    pub vault_token_denom: String,
     /// The duration of the lock period for deposits. This can be set to zero seconds to disable locking.
     pub lock_duration: Duration,
     /// The tokens that are compounded into more base tokens. This can be updated if more tokens are
