@@ -10,6 +10,8 @@ use cw_vault_standard::extensions::{
 use liquidity_helper::LiquidityHelperUnchecked;
 use strum::EnumVariantNames;
 
+use crate::state::ConfigUpdates;
+
 #[cw_serde]
 pub struct InstantiateMsg {
     /// Contract owner
@@ -74,7 +76,7 @@ pub enum ApolloExtensionExecuteMsg {
     /// Update the configuration of the vault.
     UpdateConfig {
         // The config updates.
-        // updates: ConfigUpdates,
+        updates: ConfigUpdates<String>,
     },
     /// Compounds the vault
     Compound {},

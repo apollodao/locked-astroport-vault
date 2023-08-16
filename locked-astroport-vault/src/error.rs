@@ -22,9 +22,6 @@ pub enum ContractError {
     #[error("Deposits are disabled")]
     DepositsDisabled {},
 
-    #[error("Performance fee can't be higher than 100%")]
-    PerformanceFeeTooHigh {},
-
     #[error("Unknown reply ID: {id}")]
     UnknownReplyId { id: u64 },
 

@@ -2,8 +2,8 @@
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, QueryRequest, Reply,
-    Response, StdResult, SubMsg, WasmQuery,
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryRequest, Reply, Response,
+    StdResult, SubMsg, WasmQuery,
 };
 use cw_dex::astroport::astroport;
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
@@ -15,7 +15,7 @@ use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 use crate::error::{ContractError, ContractResponse};
 use crate::execute::{
     execute_compound, execute_force_redeem, execute_force_withdraw_unlocking,
-    execute_update_whitelist, execute_withdraw_unlocked,
+    execute_update_config, execute_update_whitelist, execute_withdraw_unlocked,
 };
 use crate::execute_internal::{self};
 use crate::helpers::{self, IntoInternalCall, IsZero};
@@ -27,7 +27,7 @@ use crate::query::{
     query_unlocking_position, query_unlocking_positions, query_vault_info,
     query_vault_standard_info,
 };
-use crate::state::{Config, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM};
+use crate::state::{ConfigUnchecked, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM};
 
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -42,26 +42,18 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.owner))?;
 
-    // Validate performance fee
-    if msg.performance_fee > Decimal::one() {
-        return Err(ContractError::PerformanceFeeTooHigh {});
-    }
-
-    // Store config
-    let config = Config {
+    // Create, validate and store config
+    let config = ConfigUnchecked {
         lock_duration: Duration::Time(msg.lock_duration),
-        reward_tokens: msg
-            .reward_tokens
-            .iter()
-            .map(|asset_info| asset_info.check(deps.api))
-            .collect::<StdResult<Vec<_>>>()?,
+        reward_tokens: msg.reward_tokens,
         deposits_enabled: msg.deposits_enabled,
-        treasury: deps.api.addr_validate(&msg.treasury)?,
+        treasury: msg.treasury,
         performance_fee: msg.performance_fee,
-        router: msg.router.check(deps.api)?,
-        reward_liquidation_target: msg.reward_liquidation_target.check(deps.api)?,
-        liquidity_helper: msg.liquidity_helper.check(deps.api)?,
-    };
+        router: msg.router,
+        reward_liquidation_target: msg.reward_liquidation_target,
+        liquidity_helper: msg.liquidity_helper,
+    }
+    .check(deps.as_ref())?;
     CONFIG.save(deps.storage, &config)?;
 
     // Query pair info from astroport pair
@@ -209,7 +201,9 @@ pub fn execute(
                 Ok(Response::new().add_attributes(ownership.into_attributes()))
             }
             ExtensionExecuteMsg::Apollo(msg) => match msg {
-                ApolloExtensionExecuteMsg::UpdateConfig {} => todo!(),
+                ApolloExtensionExecuteMsg::UpdateConfig { updates } => {
+                    execute_update_config(deps, info, updates)
+                }
                 ApolloExtensionExecuteMsg::Compound {} => execute_compound(deps, env),
             },
         },

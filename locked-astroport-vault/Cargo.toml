@@ -31,6 +31,10 @@ cw-dex-router       = { workspace = true, features = ["library"] }
 strum               = { workspace = true, features = ["derive"] }
 liquidity-helper    = { workspace = true }
 cw-item-set         = { workspace = true }
+cw-address-like     = { workspace = true }
+optional_struct     = { workspace = true }
+serde               = { workspace = true }
+schemars            = { workspace = true }
 
 [dev-dependencies]
 cw-it                           = { workspace = true, features = ["astroport", "osmosis-test-tube"] }

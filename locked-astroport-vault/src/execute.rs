@@ -1,10 +1,14 @@
 use apollo_cw_asset::Asset;
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
+use optional_struct::Applyable;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
 use crate::msg::InternalMsg;
-use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, STAKING, VAULT_TOKEN_DENOM};
+use crate::state::{
+    self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, FORCE_WITHDRAW_WHITELIST, STAKING,
+    VAULT_TOKEN_DENOM,
+};
 
 use cw_dex::traits::{Rewards, Unstake};
 
@@ -141,4 +145,24 @@ pub fn execute_force_withdraw_unlocking(
     let send_msg = Asset::cw20(base_token, claimed_amount).transfer_msg(&recipient)?;
 
     Ok(res.add_message(send_msg))
+}
+
+pub fn execute_update_config(
+    deps: DepsMut,
+    info: MessageInfo,
+    updates: ConfigUpdates<String>,
+) -> ContractResponse {
+    if !cw_ownable::is_owner(deps.storage, &info.sender)? {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let mut config: ConfigUnchecked = CONFIG.load(deps.storage)?.into();
+
+    updates.apply_to(&mut config);
+
+    let config = config.check(deps.as_ref())?;
+
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new())
 }
