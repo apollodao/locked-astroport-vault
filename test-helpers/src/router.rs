@@ -6,11 +6,17 @@ use cw_dex_router::{
     operations::SwapOperationsListUnchecked,
 };
 use cw_it::{
+    cw_multi_test::ContractWrapper,
     robot::TestRobot,
     test_tube::{Account, Module, SigningAccount, Wasm},
     traits::CwItRunner,
     ContractType, TestRunner,
 };
+
+#[cfg(feature = "osmosis-test-tube")]
+use cw_it::Artifact;
+
+pub const CW_DEX_ROUTER_WASM_NAME: &str = "cw_dex_router_astroport.wasm";
 
 pub struct CwDexRouterRobot<'a> {
     pub runner: &'a TestRunner<'a>,
@@ -18,6 +24,26 @@ pub struct CwDexRouterRobot<'a> {
 }
 
 impl<'a> CwDexRouterRobot<'a> {
+    /// Returns a `ContractType` representing the contract to use for the given `TestRunner`.
+    pub fn contract(runner: &'a TestRunner<'a>, artifacts_dir: Option<&str>) -> ContractType {
+        let _artifacts_dir = artifacts_dir.unwrap_or("tests/test_artifacts");
+        match runner {
+            #[cfg(feature = "osmosis-test-tube")]
+            TestRunner::OsmosisTestApp(_) => ContractType::Artifact(Artifact::Local(format!(
+                "{}/{}",
+                _artifacts_dir, CW_DEX_ROUTER_WASM_NAME
+            ))),
+            TestRunner::MultiTest(_) => {
+                ContractType::MultiTestContract(Box::new(ContractWrapper::new_with_empty(
+                    cw_dex_router::contract::execute,
+                    cw_dex_router::contract::instantiate,
+                    cw_dex_router::contract::query,
+                )))
+            }
+            _ => panic!("Unsupported runner"),
+        }
+    }
+
     pub fn new(
         runner: &'a TestRunner<'a>,
         contract: ContractType,

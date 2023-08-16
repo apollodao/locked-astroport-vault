@@ -1,36 +1,23 @@
 use std::str::FromStr;
 
-use cosmwasm_std::{coin, Coins};
-use cw_it::{test_tube::Account, traits::CwItRunner, TestRunner};
+use cosmwasm_std::Coins;
+use cw_it::traits::CwItRunner;
 use cw_ownable::Ownership;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
-pub const UNOPTIMIZED_PATH: &str = "../target/wasm32-unknown-unknown/release";
+pub mod common;
+pub use common::{get_test_runner, UNOPTIMIZED_PATH};
 
-fn get_runner<'a>() -> TestRunner<'a> {
-    TestRunner::from_str(
-        &std::env::var("TEST_RUNNER").unwrap_or_else(|_| "osmosis-test-app".into()),
-    )
-    .unwrap()
-}
+use crate::common::default_instantiate;
 
 #[test]
 fn test_instantiation() {
-    let runner = get_runner();
-    let vault_contract = LockedAstroportVaultRobot::local_contract(Some(UNOPTIMIZED_PATH));
+    let runner = get_test_runner();
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let treasury_addr = runner.init_account(&[]).unwrap();
-    let token_factory_fee = coin(10_000_000, "uosmo");
-    let robot = LockedAstroportVaultRobot::new_wsteth_eth_vault(
-        &runner,
-        vault_contract,
-        token_factory_fee,
-        treasury_addr.address(),
-        None,
-        &admin,
-    );
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
 
     // Query ownership to confirm
     let ownership = robot.query_ownership();

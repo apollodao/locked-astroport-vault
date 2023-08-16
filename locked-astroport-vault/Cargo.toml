@@ -37,7 +37,7 @@ serde               = { workspace = true }
 schemars            = { workspace = true }
 
 [dev-dependencies]
-cw-it                           = { workspace = true, features = ["astroport", "osmosis-test-tube"] }
+cw-it                           = { workspace = true, features = ["astroport"] }
 cw-vault-standard-test-helpers  = { workspace = true, features = ["lockup", "force-unlock"] }
 proptest                        = { workspace = true }
 test-case                       = { workspace = true }
