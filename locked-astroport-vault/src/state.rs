@@ -21,10 +21,18 @@ pub fn claims() -> Claims<'static> {
 
 #[cw_serde]
 pub struct Config {
+    /// The base token that is accepted for deposits and that the vault accrues more of over time.
+    /// In this case it is an Astroport CW20 LP token.
     pub base_token: Addr,
+    /// The denom of the native vault token that represents shares of the vault.
     pub vault_token_denom: String,
+    /// The duration of the lock period for deposits. This can be set to zero seconds to disable locking.
     pub lock_duration: Duration,
+    /// The tokens that are compounded into more base tokens. This can be updated if more tokens are
+    /// available on either the Astroport generator or just transfered to the vault directly.
     pub reward_tokens: Vec<AssetInfo>,
+    /// The whitelist of addresses that are allowed to force withdraw. This is used in the case of
+    /// liquidations when the vault tokens are used as collateral in lending protocols such as Mars.
     pub force_withdraw_whitelist: HashSet<Addr>,
     /// Whether or not deposits are enabled
     pub deposits_enabled: bool,
