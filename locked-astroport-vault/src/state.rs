@@ -104,7 +104,7 @@ impl ConfigUnchecked {
         // don't need it here. We just need to make sure the paths exist.
         for asset in &reward_tokens {
             // We skip the reward liquidation target because we don't need to
-            // route to it.
+            // route from it.
             if asset == &reward_liquidation_target {
                 continue;
             }

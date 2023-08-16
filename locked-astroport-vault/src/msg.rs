@@ -1,6 +1,6 @@
 use apollo_cw_asset::AssetInfoUnchecked;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Decimal, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, CosmosMsg, Decimal, Env, StdResult, Uint128};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
 use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::{
@@ -10,7 +10,7 @@ use cw_vault_standard::extensions::{
 use liquidity_helper::LiquidityHelperUnchecked;
 use strum::EnumVariantNames;
 
-use crate::state::ConfigUpdates;
+use crate::{helpers::IntoInternalCall, state::ConfigUpdates};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -55,18 +55,24 @@ pub enum InternalMsg {
     Deposit {
         /// The amount of base tokens to deposit.
         amount: Uint128,
-        /// The optional recipient of the vault token. If not set, the caller
-        /// address will be used instead.
-        recipient: Option<String>,
+        /// The original caller of the contract. We can't use info.sender, since this is an internal
+        /// call, so that would be the contract itself.
+        depositor: Addr,
+        /// The recipient of the vault token.
+        recipient: Addr,
     },
     Redeem {
-        /// An optional field containing which address should receive the
-        /// withdrawn base tokens. If not set, the caller address will be
-        /// used instead.
-        recipient: Option<String>,
+        /// The address which should receive the withdrawn base tokens.
+        recipient: Addr,
         /// The amount of vault tokens sent to the contract.
         amount: Uint128,
     },
+}
+
+impl IntoInternalCall for InternalMsg {
+    fn into_internal_call(self, env: &Env, funds: Vec<Coin>) -> StdResult<CosmosMsg> {
+        ExtensionExecuteMsg::into_internal_call(ExtensionExecuteMsg::Internal(self), env, funds)
+    }
 }
 
 /// Apollo extension messages define functionality that is part of all apollo
@@ -80,6 +86,12 @@ pub enum ApolloExtensionExecuteMsg {
     },
     /// Compounds the vault
     Compound {},
+}
+
+impl IntoInternalCall for ApolloExtensionExecuteMsg {
+    fn into_internal_call(self, env: &Env, funds: Vec<Coin>) -> StdResult<CosmosMsg> {
+        ExtensionExecuteMsg::into_internal_call(ExtensionExecuteMsg::Apollo(self), env, funds)
+    }
 }
 
 #[cw_serde]
@@ -100,6 +112,16 @@ pub enum ExtensionExecuteMsg {
 
     /// Execute an Owner extension message.
     UpdateOwnership(OwnerAction),
+}
+
+impl IntoInternalCall for ExtensionExecuteMsg {
+    fn into_internal_call(self, env: &Env, funds: Vec<Coin>) -> StdResult<CosmosMsg> {
+        Ok(CosmosMsg::Wasm(cosmwasm_std::WasmMsg::Execute {
+            contract_addr: env.contract.address.to_string(),
+            msg: to_binary(&ExecuteMsg::VaultExtension(self))?,
+            funds,
+        }))
+    }
 }
 
 #[cw_ownable::cw_ownable_query]

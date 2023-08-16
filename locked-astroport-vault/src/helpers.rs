@@ -1,10 +1,9 @@
-use cosmwasm_std::{coin, to_binary, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
+use cosmwasm_std::{coin, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
 use cw_utils::Duration;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
 use crate::error::ContractResult;
 use crate::state::STATE;
-use cosmwasm_schema::serde::Serialize;
 
 use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
 
@@ -46,6 +45,9 @@ pub fn unwrap_recipient(
 /// base tokens.
 pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint128 {
     let state = STATE.load(deps.storage).unwrap();
+    if state.staked_base_tokens.is_zero() {
+        return base_token_amount;
+    }
     Decimal::from_ratio(base_token_amount, state.staked_base_tokens) * state.vault_token_supply
 }
 
@@ -53,6 +55,9 @@ pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint1
 /// vault tokens.
 pub(crate) fn convert_to_assets(deps: Deps, vault_token_amount: Uint128) -> Uint128 {
     let state = STATE.load(deps.storage).unwrap();
+    if state.vault_token_supply.is_zero() {
+        return vault_token_amount;
+    }
     Decimal::from_ratio(vault_token_amount, state.vault_token_supply) * state.staked_base_tokens
 }
 
@@ -110,21 +115,7 @@ pub(crate) fn burn_vault_tokens(
 
 /// A trait to convert a type into a `CosmosMsg` Execute variant that calls the contract itself.
 pub trait IntoInternalCall {
-    fn into_internal_call(&self, env: &Env) -> StdResult<CosmosMsg>;
-}
-
-/// Implement the trait for any type that implements `Serialize`.
-impl<T> IntoInternalCall for T
-where
-    T: Serialize,
-{
-    fn into_internal_call(&self, env: &Env) -> StdResult<CosmosMsg> {
-        Ok(CosmosMsg::Wasm(cosmwasm_std::WasmMsg::Execute {
-            contract_addr: env.contract.address.to_string(),
-            msg: to_binary(self)?,
-            funds: vec![],
-        }))
-    }
+    fn into_internal_call(self, env: &Env, funds: Vec<Coin>) -> StdResult<CosmosMsg>;
 }
 
 /// A trait to check if a type is zero.

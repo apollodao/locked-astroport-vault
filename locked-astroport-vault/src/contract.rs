@@ -3,7 +3,7 @@ use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
     to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryRequest, Reply, Response,
-    StdResult, SubMsg, WasmQuery,
+    StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw_dex::astroport::astroport;
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
@@ -27,7 +27,9 @@ use crate::query::{
     query_unlocking_position, query_unlocking_positions, query_vault_info,
     query_vault_standard_info,
 };
-use crate::state::{ConfigUnchecked, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM};
+use crate::state::{
+    ConfigUnchecked, VaultState, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM,
+};
 
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -75,6 +77,13 @@ pub fn instantiate(
     );
     BASE_TOKEN.save(deps.storage, &pair_info.liquidity_token)?;
     VAULT_TOKEN_DENOM.save(deps.storage, &vault_token_denom)?;
+    STATE.save(
+        deps.storage,
+        &VaultState {
+            staked_base_tokens: Uint128::zero(),
+            vault_token_supply: Uint128::zero(),
+        },
+    )?;
 
     // Store staking info
     let staking = AstroportStaking {
@@ -107,12 +116,17 @@ pub fn execute(
             // Call contract itself first to compound, but as a SubMsg so that we can still deposit
             // if the compound fails
             let compound_msg = SubMsg::reply_always(
-                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env)?,
+                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
                 0,
             );
 
-            let deposit_msg =
-                InternalMsg::Deposit { amount, recipient }.into_internal_call(&env)?;
+            let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
+            let deposit_msg = InternalMsg::Deposit {
+                amount,
+                depositor: info.sender,
+                recipient,
+            }
+            .into_internal_call(&env, vec![])?;
 
             Ok(Response::new()
                 .add_submessage(compound_msg)
@@ -122,11 +136,13 @@ pub fn execute(
             // Call contract itself first to compound, but as a SubMsg so that we can still redeem
             // if the compound fails
             let compound_msg = SubMsg::reply_always(
-                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env)?,
+                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
                 0,
             );
 
-            let redeem_msg = InternalMsg::Redeem { amount, recipient }.into_internal_call(&env)?;
+            let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
+            let redeem_msg =
+                InternalMsg::Redeem { amount, recipient }.into_internal_call(&env, info.funds)?;
 
             Ok(Response::new()
                 .add_submessage(compound_msg)
@@ -140,11 +156,11 @@ pub fn execute(
 
                 match msg {
                     LockupExecuteMsg::Unlock { amount } => {
-                        let recipient = Some(info.sender.to_string());
+                        let recipient = info.sender.clone();
                         execute_internal::redeem(deps, env, info, amount, recipient)
                     }
                     LockupExecuteMsg::EmergencyUnlock { amount } => {
-                        let recipient = Some(info.sender.to_string());
+                        let recipient = info.sender.clone();
                         execute_internal::redeem(deps, env, info, amount, recipient)
                     }
                     LockupExecuteMsg::WithdrawUnlocked {
@@ -187,9 +203,11 @@ pub fn execute(
                         execute_internal::provide_liquidity(deps, env)
                     }
                     InternalMsg::StakeLps {} => execute_internal::stake_lps(deps, env),
-                    InternalMsg::Deposit { amount, recipient } => {
-                        execute_internal::deposit(deps, env, info, amount, recipient)
-                    }
+                    InternalMsg::Deposit {
+                        amount,
+                        depositor,
+                        recipient,
+                    } => execute_internal::deposit(deps, env, amount, depositor, recipient),
                     InternalMsg::Redeem { recipient, amount } => {
                         execute_internal::redeem(deps, env, info, amount, recipient)
                     }

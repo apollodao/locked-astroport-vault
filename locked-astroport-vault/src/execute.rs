@@ -19,13 +19,13 @@ pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
     let claim_rewards_res = staking.claim_rewards(deps.as_ref(), &env)?;
 
     // Sell rewards
-    let sell_msg = InternalMsg::SellTokens {}.into_internal_call(&env)?;
+    let sell_msg = InternalMsg::SellTokens {}.into_internal_call(&env, vec![])?;
 
     // Provide Liquidity
-    let provide_msg = InternalMsg::ProvideLiquidity {}.into_internal_call(&env)?;
+    let provide_msg = InternalMsg::ProvideLiquidity {}.into_internal_call(&env, vec![])?;
 
     // Stake LP tokens
-    let stake_msg = InternalMsg::StakeLps {}.into_internal_call(&env)?;
+    let stake_msg = InternalMsg::StakeLps {}.into_internal_call(&env, vec![])?;
 
     Ok(claim_rewards_res
         .add_message(sell_msg)

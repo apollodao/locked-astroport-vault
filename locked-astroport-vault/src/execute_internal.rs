@@ -1,11 +1,11 @@
 use apollo_cw_asset::{Asset, AssetInfo, AssetList};
 use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{
-    coins, to_binary, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128,
+    coins, to_binary, Addr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128,
 };
 
 use crate::error::{ContractError, ContractResponse};
-use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, unwrap_recipient, IsZero};
+use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, IsZero};
 use crate::state::{self, BASE_TOKEN, CONFIG, POOL, STAKING, VAULT_TOKEN_DENOM};
 
 use cw_dex::traits::{Stake, Unstake};
@@ -76,14 +76,13 @@ pub fn stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
 pub fn deposit(
     deps: DepsMut,
     env: Env,
-    info: MessageInfo,
     amount: Uint128,
-    recipient: Option<String>,
+    depositor: Addr,
+    recipient: Addr,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let vault_token_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
-    let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that deposits are enabled
     if !cfg.deposits_enabled {
@@ -92,7 +91,7 @@ pub fn deposit(
 
     // Transfer LP tokens from sender
     let transfer_from_res = Response::new().add_message(
-        Asset::cw20(base_token, amount).transfer_from_msg(info.sender, &env.contract.address)?,
+        Asset::cw20(base_token, amount).transfer_from_msg(depositor, &env.contract.address)?,
     );
 
     // Stake deposited LP tokens
@@ -119,12 +118,11 @@ pub fn redeem(
     env: Env,
     info: MessageInfo,
     amount: Uint128,
-    recipient: Option<String>,
+    recipient: Addr,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
-    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that only vault tokens were sent and that the amount is correct
     let unlock_amount = helpers::correct_funds(&info, &vt_denom, amount)?;
