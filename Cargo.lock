@@ -621,6 +621,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-item-set"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dea5a233bd67babedbe96a514178a64b0c597f1f38bc474fa8d63e3f26bdceb2"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus 1.1.0",
+]
+
+[[package]]
 name = "cw-ownable"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1474,6 +1484,7 @@ dependencies = [
  "cw-dex",
  "cw-dex-router",
  "cw-it",
+ "cw-item-set",
  "cw-ownable",
  "cw-storage-plus 1.1.0",
  "cw-utils 1.0.1",

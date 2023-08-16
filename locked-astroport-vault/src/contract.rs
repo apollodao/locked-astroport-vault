@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
@@ -57,7 +55,6 @@ pub fn instantiate(
             .iter()
             .map(|asset_info| asset_info.check(deps.api))
             .collect::<StdResult<Vec<_>>>()?,
-        force_withdraw_whitelist: HashSet::new(),
         deposits_enabled: msg.deposits_enabled,
         treasury: deps.api.addr_validate(&msg.treasury)?,
         performance_fee: msg.performance_fee,

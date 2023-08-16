@@ -4,7 +4,7 @@ use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
 use crate::msg::InternalMsg;
-use crate::state::{self, BASE_TOKEN, CONFIG, STAKING, VAULT_TOKEN_DENOM};
+use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, STAKING, VAULT_TOKEN_DENOM};
 
 use cw_dex::traits::{Rewards, Unstake};
 
@@ -63,21 +63,18 @@ pub fn execute_update_whitelist(
         return Err(ContractError::Unauthorized {});
     }
 
-    let cfg = CONFIG.load(deps.storage)?;
-    let mut whitelist = cfg.force_withdraw_whitelist;
-
     for addr in add_addresses {
-        whitelist.insert(deps.api.addr_validate(&addr)?);
+        FORCE_WITHDRAW_WHITELIST.insert(deps.storage, &deps.api.addr_validate(&addr)?)?;
     }
 
     for addr in remove_addresses {
         let addr = deps.api.addr_validate(&addr)?;
-        if !whitelist.contains(&addr) {
+        let was_removed = FORCE_WITHDRAW_WHITELIST.remove(deps.storage, &addr)?;
+        if !was_removed {
             return Err(ContractError::Std(StdError::generic_err(
                 "Address not in whitelist",
             )));
         }
-        whitelist.remove(&addr);
     }
 
     Ok(Response::new())
@@ -90,13 +87,12 @@ pub fn execute_force_redeem(
     amount: Uint128,
     recipient: Option<String>,
 ) -> ContractResponse {
-    let cfg = CONFIG.load(deps.storage)?;
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that the sender is whitelisted
-    if !cfg.force_withdraw_whitelist.contains(&info.sender) {
+    if !FORCE_WITHDRAW_WHITELIST.contains(deps.storage, &info.sender) {
         return Err(ContractError::Unauthorized {});
     }
 
@@ -125,12 +121,11 @@ pub fn execute_force_withdraw_unlocking(
     recipient: Option<String>,
     lockup_id: u64,
 ) -> ContractResponse {
-    let cfg = CONFIG.load(deps.storage)?;
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let recipient = unwrap_recipient(recipient, &info, deps.api)?;
 
     // Check that the sender is whitelisted
-    if !cfg.force_withdraw_whitelist.contains(&info.sender) {
+    if !FORCE_WITHDRAW_WHITELIST.contains(deps.storage, &info.sender) {
         return Err(ContractError::Unauthorized {});
     }
 

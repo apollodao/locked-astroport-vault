@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use crate::claims::Claims;
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
 use cw_dex_router::helpers::CwDexRouter;
+use cw_item_set::Set;
 use cw_storage_plus::Item;
 use cw_utils::Duration;
 use liquidity_helper::LiquidityHelper;
@@ -29,6 +28,10 @@ pub const VAULT_TOKEN_DENOM: Item<String> = Item::new("vault_token_denom");
 /// Stores the state of the vault.
 pub const STATE: Item<VaultState> = Item::new("state");
 
+/// Stores a set of addresses that are allowed to force withdraw. This is used in the case of
+/// liquidations when the vault tokens are used as collateral in lending protocols such as Mars.
+pub const FORCE_WITHDRAW_WHITELIST: Set<&Addr> = Set::new("whitelist");
+
 /// Stores unlocking positions that are created upon redeeming vault tokens if the vault has a
 /// lockup duration.
 pub fn claims() -> Claims<'static> {
@@ -42,9 +45,6 @@ pub struct Config {
     /// The tokens that are compounded into more base tokens. This can be updated if more tokens are
     /// available on either the Astroport generator or just transfered to the vault directly.
     pub reward_tokens: Vec<AssetInfo>,
-    /// The whitelist of addresses that are allowed to force withdraw. This is used in the case of
-    /// liquidations when the vault tokens are used as collateral in lending protocols such as Mars.
-    pub force_withdraw_whitelist: HashSet<Addr>,
     /// Whether or not deposits are enabled
     pub deposits_enabled: bool,
     /// The treasury address to send fees to

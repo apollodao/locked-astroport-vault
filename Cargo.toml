@@ -24,6 +24,7 @@ thiserror               = "1.0.43"
 cw-dex-router           = { version = "0.2.0-rc.1", features = ["library"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
 liquidity-helper        = "0.1.0"
+cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
 locked-astroport-vault  = { version = "0.1.0", path = "./locked-astroport-vault" }
 
 # Dev dependencies
