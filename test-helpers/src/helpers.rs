@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 
 /// An enum to choose which type of unwrap to use. When using `Unwrap::Err`, the
-/// result must be an `Err` or the test will panic. If the result contains an `Err`,
-/// the test will pass only if the error message contains the provided string.
+/// result must be an `Err` or the test will panic. If the result contains an
+/// `Err`, the test will pass only if the error message contains the provided
+/// string.
 pub enum Unwrap {
     Ok,
     Err(&'static str),

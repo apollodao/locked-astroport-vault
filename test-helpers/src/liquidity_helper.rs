@@ -1,10 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
-use cw_it::{
-    test_tube::{Account, Module, SigningAccount, Wasm},
-    traits::CwItRunner,
-    ContractType, TestRunner,
-};
+use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
+use cw_it::traits::CwItRunner;
+use cw_it::{ContractType, TestRunner};
 use liquidity_helper::LiquidityHelper;
 
 pub struct AstroportLiquidityHelperRobot<'a> {

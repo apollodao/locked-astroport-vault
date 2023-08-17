@@ -25,7 +25,7 @@ pub fn execute_withdraw_unlocked(
     let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(&recipient)?;
+    let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(recipient)?;
 
     Ok(res.add_message(send_msg))
 }
@@ -86,7 +86,7 @@ pub fn execute_force_redeem(
     let staking_res = staking.unstake(deps.as_ref(), &env, release_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(base_token, release_amount).transfer_msg(&recipient)?;
+    let send_msg = Asset::cw20(base_token, release_amount).transfer_msg(recipient)?;
 
     Ok(staking_res.add_message(burn_msg).add_message(send_msg))
 }
@@ -116,7 +116,7 @@ pub fn execute_force_withdraw_unlocking(
     let res = staking.unstake(deps.as_ref(), &env, claimed_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(base_token, claimed_amount).transfer_msg(&recipient)?;
+    let send_msg = Asset::cw20(base_token, claimed_amount).transfer_msg(recipient)?;
 
     Ok(res.add_message(send_msg))
 }

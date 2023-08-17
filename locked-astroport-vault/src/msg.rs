@@ -3,14 +3,13 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{to_binary, Addr, Coin, CosmosMsg, Decimal, Env, StdResult, Uint128};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
 use cw_ownable::Action as OwnerAction;
-use cw_vault_standard::extensions::{
-    force_unlock::ForceUnlockExecuteMsg,
-    lockup::{LockupExecuteMsg, LockupQueryMsg},
-};
+use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
+use cw_vault_standard::extensions::lockup::{LockupExecuteMsg, LockupQueryMsg};
 use liquidity_helper::LiquidityHelperUnchecked;
 use strum::EnumVariantNames;
 
-use crate::{helpers::IntoInternalCall, state::ConfigUpdates};
+use crate::helpers::IntoInternalCall;
+use crate::state::ConfigUpdates;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -55,8 +54,9 @@ pub enum InternalMsg {
     Deposit {
         /// The amount of base tokens to deposit.
         amount: Uint128,
-        /// The original caller of the contract. We can't use info.sender, since this is an internal
-        /// call, so that would be the contract itself.
+        /// The original caller of the contract. We can't use info.sender, since
+        /// this is an internal call, so that would be the contract
+        /// itself.
         depositor: Addr,
         /// The recipient of the vault token.
         recipient: Addr,

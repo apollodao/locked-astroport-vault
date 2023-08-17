@@ -5,8 +5,7 @@ use cosmwasm_std::{
     to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
     Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
-use cw_dex::astroport::astroport;
-use cw_dex::astroport::{AstroportPool, AstroportStaking};
+use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
@@ -111,8 +110,8 @@ pub fn execute(
     let cfg = CONFIG.load(deps.storage)?;
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
-            // Call contract itself first to compound, but as a SubMsg so that we can still deposit
-            // if the compound fails
+            // Call contract itself first to compound, but as a SubMsg so that we can still
+            // deposit if the compound fails
             let compound_msg = SubMsg::reply_on_error(
                 ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
                 COMPOUNT_REPLY_ID,
@@ -131,8 +130,8 @@ pub fn execute(
                 .add_message(deposit_msg))
         }
         ExecuteMsg::Redeem { recipient, amount } => {
-            // Call contract itself first to compound, but as a SubMsg so that we can still redeem
-            // if the compound fails
+            // Call contract itself first to compound, but as a SubMsg so that we can still
+            // redeem if the compound fails
             let compound_msg = SubMsg::reply_on_error(
                 ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
                 COMPOUNT_REPLY_ID,
@@ -294,9 +293,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    // If this reply is triggered by a compound SubMsg::ReplyOnError, we add an event so it can be
-    // seen in the transaction logs. Unfortunately we can't add the error, because errors messages
-    //  are still redacted.
+    // If this reply is triggered by a compound SubMsg::ReplyOnError, we add an
+    // event so it can be seen in the transaction logs. Unfortunately we can't
+    // add the error, because errors messages  are still redacted.
     if msg.id == COMPOUNT_REPLY_ID {
         let event = Event::new("apollo/vaults/execute_compound")
             .add_attribute("action", "reply on compound failed");

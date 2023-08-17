@@ -2,12 +2,11 @@ use std::str::FromStr;
 
 use common::instantiate_unlocked_vault;
 use cosmwasm_std::{Coins, Uint128};
-use cw_it::{test_tube::Account, traits::CwItRunner};
+use cw_it::test_tube::Account;
+use cw_it::traits::CwItRunner;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
-use locked_astroport_vault_test_helpers::{
-    helpers::Unwrap,
-    robot::{LockedAstroportVaultRobot, DEFAULT_COINS},
-};
+use locked_astroport_vault_test_helpers::helpers::Unwrap;
+use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
 pub use common::{get_test_runner, UNOPTIMIZED_PATH};
@@ -32,9 +31,10 @@ fn test_redeem_with_lockup() {
         &user,
     );
 
-    // Deposit some funds, assert that vt and bt balances are correct, redeem, and assert again.
-    // After redeeming the base_token_balance should not be the same as before depositing, since
-    // we have a lockup on this vault and instead a claim has been created.
+    // Deposit some funds, assert that vt and bt balances are correct, redeem, and
+    // assert again. After redeeming the base_token_balance should not be the
+    // same as before depositing, since we have a lockup on this vault and
+    // instead a claim has been created.
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
@@ -45,7 +45,8 @@ fn test_redeem_with_lockup() {
         .assert_base_token_balance_eq(user.address(), base_token_balance - deposit_amount)
         .assert_vault_token_balance_eq(user.address(), Uint128::zero());
 
-    // Query the vault to ensure that the claim/unlocking position was created correctly
+    // Query the vault to ensure that the claim/unlocking position was created
+    // correctly
     let unlocking_positions = robot.query_unlocking_positions(&user.address());
     assert_eq!(unlocking_positions.len(), 1);
     assert_eq!(unlocking_positions[0].owner, user.address());
@@ -71,9 +72,9 @@ fn test_redeem_without_lockup() {
         &user,
     );
 
-    // Deposit some funds, assert that vt and bt balances are correct, redeem, and assert again.
-    // After redeeming the base_token_balance should be the same as before depositing, since
-    // we have no lockup on this vault.
+    // Deposit some funds, assert that vt and bt balances are correct, redeem, and
+    // assert again. After redeeming the base_token_balance should be the same
+    // as before depositing, since we have no lockup on this vault.
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot

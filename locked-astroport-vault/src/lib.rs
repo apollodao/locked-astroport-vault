@@ -19,5 +19,6 @@ pub mod error;
 /// Contains helper and utility functions and traits.
 pub mod helpers;
 
-/// Contains the Claims struct for storing claims on locked LP tokens (UnlockingPositions).
+/// Contains the Claims struct for storing claims on locked LP tokens
+/// (UnlockingPositions).
 pub mod claims;

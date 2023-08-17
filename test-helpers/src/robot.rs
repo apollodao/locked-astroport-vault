@@ -2,27 +2,22 @@ use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{coin, Addr, Coin, Decimal, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
-use cw_dex::{
-    astroport::{astroport::factory::PairType, AstroportPool},
-    Pool,
-};
+use cw_dex::astroport::astroport::factory::PairType;
+use cw_dex::astroport::AstroportPool;
+use cw_dex::Pool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
-use cw_it::{
-    astroport::{
-        robot::AstroportTestRobot,
-        utils::{create_astroport_pair, AstroportContracts},
-    },
-    cw_multi_test::ContractWrapper,
-    robot::TestRobot,
-    test_tube::{Account, Module, SigningAccount, Wasm},
-    traits::CwItRunner,
-    Artifact, ContractType, TestRunner,
-};
+use cw_it::astroport::robot::AstroportTestRobot;
+use cw_it::astroport::utils::{create_astroport_pair, AstroportContracts};
+use cw_it::cw_multi_test::ContractWrapper;
+use cw_it::robot::TestRobot;
+use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
+use cw_it::traits::CwItRunner;
+use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
 use cw_vault_standard::extensions::lockup::{LockupQueryMsg, UnlockingPosition};
-use cw_vault_standard_test_helpers::traits::{
-    force_unlock::ForceUnlockVaultRobot, lockup::LockedVaultRobot, CwVaultStandardRobot,
-};
+use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
+use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
+use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use liquidity_helper::LiquidityHelperUnchecked;
 use locked_astroport_vault;
 use locked_astroport_vault::msg::{
@@ -31,7 +26,8 @@ use locked_astroport_vault::msg::{
 };
 use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates};
 
-use crate::{helpers::Unwrap, router::CwDexRouterRobot};
+use crate::helpers::Unwrap;
+use crate::router::CwDexRouterRobot;
 
 pub const LOCKED_ASTROPORT_VAULT_WASM_NAME: &str = "locked_astroport_vault.wasm";
 pub const ASTROPORT_LIQUIDITY_HELPER_WASM_NAME: &str = "astroport_liquidity_helper.wasm";
@@ -69,7 +65,8 @@ pub struct LockedAstroportVaultRobot<'a> {
 
 impl<'a> LockedAstroportVaultRobot<'a> {
     /// Returns a `ContractType` representing a local wasm file of the contract.
-    /// If `artifacts_dir` is `None`, the default path of `artifacts` will be used.
+    /// If `artifacts_dir` is `None`, the default path of `artifacts` will be
+    /// used.
     pub fn wasm_contract(artifacts_dir: Option<&str>) -> ContractType {
         let dir = artifacts_dir.unwrap_or_else(|| "artifacts").to_string();
         let path = format!("{}/{}", dir, LOCKED_ASTROPORT_VAULT_WASM_NAME);
@@ -77,7 +74,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         ContractType::Artifact(Artifact::Local(path))
     }
 
-    /// Returns a `ContractType` representing a multi-test contract of the contract.
+    /// Returns a `ContractType` representing a multi-test contract of the
+    /// contract.
     pub fn multitest_contract() -> ContractType {
         ContractType::MultiTestContract(Box::new(
             ContractWrapper::new_with_empty(
@@ -89,7 +87,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         ))
     }
 
-    /// Returns a `ContractType` representing the contract to use for the given `TestRunner`.
+    /// Returns a `ContractType` representing the contract to use for the given
+    /// `TestRunner`.
     pub fn contract(runner: &'a TestRunner<'a>, _artifacts_dir: Option<&str>) -> ContractType {
         match runner {
             #[cfg(feature = "osmosis-test-tube")]
@@ -165,7 +164,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         }
     }
 
-    /// Creates a new `LockedAstroportVaultRobot` from the given `InstantiateMsg`.
+    /// Creates a new `LockedAstroportVaultRobot` from the given
+    /// `InstantiateMsg`.
     pub fn new_with_instantiate_msg(
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
@@ -197,7 +197,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         }
     }
 
-    /// Creates a AXL/NTRN pool and a new LockedAstroportVaultRobot for the pool with no lockup.
+    /// Creates a AXL/NTRN pool and a new LockedAstroportVaultRobot for the pool
+    /// with no lockup.
     pub fn new_unlocked_axlr_ntrn_vault(
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
@@ -614,7 +615,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
-    /// Queries the ConvertToShares query to convert an amount of base tokens to vault tokens
+    /// Queries the ConvertToShares query to convert an amount of base tokens to
+    /// vault tokens
     pub fn query_convert_to_shares(&self, amount: impl Into<Uint128>) -> Uint128 {
         self.wasm()
             .query::<_, Uint128>(
@@ -626,7 +628,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
-    /// Queries the ConvertToAssets query to convert an amount of vault tokens to base tokens
+    /// Queries the ConvertToAssets query to convert an amount of vault tokens
+    /// to base tokens
     pub fn query_convert_to_assets(&self, amount: impl Into<Uint128>) -> Uint128 {
         self.wasm()
             .query::<_, Uint128>(
@@ -659,8 +662,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
 
     // Assertions //
 
-    /// Asserts that the vault token balance of the given address, when converted to an amount of
-    /// base tokens using the current exchange rate, is equal to the given amount.
+    /// Asserts that the vault token balance of the given address, when
+    /// converted to an amount of base tokens using the current exchange
+    /// rate, is equal to the given amount.
     pub fn assert_vt_balance_converted_to_assets_eq(
         &self,
         address: impl Into<String>,
@@ -671,8 +675,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
-    /// Asserts that the vault token balance of the given address, when converted to an amount of
-    /// base tokens using the current exchange rate, is greater than the given amount.
+    /// Asserts that the vault token balance of the given address, when
+    /// converted to an amount of base tokens using the current exchange
+    /// rate, is greater than the given amount.
     pub fn assert_vt_balance_converted_to_assets_gt(
         &self,
         address: impl Into<String>,
@@ -689,7 +694,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
-    /// Asserts that the total amount of base tokens help by the vault is equal to the given amount
+    /// Asserts that the total amount of base tokens help by the vault is equal
+    /// to the given amount
     pub fn assert_total_vault_assets_eq(&self, amount: impl Into<Uint128>) -> &Self {
         assert_eq!(self.query_total_vault_assets(), amount.into());
         self
@@ -730,9 +736,10 @@ impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a
     }
 }
 
-// TODO: figure out how to refactor to get around the need to create the AstroportPool like this.
-// should probably take an unchecked pool as argument, which would mean we need to change the
-// cw-dex-router message to take an unchecked pool as well.
+// TODO: figure out how to refactor to get around the need to create the
+// AstroportPool like this. should probably take an unchecked pool as argument,
+// which would mean we need to change the cw-dex-router message to take an
+// unchecked pool as well.
 fn swap_operation(
     pair_addr: &str,
     lp_addr: &str,

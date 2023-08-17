@@ -19,11 +19,12 @@ pub const CONFIG: Item<Config> = Item::new("config");
 /// Stores the Astroport pool that the vault compounds.
 pub const POOL: Item<AstroportPool> = Item::new("pool");
 
-/// Stores the Astroport staking contract that the vault uses to stake the LP tokens.
+/// Stores the Astroport staking contract that the vault uses to stake the LP
+/// tokens.
 pub const STAKING: Item<AstroportStaking> = Item::new("staking");
 
-/// The base token that is accepted for deposits and that the vault accrues more of over time.
-/// In this case it is an Astroport CW20 LP token.
+/// The base token that is accepted for deposits and that the vault accrues more
+/// of over time. In this case it is an Astroport CW20 LP token.
 pub const BASE_TOKEN: Item<Addr> = Item::new("base_token");
 
 /// The denom of the native vault token that represents shares of the vault.
@@ -32,12 +33,13 @@ pub const VAULT_TOKEN_DENOM: Item<String> = Item::new("vault_token_denom");
 /// Stores the state of the vault.
 pub const STATE: Item<VaultState> = Item::new("state");
 
-/// Stores a set of addresses that are allowed to force withdraw. This is used in the case of
-/// liquidations when the vault tokens are used as collateral in lending protocols such as Mars.
+/// Stores a set of addresses that are allowed to force withdraw. This is used
+/// in the case of liquidations when the vault tokens are used as collateral in
+/// lending protocols such as Mars.
 pub const FORCE_WITHDRAW_WHITELIST: Set<&Addr> = Set::new("whitelist");
 
-/// Stores unlocking positions that are created upon redeeming vault tokens if the vault has a
-/// lockup duration.
+/// Stores unlocking positions that are created upon redeeming vault tokens if
+/// the vault has a lockup duration.
 pub fn claims() -> Claims<'static> {
     Claims::new("claims", "claims_index", "num_claims")
 }
@@ -45,10 +47,12 @@ pub fn claims() -> Claims<'static> {
 #[optional_struct(ConfigUpdates)]
 #[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq)]
 pub struct ConfigBase<T: AddressLike> {
-    /// The duration of the lock period for deposits. This can be set to zero seconds to disable locking.
+    /// The duration of the lock period for deposits. This can be set to zero
+    /// seconds to disable locking.
     pub lock_duration: Duration,
-    /// The tokens that are compounded into more base tokens. This can be updated if more tokens are
-    /// available on either the Astroport generator or just transfered to the vault directly.
+    /// The tokens that are compounded into more base tokens. This can be
+    /// updated if more tokens are available on either the Astroport
+    /// generator or just transfered to the vault directly.
     pub reward_tokens: Vec<AssetInfoBase<T>>,
     /// Whether or not deposits are enabled
     pub deposits_enabled: bool,
@@ -69,7 +73,8 @@ pub type Config = ConfigBase<Addr>;
 pub type ConfigUnchecked = ConfigBase<String>;
 
 impl ConfigUnchecked {
-    /// Checks that the all the values on the `ConfigUnchecked` are valid and returns a `Config`.
+    /// Checks that the all the values on the `ConfigUnchecked` are valid and
+    /// returns a `Config`.
     pub fn check(&self, deps: Deps) -> StdResult<Config> {
         let api = deps.api;
 

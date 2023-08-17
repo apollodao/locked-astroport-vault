@@ -36,8 +36,9 @@ pub fn correct_funds(info: &MessageInfo, denom: &str, amount: Uint128) -> StdRes
     }
 }
 
-/// Converts an `Option<String>` to an `Addr` by unwrapping the string and verifying the address,
-/// or using the sender address if the supplied Option is `None`.
+/// Converts an `Option<String>` to an `Addr` by unwrapping the string and
+/// verifying the address, or using the sender address if the supplied Option is
+/// `None`.
 pub fn unwrap_recipient(
     recipient: Option<String>,
     info: &MessageInfo,
@@ -46,8 +47,8 @@ pub fn unwrap_recipient(
     recipient.map_or(Ok(info.sender.clone()), |x| api.addr_validate(&x))
 }
 
-/// Returns the number of vault tokens that will be minted for `base_token_amount`
-/// base tokens.
+/// Returns the number of vault tokens that will be minted for
+/// `base_token_amount` base tokens.
 pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint128 {
     let state = STATE.load(deps.storage).unwrap();
     if state.staked_base_tokens.is_zero() {
@@ -56,8 +57,8 @@ pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint1
     Decimal::from_ratio(base_token_amount, state.staked_base_tokens) * state.vault_token_supply
 }
 
-/// Returns the number of base tokens that will be released for `vault_token_amount`
-/// vault tokens.
+/// Returns the number of base tokens that will be released for
+/// `vault_token_amount` vault tokens.
 pub(crate) fn convert_to_assets(deps: Deps, vault_token_amount: Uint128) -> Uint128 {
     let state = STATE.load(deps.storage).unwrap();
     if state.vault_token_supply.is_zero() {
@@ -118,7 +119,8 @@ pub(crate) fn burn_vault_tokens(
     ))
 }
 
-/// A trait to convert a type into a `CosmosMsg` Execute variant that calls the contract itself.
+/// A trait to convert a type into a `CosmosMsg` Execute variant that calls the
+/// contract itself.
 pub trait IntoInternalCall {
     fn into_internal_call(self, env: &Env, funds: Vec<Coin>) -> StdResult<CosmosMsg>;
 }

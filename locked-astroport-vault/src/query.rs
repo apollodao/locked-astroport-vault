@@ -1,13 +1,10 @@
 use cosmwasm_std::{Deps, StdResult};
-use cw_vault_standard::{
-    extensions::lockup::UnlockingPosition, VaultInfoResponse, VaultStandardInfoResponse,
-};
+use cw_vault_standard::extensions::lockup::UnlockingPosition;
+use cw_vault_standard::{VaultInfoResponse, VaultStandardInfoResponse};
 use strum::VariantNames;
 
-use crate::{
-    msg::ExtensionExecuteMsg,
-    state::{self, BASE_TOKEN, VAULT_TOKEN_DENOM},
-};
+use crate::msg::ExtensionExecuteMsg;
+use crate::state::{self, BASE_TOKEN, VAULT_TOKEN_DENOM};
 
 pub fn query_vault_standard_info(_deps: Deps) -> StdResult<VaultStandardInfoResponse> {
     Ok(VaultStandardInfoResponse {

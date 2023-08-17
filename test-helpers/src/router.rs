@@ -1,17 +1,13 @@
 use apollo_cw_asset::AssetInfoUnchecked;
 use cosmwasm_std::Addr;
-use cw_dex_router::{
-    helpers::{CwDexRouter, CwDexRouterUnchecked},
-    msg::InstantiateMsg,
-    operations::SwapOperationsListUnchecked,
-};
-use cw_it::{
-    cw_multi_test::ContractWrapper,
-    robot::TestRobot,
-    test_tube::{Account, Module, SigningAccount, Wasm},
-    traits::CwItRunner,
-    ContractType, TestRunner,
-};
+use cw_dex_router::helpers::{CwDexRouter, CwDexRouterUnchecked};
+use cw_dex_router::msg::InstantiateMsg;
+use cw_dex_router::operations::SwapOperationsListUnchecked;
+use cw_it::cw_multi_test::ContractWrapper;
+use cw_it::robot::TestRobot;
+use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
+use cw_it::traits::CwItRunner;
+use cw_it::{ContractType, TestRunner};
 
 #[cfg(feature = "osmosis-test-tube")]
 use cw_it::Artifact;
@@ -24,7 +20,8 @@ pub struct CwDexRouterRobot<'a> {
 }
 
 impl<'a> CwDexRouterRobot<'a> {
-    /// Returns a `ContractType` representing the contract to use for the given `TestRunner`.
+    /// Returns a `ContractType` representing the contract to use for the given
+    /// `TestRunner`.
     pub fn contract(runner: &'a TestRunner<'a>, artifacts_dir: Option<&str>) -> ContractType {
         let _artifacts_dir = artifacts_dir.unwrap_or("tests/test_artifacts");
         match runner {
