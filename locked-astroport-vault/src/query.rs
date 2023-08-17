@@ -1,13 +1,10 @@
 use cosmwasm_std::{Deps, StdResult};
-use cw_vault_standard::{
-    extensions::lockup::UnlockingPosition, VaultInfoResponse, VaultStandardInfoResponse,
-};
+use cw_vault_standard::extensions::lockup::UnlockingPosition;
+use cw_vault_standard::{VaultInfoResponse, VaultStandardInfoResponse};
 use strum::VariantNames;
 
-use crate::{
-    msg::ExtensionExecuteMsg,
-    state::{self, CONFIG},
-};
+use crate::msg::ExtensionExecuteMsg;
+use crate::state::{self, BASE_TOKEN, VAULT_TOKEN_DENOM};
 
 pub fn query_vault_standard_info(_deps: Deps) -> StdResult<VaultStandardInfoResponse> {
     Ok(VaultStandardInfoResponse {
@@ -20,11 +17,12 @@ pub fn query_vault_standard_info(_deps: Deps) -> StdResult<VaultStandardInfoResp
 }
 
 pub fn query_vault_info(deps: Deps) -> StdResult<VaultInfoResponse> {
-    let cfg = CONFIG.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
+    let vault_token_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
 
     Ok(VaultInfoResponse {
-        base_token: cfg.base_token.to_string(),
-        vault_token: cfg.vault_token_denom,
+        base_token: base_token.to_string(),
+        vault_token: vault_token_denom,
     })
 }
 

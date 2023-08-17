@@ -22,11 +22,11 @@ pub enum ContractError {
     #[error("Deposits are disabled")]
     DepositsDisabled {},
 
-    #[error("Performance fee can't be higher than 100%")]
-    PerformanceFeeTooHigh {},
-
     #[error("Unknown reply ID: {id}")]
     UnknownReplyId { id: u64 },
+
+    #[error("Lockup is disabled for this vault")]
+    LockupDisabled {},
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;

@@ -1,0 +1,4 @@
+- astroport_liquidity_helper.wasm
+    - Downloaded from [Github Releases v0.2.0](https://github.com/apollodao/liquidity-helpers/releases/tag/v0.2.0)
+- cw_dex_router_astroport.wasm
+    - Built unoptimized from v0.2.0-rc.1
