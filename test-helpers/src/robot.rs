@@ -67,9 +67,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     /// Returns a `ContractType` representing a local wasm file of the contract.
     /// If `artifacts_dir` is `None`, the default path of `artifacts` will be
     /// used.
-    pub fn wasm_contract(artifacts_dir: Option<&str>) -> ContractType {
-        let dir = artifacts_dir.unwrap_or_else(|| "artifacts").to_string();
-        let path = format!("{}/{}", dir, LOCKED_ASTROPORT_VAULT_WASM_NAME);
+    pub fn wasm_contract(artifacts_dir: &str) -> ContractType {
+        let path = format!("{}/{}", artifacts_dir, LOCKED_ASTROPORT_VAULT_WASM_NAME);
         println!("Loading contract from {}", path);
         ContractType::Artifact(Artifact::Local(path))
     }
@@ -89,7 +88,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
 
     /// Returns a `ContractType` representing the contract to use for the given
     /// `TestRunner`.
-    pub fn contract(runner: &'a TestRunner<'a>, _artifacts_dir: Option<&str>) -> ContractType {
+    pub fn contract(runner: &'a TestRunner<'a>, _artifacts_dir: &str) -> ContractType {
         match runner {
             #[cfg(feature = "osmosis-test-tube")]
             TestRunner::OsmosisTestApp(_) => Self::wasm_contract(_artifacts_dir),
@@ -102,10 +101,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     pub fn instantiate_deps(
         runner: &'a TestRunner<'a>,
         signer: &SigningAccount,
-        artifacts_dir: Option<&str>,
+        artifacts_dir: &str,
     ) -> LockedVaultDependencies<'a> {
-        let artifacts_dir = artifacts_dir.unwrap_or_else(|| "tests/test_artifacts");
-
         // Upload and instantiate astroport contracts
         let astroport_contracts = AstroportContracts::new_from_local_contracts(
             runner,
@@ -118,7 +115,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         // Create CwDexRouterRobot
         let cw_dex_router_robot = CwDexRouterRobot::new(
             runner,
-            CwDexRouterRobot::contract(&runner, Some(artifacts_dir)),
+            CwDexRouterRobot::contract(runner, artifacts_dir),
             signer,
         );
 
@@ -206,13 +203,13 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         treasury_addr: String,
         dependencies: &'a LockedVaultDependencies<'a>,
         signer: &SigningAccount,
-    ) -> Self {
+    ) -> (Self, AstroportPool, AstroportPool) {
         let axl = AssetInfo::native(AXL_DENOM.to_string());
         let ntrn = AssetInfo::native(NTRN_DENOM.to_string());
         let astro = AssetInfo::native(ASTRO_DENOM.to_string());
 
         // Create AXL/NTRN astroport pool
-        let (axl_ntrn_pair, _axl_ntrn_lp) = create_astroport_pair(
+        let (axl_ntrn_pair, axl_ntrn_lp) = create_astroport_pair(
             runner,
             &dependencies.astroport_contracts.factory.address,
             PairType::Xyk {},
@@ -224,9 +221,15 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 Uint128::from(1_000_000_000u128),
             ]),
         );
+        let axl_ntrn_pool = AstroportPool {
+            lp_token_addr: Addr::unchecked(&axl_ntrn_lp),
+            pair_addr: Addr::unchecked(&axl_ntrn_pair),
+            pair_type: PairType::Xyk {},
+            pool_assets: [axl.clone(), ntrn.clone()].to_vec(),
+        };
 
         // Create ASTRO/NTRN astroport pool
-        let (astro_ntrn_pair, _astro_ntrn_lp) = create_astroport_pair(
+        let (astro_ntrn_pair, astro_ntrn_lp) = create_astroport_pair(
             runner,
             &dependencies.astroport_contracts.factory.address,
             PairType::Xyk {},
@@ -238,6 +241,12 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 Uint128::from(1_000_000_000u128),
             ]),
         );
+        let astro_ntrn_pool = AstroportPool {
+            lp_token_addr: Addr::unchecked(&astro_ntrn_lp),
+            pair_addr: Addr::unchecked(&astro_ntrn_pair),
+            pair_type: PairType::Xyk {},
+            pool_assets: [astro.clone(), ntrn.clone()].to_vec(),
+        };
 
         // Set routes in cw-dex-router
         // AXL <-> NTRN
@@ -246,7 +255,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ntrn.clone().into(),
             SwapOperationsListUnchecked::new(vec![swap_operation(
                 &axl_ntrn_pair,
-                &_axl_ntrn_lp,
+                &axl_ntrn_lp,
                 &axl,
                 &ntrn,
             )]),
@@ -260,7 +269,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ntrn.clone().into(),
             SwapOperationsListUnchecked::new(vec![swap_operation(
                 &astro_ntrn_pair,
-                &_astro_ntrn_lp,
+                &astro_ntrn_lp,
                 &astro,
                 &ntrn,
             )]),
@@ -290,13 +299,17 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ),
         };
 
-        Self::new_with_instantiate_msg(
-            runner,
-            vault_contract,
-            token_factory_fee,
-            &instantiate_msg,
-            dependencies,
-            signer,
+        (
+            Self::new_with_instantiate_msg(
+                runner,
+                vault_contract,
+                token_factory_fee,
+                &instantiate_msg,
+                dependencies,
+                signer,
+            ),
+            axl_ntrn_pool,
+            astro_ntrn_pool,
         )
     }
 
@@ -512,7 +525,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         recipient: Option<String>,
         signer: &SigningAccount,
     ) -> &Self {
-        self.increase_cw20_allowance(&self.base_token(), &self.vault_addr, amount, &signer)
+        self.increase_cw20_allowance(&self.base_token(), &self.vault_addr, amount, signer)
             .deposit(amount, recipient, &[], signer)
     }
 
@@ -704,7 +717,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
 
 impl<'a> TestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a> {
     fn runner(&self) -> &'a TestRunner<'a> {
-        &self.runner
+        self.runner
     }
 }
 

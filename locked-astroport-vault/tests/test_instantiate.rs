@@ -6,9 +6,9 @@ use cw_ownable::Ownership;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
-pub use common::{get_test_runner, UNOPTIMIZED_PATH};
+pub use common::get_test_runner;
 
-use crate::common::default_instantiate;
+use crate::common::{default_instantiate, DEPS_PATH};
 
 #[test]
 fn test_instantiation() {
@@ -16,7 +16,7 @@ fn test_instantiation() {
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
 
     // Query ownership to confirm

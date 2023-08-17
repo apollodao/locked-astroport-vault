@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use common::DEPS_PATH;
 use cosmwasm_std::{Coins, Uint128};
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
@@ -18,7 +19,7 @@ fn test_compound_vault() {
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 

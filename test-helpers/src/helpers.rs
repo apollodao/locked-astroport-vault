@@ -18,7 +18,7 @@ impl Unwrap {
             Unwrap::Err(s) => {
                 let err = result.unwrap_err();
                 assert!(
-                    format!("{:?}", err).contains(&s),
+                    format!("{:?}", err).contains(s),
                     "Expected error message to contain {:?}, got {:?}",
                     s,
                     err

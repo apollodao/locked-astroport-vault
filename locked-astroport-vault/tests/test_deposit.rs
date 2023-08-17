@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use common::DEPS_PATH;
 use cosmwasm_std::{Coins, Uint128};
 use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::test_tube::Account;
@@ -9,7 +10,7 @@ use locked_astroport_vault::state::ConfigUpdates;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
-pub use common::{get_test_runner, UNOPTIMIZED_PATH};
+pub use common::get_test_runner;
 
 use crate::common::default_instantiate;
 
@@ -19,7 +20,7 @@ fn test_deposit() {
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
@@ -40,7 +41,7 @@ fn can_only_deposit_when_despoits_enabled() {
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 

@@ -9,9 +9,9 @@ use locked_astroport_vault_test_helpers::helpers::Unwrap;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
-pub use common::{get_test_runner, UNOPTIMIZED_PATH};
+pub use common::get_test_runner;
 
-use crate::common::default_instantiate;
+use crate::common::{default_instantiate, DEPS_PATH};
 
 #[test]
 fn test_redeem_with_lockup() {
@@ -19,7 +19,7 @@ fn test_redeem_with_lockup() {
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
@@ -60,7 +60,7 @@ fn test_redeem_without_lockup() {
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, None);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = instantiate_unlocked_vault(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 

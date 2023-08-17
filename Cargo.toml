@@ -6,6 +6,8 @@ members = [
 
 [workspace.package]
 edition = "2021"
+license = "BUSL-1.1"
+license-file = "LICENSE"
 
 [workspace.dependencies]
 apollo-cw-asset         = "0.1.2"

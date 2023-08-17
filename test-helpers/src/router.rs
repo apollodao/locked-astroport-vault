@@ -22,8 +22,7 @@ pub struct CwDexRouterRobot<'a> {
 impl<'a> CwDexRouterRobot<'a> {
     /// Returns a `ContractType` representing the contract to use for the given
     /// `TestRunner`.
-    pub fn contract(runner: &'a TestRunner<'a>, artifacts_dir: Option<&str>) -> ContractType {
-        let _artifacts_dir = artifacts_dir.unwrap_or("tests/test_artifacts");
+    pub fn contract(runner: &'a TestRunner<'a>, _artifacts_dir: &str) -> ContractType {
         match runner {
             #[cfg(feature = "osmosis-test-tube")]
             TestRunner::OsmosisTestApp(_) => ContractType::Artifact(Artifact::Local(format!(
@@ -80,7 +79,7 @@ impl<'a> CwDexRouterRobot<'a> {
     ) {
         self.wasm()
             .execute(
-                &self.cw_dex_router.0.to_string(),
+                self.cw_dex_router.0.as_ref(),
                 &cw_dex_router::msg::ExecuteMsg::SetPath {
                     offer_asset: from,
                     ask_asset: to,
