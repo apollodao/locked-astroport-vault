@@ -2,8 +2,8 @@
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryRequest, Reply, Response,
-    StdResult, SubMsg, Uint128, WasmQuery,
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
+    Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw_dex::astroport::astroport;
 use cw_dex::astroport::{AstroportPool, AstroportStaking};
@@ -33,6 +33,8 @@ use crate::state::{
 
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub const COMPOUNT_REPLY_ID: u64 = 4018u64;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -115,9 +117,9 @@ pub fn execute(
         ExecuteMsg::Deposit { amount, recipient } => {
             // Call contract itself first to compound, but as a SubMsg so that we can still deposit
             // if the compound fails
-            let compound_msg = SubMsg::reply_always(
+            let compound_msg = SubMsg::reply_on_error(
                 ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
-                0,
+                COMPOUNT_REPLY_ID,
             );
 
             let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
@@ -135,9 +137,9 @@ pub fn execute(
         ExecuteMsg::Redeem { recipient, amount } => {
             // Call contract itself first to compound, but as a SubMsg so that we can still redeem
             // if the compound fails
-            let compound_msg = SubMsg::reply_always(
+            let compound_msg = SubMsg::reply_on_error(
                 ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
-                0,
+                COMPOUNT_REPLY_ID,
             );
 
             let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
@@ -283,6 +285,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
+pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    // If this reply is triggered by a compound SubMsg::ReplyOnError, we add an event so it can be
+    // seen in the transaction logs. Unfortunately we can't add the error, because errors messages
+    //  are still redacted.
+    if msg.id == COMPOUNT_REPLY_ID {
+        let event = Event::new("apollo/vaults/execute_compound")
+            .add_attribute("action", "reply on compound failed");
+        return Ok(Response::new().add_event(event));
+    }
     Ok(Response::new())
 }

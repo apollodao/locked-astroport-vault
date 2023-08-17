@@ -1,12 +1,13 @@
 use apollo_cw_asset::{Asset, AssetInfo, AssetList};
 use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{
-    coins, to_binary, Addr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128,
+    attr, coins, to_binary, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response,
+    StdError, Uint128,
 };
 
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, IsZero};
-use crate::state::{self, BASE_TOKEN, CONFIG, POOL, STAKING, VAULT_TOKEN_DENOM};
+use crate::state::{self, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM};
 
 use cw_dex::traits::{Stake, Unstake};
 
@@ -26,6 +27,16 @@ pub fn sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
     // Create msgs to transfer performance fees to treasury
     let mut msgs = performance_fees.transfer_msgs(cfg.treasury)?;
 
+    // Create event
+    let mut event = Event::new("apollo/vaults/execute_compound")
+        .add_attributes(vec![attr("action", "sell_tokens")]);
+    for fee in performance_fees.iter() {
+        event = event.add_attributes(vec![attr("performance_fee", fee.to_string())]);
+    }
+    for token in tokens_to_sell.iter() {
+        event = event.add_attributes(vec![attr("sold_token", token.to_string())]);
+    }
+
     // Add msg to sell reward tokens
     if tokens_to_sell.len() > 0 {
         msgs.append(&mut cfg.router.basket_liquidate_msgs(
@@ -36,7 +47,7 @@ pub fn sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
         )?);
     }
 
-    Ok(Response::default().add_messages(msgs))
+    Ok(Response::default().add_messages(msgs).add_event(event))
 }
 
 pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
@@ -49,6 +60,15 @@ pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
         &env.contract.address,
     )?;
 
+    // Return with no messages if there are no assets to provide liquidity with
+    if pool_asset_balances.len() == 0 {
+        return Ok(Response::default());
+    }
+
+    let event = Event::new("apollo/vaults/execute_compound")
+        .add_attribute("action", "provide_liquidity")
+        .add_attribute("pool_asset_balances", pool_asset_balances.to_string());
+
     let provide_liquidity_msgs = cfg.liquidity_helper.balancing_provide_liquidity(
         pool_asset_balances,
         Uint128::zero(), // TODO: Set slippage?
@@ -56,7 +76,9 @@ pub fn provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
         None,
     )?;
 
-    Ok(Response::new().add_messages(provide_liquidity_msgs))
+    Ok(Response::new()
+        .add_messages(provide_liquidity_msgs)
+        .add_event(event))
 }
 
 pub fn stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
@@ -70,7 +92,17 @@ pub fn stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
     // Stake LP tokens
     let staking_res = staking.stake(deps.as_ref(), &env, lp_token_balance)?;
 
-    Ok(staking_res)
+    // Update total staked amount
+    STATE.update(deps.storage, |mut state| {
+        state.staked_base_tokens += lp_token_balance;
+        Ok::<_, StdError>(state)
+    })?;
+
+    let event = Event::new("apollo/vaults/execute_compound")
+        .add_attribute("action", "stake_lps")
+        .add_attribute("amount_to_stake", lp_token_balance.to_string());
+
+    Ok(staking_res.add_event(event))
 }
 
 pub fn deposit(
