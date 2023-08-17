@@ -13,11 +13,7 @@ use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 
 use crate::error::{ContractError, ContractResponse};
-use crate::execute::{
-    execute_compound, execute_force_redeem, execute_force_withdraw_unlocking,
-    execute_update_config, execute_update_whitelist, execute_withdraw_unlocked,
-};
-use crate::execute_internal::{self};
+use crate::execute;
 use crate::helpers::{self, IntoInternalCall, IsZero};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
@@ -159,16 +155,18 @@ pub fn execute(
                 match msg {
                     LockupExecuteMsg::Unlock { amount } => {
                         let recipient = info.sender.clone();
-                        execute_internal::redeem(deps, env, info, amount, recipient)
+                        execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
                     }
                     LockupExecuteMsg::EmergencyUnlock { amount } => {
                         let recipient = info.sender.clone();
-                        execute_internal::redeem(deps, env, info, amount, recipient)
+                        execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
                     }
                     LockupExecuteMsg::WithdrawUnlocked {
                         recipient,
                         lockup_id,
-                    } => execute_withdraw_unlocked(deps, env, info, recipient, lockup_id),
+                    } => execute::lockup::execute_withdraw_unlocked(
+                        deps, env, info, recipient, lockup_id,
+                    ),
                 }
             }
             ExtensionExecuteMsg::ForceUnlock(msg) => {
@@ -178,19 +176,25 @@ pub fn execute(
 
                 match msg {
                     ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
-                        execute_force_redeem(deps, env, info, amount, recipient)
+                        execute::lockup::execute_force_redeem(deps, env, info, amount, recipient)
                     }
                     ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
                         lockup_id,
                         amount,
                         recipient,
-                    } => execute_force_withdraw_unlocking(
+                    } => execute::lockup::execute_force_withdraw_unlocking(
                         deps, env, info, amount, recipient, lockup_id,
                     ),
                     ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
                         add_addresses,
                         remove_addresses,
-                    } => execute_update_whitelist(deps, env, info, add_addresses, remove_addresses),
+                    } => execute::lockup::execute_update_force_withdraw_whitelist(
+                        deps,
+                        env,
+                        info,
+                        add_addresses,
+                        remove_addresses,
+                    ),
                 }
             }
             ExtensionExecuteMsg::Internal(msg) => {
@@ -200,18 +204,20 @@ pub fn execute(
                 }
 
                 match msg {
-                    InternalMsg::SellTokens {} => execute_internal::sell_tokens(deps, env),
+                    InternalMsg::SellTokens {} => execute::compound::execute_sell_tokens(deps, env),
                     InternalMsg::ProvideLiquidity {} => {
-                        execute_internal::provide_liquidity(deps, env)
+                        execute::compound::execute_provide_liquidity(deps, env)
                     }
-                    InternalMsg::StakeLps {} => execute_internal::stake_lps(deps, env),
+                    InternalMsg::StakeLps {} => execute::compound::execute_stake_lps(deps, env),
                     InternalMsg::Deposit {
                         amount,
                         depositor,
                         recipient,
-                    } => execute_internal::deposit(deps, env, amount, depositor, recipient),
+                    } => execute::basic_vault::execute_deposit(
+                        deps, env, amount, depositor, recipient,
+                    ),
                     InternalMsg::Redeem { recipient, amount } => {
-                        execute_internal::redeem(deps, env, info, amount, recipient)
+                        execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
                     }
                 }
             }
@@ -222,9 +228,11 @@ pub fn execute(
             }
             ExtensionExecuteMsg::Apollo(msg) => match msg {
                 ApolloExtensionExecuteMsg::UpdateConfig { updates } => {
-                    execute_update_config(deps, info, updates)
+                    execute::basic_vault::execute_update_config(deps, info, updates)
                 }
-                ApolloExtensionExecuteMsg::Compound {} => execute_compound(deps, env),
+                ApolloExtensionExecuteMsg::Compound {} => {
+                    execute::compound::execute_compound(deps, env)
+                }
             },
         },
     }

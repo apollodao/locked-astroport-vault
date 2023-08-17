@@ -1,37 +1,11 @@
 use apollo_cw_asset::Asset;
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
-use optional_struct::Applyable;
 
 use crate::error::{ContractError, ContractResponse};
-use crate::helpers::{self, burn_vault_tokens, unwrap_recipient, IntoInternalCall};
-use crate::msg::InternalMsg;
-use crate::state::{
-    self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, FORCE_WITHDRAW_WHITELIST, STAKING,
-    VAULT_TOKEN_DENOM,
-};
+use crate::helpers::{self, burn_vault_tokens, unwrap_recipient};
+use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, STAKING, VAULT_TOKEN_DENOM};
 
-use cw_dex::traits::{Rewards, Unstake};
-
-pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
-    let staking = STAKING.load(deps.storage)?;
-
-    // Claim any pending rewards
-    let claim_rewards_res = staking.claim_rewards(deps.as_ref(), &env)?;
-
-    // Sell rewards
-    let sell_msg = InternalMsg::SellTokens {}.into_internal_call(&env, vec![])?;
-
-    // Provide Liquidity
-    let provide_msg = InternalMsg::ProvideLiquidity {}.into_internal_call(&env, vec![])?;
-
-    // Stake LP tokens
-    let stake_msg = InternalMsg::StakeLps {}.into_internal_call(&env, vec![])?;
-
-    Ok(claim_rewards_res
-        .add_message(sell_msg)
-        .add_message(provide_msg)
-        .add_message(stake_msg))
-}
+use cw_dex::traits::Unstake;
 
 pub fn execute_withdraw_unlocked(
     deps: DepsMut,
@@ -56,7 +30,7 @@ pub fn execute_withdraw_unlocked(
     Ok(res.add_message(send_msg))
 }
 
-pub fn execute_update_whitelist(
+pub fn execute_update_force_withdraw_whitelist(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
@@ -145,24 +119,4 @@ pub fn execute_force_withdraw_unlocking(
     let send_msg = Asset::cw20(base_token, claimed_amount).transfer_msg(&recipient)?;
 
     Ok(res.add_message(send_msg))
-}
-
-pub fn execute_update_config(
-    deps: DepsMut,
-    info: MessageInfo,
-    updates: ConfigUpdates<String>,
-) -> ContractResponse {
-    if !cw_ownable::is_owner(deps.storage, &info.sender)? {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    let mut config: ConfigUnchecked = CONFIG.load(deps.storage)?.into();
-
-    updates.apply_to(&mut config);
-
-    let config = config.check(deps.as_ref())?;
-
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(Response::new())
 }
