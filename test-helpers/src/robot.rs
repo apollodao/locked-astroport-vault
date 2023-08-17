@@ -428,7 +428,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             axl.clone().into(),
             eth.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &axl, &usdc),
+                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &axl, &ntrn),
+                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc),
                 swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth),
             ]),
             true,
@@ -545,8 +546,23 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
+    pub fn compound_vault(&self, signer: &SigningAccount) -> &Self {
+        self.wasm()
+            .execute(
+                &self.vault_addr,
+                &ExecuteMsg::VaultExtension(ExtensionExecuteMsg::Apollo(
+                    ApolloExtensionExecuteMsg::Compound {},
+                )),
+                &[],
+                signer,
+            )
+            .unwrap();
+        self
+    }
+
     // Queries //
 
+    /// Queries the ownership info of the vault
     pub fn query_ownership(&self) -> Ownership<Addr> {
         self.wasm()
             .query::<_, cw_ownable::Ownership<Addr>>(
@@ -558,6 +574,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    /// Queries the contract version info of the vault
     pub fn query_contract_version(&self) -> cw2::ContractVersion {
         self.wasm()
             .query::<_, cw2::ContractVersion>(
@@ -569,6 +586,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    /// Queries all the unlocking positions of the given owner
     pub fn query_unlocking_positions(&self, owner: &str) -> Vec<UnlockingPosition> {
         self.wasm()
             .query::<_, Vec<UnlockingPosition>>(
@@ -584,6 +602,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    /// Queries the config of the vault
     pub fn query_config(&self) -> ConfigBase<Addr> {
         self.wasm()
             .query::<_, Config>(
@@ -595,8 +614,85 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    /// Queries the ConvertToShares query to convert an amount of base tokens to vault tokens
+    pub fn query_convert_to_shares(&self, amount: impl Into<Uint128>) -> Uint128 {
+        self.wasm()
+            .query::<_, Uint128>(
+                &self.vault_addr,
+                &QueryMsg::ConvertToShares {
+                    amount: amount.into(),
+                },
+            )
+            .unwrap()
+    }
+
+    /// Queries the ConvertToAssets query to convert an amount of vault tokens to base tokens
+    pub fn query_convert_to_assets(&self, amount: impl Into<Uint128>) -> Uint128 {
+        self.wasm()
+            .query::<_, Uint128>(
+                &self.vault_addr,
+                &QueryMsg::ConvertToAssets {
+                    amount: amount.into(),
+                },
+            )
+            .unwrap()
+    }
+
+    /// Queries the current block time in seconds since the UNIX epoch
     pub fn query_block_time_seconds(&self) -> u64 {
         self.runner.query_block_time_nanos() / 1_000_000_000
+    }
+
+    /// Queries the total supply of vault tokens
+    pub fn query_total_vault_token_supply(&self) -> Uint128 {
+        self.wasm()
+            .query::<_, Uint128>(&self.vault_addr, &QueryMsg::TotalVaultTokenSupply {})
+            .unwrap()
+    }
+
+    /// Queries the total assets (base tokens) held by the vault
+    pub fn query_total_vault_assets(&self) -> Uint128 {
+        self.wasm()
+            .query::<_, Uint128>(&self.vault_addr, &QueryMsg::TotalAssets {})
+            .unwrap()
+    }
+
+    // Assertions //
+
+    /// Asserts that the vault token balance of the given address, when converted to an amount of
+    /// base tokens using the current exchange rate, is equal to the given amount.
+    pub fn assert_vt_balance_converted_to_assets_eq(
+        &self,
+        address: impl Into<String>,
+        amount: impl Into<Uint128>,
+    ) -> &Self {
+        let assets = self.query_convert_to_assets(self.query_vault_token_balance(address));
+        assert_eq!(assets, amount.into());
+        self
+    }
+
+    /// Asserts that the vault token balance of the given address, when converted to an amount of
+    /// base tokens using the current exchange rate, is greater than the given amount.
+    pub fn assert_vt_balance_converted_to_assets_gt(
+        &self,
+        address: impl Into<String>,
+        amount: impl Into<Uint128>,
+    ) -> &Self {
+        let assets = self.query_convert_to_assets(self.query_vault_token_balance(address));
+        assert!(assets > amount.into());
+        self
+    }
+
+    /// Asserts that the total vault token supply is equal to the given amount
+    pub fn assert_total_vault_token_supply_eq(&self, amount: impl Into<Uint128>) -> &Self {
+        assert_eq!(self.query_total_vault_token_supply(), amount.into());
+        self
+    }
+
+    /// Asserts that the total amount of base tokens help by the vault is equal to the given amount
+    pub fn assert_total_vault_assets_eq(&self, amount: impl Into<Uint128>) -> &Self {
+        assert_eq!(self.query_total_vault_assets(), amount.into());
+        self
     }
 }
 

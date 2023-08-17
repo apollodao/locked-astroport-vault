@@ -25,8 +25,10 @@ fn test_deposit() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = base_token_balance / Uint128::new(2);
     robot
-        .deposit_cw20(deposit_amount, None, &admin)
-        .assert_vault_token_balance_eq(admin.address().to_string(), deposit_amount);
+        .deposit_cw20(deposit_amount, None, &user)
+        .assert_vault_token_balance_eq(user.address().to_string(), deposit_amount)
+        .assert_total_vault_token_supply_eq(deposit_amount)
+        .assert_total_vault_assets_eq(deposit_amount);
 }
 
 #[test]
