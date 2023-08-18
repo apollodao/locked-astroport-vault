@@ -34,7 +34,7 @@ schemars                = "0.8.12"
 
 # Repo packages
 locked-astroport-vault  = { version = "0.1.0-rc.1", path = "./locked-astroport-vault" }
-locked-astroport-vault-test-helpers = { version = "0.1.0-rc.1", path = "./test-helpers" }
+locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
 cw-it                               = { version = "0.1.3", features = ["astroport"] }
