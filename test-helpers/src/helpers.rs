@@ -10,10 +10,11 @@ pub enum Unwrap {
 }
 
 impl Unwrap {
-    pub fn unwrap<T: Debug, E: Debug>(self, result: Result<T, E>) {
+    pub fn unwrap<T: Debug, E: Debug>(self, result: Result<T, E>) -> Option<T> {
         match self {
             Unwrap::Ok => {
-                result.unwrap();
+                let res = result.unwrap();
+                Some(res)
             }
             Unwrap::Err(s) => {
                 let err = result.unwrap_err();
@@ -23,6 +24,7 @@ impl Unwrap {
                     s,
                     err
                 );
+                None
             }
         }
     }

@@ -172,7 +172,8 @@ dependencies = [
 [[package]]
 name = "astroport-liquidity-helper"
 version = "0.2.0"
-source = "git+https://github.com/apollodao/liquidity-helpers.git?rev=9011b6f12fca371657ceb711342005800245f1a6#9011b6f12fca371657ceb711342005800245f1a6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3217f55114759b6569fd724dca8f3c5b90286059003a3b5377373256e2c03973"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -798,7 +799,8 @@ dependencies = [
 [[package]]
 name = "cw-bigint"
 version = "0.4.3"
-source = "git+https://github.com/apollodao/cw-bigint?rev=c2217a76b08cb65204db407f661298c48b01e763#c2217a76b08cb65204db407f661298c48b01e763"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4728ee779cede6a73bf3daf35504960eb3c256cedd40e5e2827207a49dd76027"
 dependencies = [
  "autocfg",
  "num-integer",
@@ -1811,7 +1813,8 @@ dependencies = [
 [[package]]
 name = "liquidity-helper"
 version = "0.2.0"
-source = "git+https://github.com/apollodao/liquidity-helpers.git?rev=9011b6f12fca371657ceb711342005800245f1a6#9011b6f12fca371657ceb711342005800245f1a6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db586fec0aa5d95ae9fccba0ee30ea75474709e0dcdb312b5f75302cd25262e9"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1822,7 +1825,7 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1854,7 +1857,7 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault-test-helpers"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "apollo-cw-asset",
  "astroport-liquidity-helper",
