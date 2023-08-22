@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "locked-astroport-vault",
+    "contracts/locked-astroport-vault",
     "test-helpers"
 ]
+resolver = "2"
 
 [workspace.package]
 version = "0.1.0-rc.1"
@@ -33,7 +34,7 @@ serde                   = "1.0.171"
 schemars                = "0.8.12"
 
 # Repo packages
-locked-astroport-vault  = { version = "0.1.0-rc.1", path = "./locked-astroport-vault" }
+locked-astroport-vault  = { version = "0.1.0-rc.1", path = "./contracts/locked-astroport-vault" }
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
