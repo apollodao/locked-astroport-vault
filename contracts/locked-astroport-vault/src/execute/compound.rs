@@ -110,6 +110,11 @@ pub fn execute_stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
     let lp_token_balance =
         AssetInfo::cw20(base_token).query_balance(&deps.querier, &env.contract.address)?;
 
+    // Return with no messages if there are no LP tokens to stake
+    if lp_token_balance.is_zero() {
+        return Ok(Response::default());
+    }
+
     // Stake LP tokens
     let staking_res = staking.stake(deps.as_ref(), &env, lp_token_balance)?;
 
