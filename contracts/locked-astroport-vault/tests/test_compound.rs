@@ -10,7 +10,7 @@ pub mod common;
 pub use common::{get_test_runner, UNOPTIMIZED_PATH};
 
 fn test_compound_vault(robot: &LockedAstroportVaultRobot, fee: Decimal, admin: &SigningAccount) {
-    let user = robot.new_user(&admin);
+    let user = robot.new_user(admin);
 
     // Deposit some funds and assert the vault token balance is correct
     let base_token_balance = robot.query_base_token_balance(user.address());
@@ -31,12 +31,13 @@ fn test_compound_vault(robot: &LockedAstroportVaultRobot, fee: Decimal, admin: &
         println!("Donating {}", token);
         let amount = Uint128::new(1_000_000);
         robot
-            .send_native_tokens(&admin, &robot.vault_addr, amount, token.to_string())
+            .send_native_tokens(admin, &robot.vault_addr, amount, token.to_string())
             .assert_vt_balance_converted_to_assets_eq(user.address(), base_token_balance_in_vault)
             .compound_vault(&user)
             .assert_native_token_balance_eq(treasury.to_string(), token.to_string(), amount * fee);
 
-        // If fee is less than 100% then the users base token balance in the vault should have increased
+        // If fee is less than 100% then the users base token balance in the vault
+        // should have increased
         if fee < Decimal::percent(100) {
             robot.assert_vt_balance_converted_to_assets_gt(
                 user.address(),

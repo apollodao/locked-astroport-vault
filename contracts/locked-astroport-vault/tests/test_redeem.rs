@@ -27,7 +27,8 @@ fn test_redeem_with_lockup() {
     robot.redeem(
         Uint128::one(),
         None,
-        Unwrap::Err("Cannot Sub with 0 and 1"),
+        Unwrap::Err("Unexpected funds sent"),
+        Some(vec![]),
         &user,
     );
 
@@ -41,7 +42,7 @@ fn test_redeem_with_lockup() {
         .deposit_cw20(deposit_amount, None, &user)
         .assert_vault_token_balance_eq(user.address(), deposit_amount)
         .assert_base_token_balance_eq(user.address(), base_token_balance - deposit_amount)
-        .redeem(deposit_amount, None, Unwrap::Ok, &user)
+        .redeem(deposit_amount, None, Unwrap::Ok, None, &user)
         .assert_base_token_balance_eq(user.address(), base_token_balance - deposit_amount)
         .assert_vault_token_balance_eq(user.address(), Uint128::zero());
 
@@ -69,7 +70,8 @@ fn test_redeem_without_lockup() {
     robot.redeem(
         Uint128::one(),
         None,
-        Unwrap::Err("Cannot Sub with 0 and 1"),
+        Unwrap::Err("Unexpected funds sent"),
+        Some(vec![]),
         &user,
     );
 
@@ -82,7 +84,7 @@ fn test_redeem_without_lockup() {
         .deposit_cw20(deposit_amount, None, &user)
         .assert_vault_token_balance_eq(user.address(), deposit_amount)
         .assert_base_token_balance_eq(user.address(), base_token_balance - deposit_amount)
-        .redeem(deposit_amount, None, Unwrap::Ok, &user)
+        .redeem(deposit_amount, None, Unwrap::Ok, None, &user)
         .assert_base_token_balance_eq(user.address(), base_token_balance)
         .assert_vault_token_balance_eq(user.address(), Uint128::zero());
 }

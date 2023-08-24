@@ -63,11 +63,10 @@ pub fn execute_redeem(
     let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
 
     // Check that only vault tokens were sent and that the amount is correct
-    let unlock_amount = helpers::correct_funds(&info, &vt_denom, amount)?;
+    helpers::assert_correct_funds(&info, &vt_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
-    let (burn_msg, claim_amount) =
-        burn_vault_tokens(deps.branch(), &env, unlock_amount.amount, &vt_denom)?;
+    let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
 
     // If lock duration is zero, unstake LP tokens and send them to recipient,
     // else create a claim for recipient so they can call `WithdrawUnlocked` later.
