@@ -26,9 +26,11 @@ RUSTFLAGS = "-Cinstrument-coverage"
 LLVM_PROFILE_FILE = "${COVERAGE_PROF_OUTPUT}/coverage-%p-%m.profraw"
 
 [tasks.install-grcov]
+# Makes sure grcov is installed with --locked which prevents installing the latest version of clap_builder which breaks on older rustc versions
+env = { CARGO_MAKE_CRATE_INSTALLATION_LOCKED = "true" }
 condition = { env_not_set = ["SKIP_INSTALL_GRCOV"] }
 private = true
-install_crate = { crate_name = "grcov" }
+install_crate = { crate_name = "grcov", min_version = "0.8.19" }
 
 [tasks.coverage-grcov]
 condition = { rust_version = { min = "1.60.0" } }
