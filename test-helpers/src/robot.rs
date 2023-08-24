@@ -1,6 +1,8 @@
+use std::str::FromStr;
+
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, Addr, Coin, Decimal, Uint128};
+use cosmwasm_std::{coin, Addr, Coin, Coins, Decimal, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::astroport::astroport::factory::PairType;
 use cw_dex::astroport::AstroportPool;
@@ -95,6 +97,13 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             TestRunner::MultiTest(_) => Self::multitest_contract(),
             _ => panic!("Unsupported runner"),
         }
+    }
+
+    /// Creates a new account with the default coins.
+    pub fn new_admin(runner: &'a TestRunner<'a>) -> SigningAccount {
+        runner
+            .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
+            .unwrap()
     }
 
     // Uploads and instantiates dependencies for the LockedAstroportVaultRobot.
@@ -201,6 +210,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         vault_contract: ContractType,
         token_factory_fee: Coin,
         treasury_addr: String,
+        performance_fee: Decimal,
         dependencies: &'a LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool, AstroportPool) {
@@ -284,7 +294,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             reward_tokens: vec![astro.into(), axl.into(), ntrn.clone().into()],
             deposits_enabled: true,
             treasury: treasury_addr,
-            performance_fee: Decimal::percent(3),
+            performance_fee,
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router
@@ -323,6 +333,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         vault_contract: ContractType,
         token_factory_fee: Coin,
         treasury_addr: String,
+        performance_fee: Decimal,
         dependencies: &'a LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> Self {
@@ -457,7 +468,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             reward_tokens: vec![astro.into(), axl.into(), ntrn.into()],
             deposits_enabled: true,
             treasury: treasury_addr,
-            performance_fee: Decimal::percent(3),
+            performance_fee,
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router
