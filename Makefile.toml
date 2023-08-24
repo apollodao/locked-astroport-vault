@@ -1,3 +1,5 @@
+extend = [{ path = "coverage_grcov.Makefile.toml" }]
+
 [env]
 CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
 # If you bump this version, verify RUST_VERSION correctness
@@ -130,6 +132,14 @@ args = [
     "--test",
     "*",
 ]
+
+# Create HTML coverage report
+[tasks.coverage-html]
+alias = "coverage-grcov-html"
+
+# Create LCOV coverage report
+[tasks.coverage-lcov]
+alias = "coverage-grcov-lcov"
 
 # Run automatically on "cargo make". This is the default task. We keep all the
 # default tasks and add our own "custom" task.

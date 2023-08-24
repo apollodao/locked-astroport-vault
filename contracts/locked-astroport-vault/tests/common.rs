@@ -26,7 +26,7 @@ pub enum VaultSetup {
 }
 
 pub fn get_test_runner<'a>() -> TestRunner<'a> {
-    match option_env!("TEST_RUNNER_TYPE").unwrap_or("multi-test") {
+    match option_env!("TEST_RUNNER").unwrap_or("multi-test") {
         "multi-test" => {
             let mut stargate_keeper = StargateKeeper::new();
             TOKEN_FACTORY.register_msgs(&mut stargate_keeper);
