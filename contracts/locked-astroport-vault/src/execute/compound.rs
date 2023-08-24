@@ -39,7 +39,10 @@ pub fn execute_sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
         let balance = asset_info.query_balance(&deps.querier, &env.contract.address)?;
         let fee = balance * cfg.performance_fee;
         performance_fees.add(&Asset::new(asset_info.clone(), fee))?;
-        tokens_to_sell.add(&Asset::new(asset_info, balance - fee))?;
+        // Don't add to list of tokens to sell if it is the reward liquidation target
+        if asset_info != cfg.reward_liquidation_target {
+            tokens_to_sell.add(&Asset::new(asset_info, balance - fee))?;
+        }
     }
 
     // Create msgs to transfer performance fees to treasury
