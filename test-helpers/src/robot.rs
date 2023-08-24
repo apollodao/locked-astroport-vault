@@ -544,6 +544,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
+    /// Calls `ExecuteMsg::Redeem` to redeem vault tokens from the vault
     pub fn redeem(
         &self,
         amount: Uint128,
@@ -560,6 +561,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
+    /// Compounds the rewards in the vault
     pub fn compound_vault(&self, signer: &SigningAccount) -> &Self {
         self.wasm()
             .execute(
