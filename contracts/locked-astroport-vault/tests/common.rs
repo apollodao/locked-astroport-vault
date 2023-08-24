@@ -11,7 +11,7 @@ use locked_astroport_vault_test_helpers::robot::{
     LockedAstroportVaultRobot, LockedVaultDependencies,
 };
 
-pub const UNOPTIMIZED_PATH: &str = "../target/wasm32-unknown-unknown/release";
+pub const UNOPTIMIZED_PATH: &str = "../../target/wasm32-unknown-unknown/release";
 pub const DEPS_PATH: &str = "tests/test_artifacts";
 
 pub const DENOM_CREATION_FEE: &str = "10000000uosmo";
