@@ -98,14 +98,14 @@ command = "cargo"
 args = ["machete", "--fix"]
 
 
-# Wasm build of test contract
+# Unoptimized Wasm build of contract for testing
 [tasks.wasm]
 toolchain = "${RUST_VERSION}"
 command = "cargo"
 args = [
     "build",
     "-p",
-    "neutron-astroport-reward-distributor-contract",
+    "locked-astroport-vault",
     "--target",
     "wasm32-unknown-unknown",
     "--lib",
@@ -123,12 +123,15 @@ args = [
 
 # Run integration tests
 [tasks.integration-test]
+env = { TEST_RUNNER = "osmosis-test-app" }
 cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}"
 dependencies = ["wasm"]
 toolchain = "${RUST_VERSION}"
 command = "cargo"
 args = [
     "test",
+    "--features",
+    "osmosis-test-tube",
     "--test",
     "*",
 ]
