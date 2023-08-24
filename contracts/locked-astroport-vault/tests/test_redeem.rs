@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use common::instantiate_unlocked_vault;
+use common::instantiate_axlr_ntrn_vault;
 use cosmwasm_std::{Coins, Uint128};
 use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
@@ -61,7 +61,7 @@ fn test_redeem_without_lockup() {
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = instantiate_unlocked_vault(&runner, &admin, &dependencies);
+    let (robot, _treasury) = instantiate_axlr_ntrn_vault(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // Try redeeming without first depositing, should fail

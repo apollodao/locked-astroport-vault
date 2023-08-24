@@ -56,7 +56,7 @@ pub fn default_instantiate<'a>(
     (robot, treasury_addr)
 }
 
-pub fn instantiate_unlocked_vault<'a>(
+pub fn instantiate_axlr_ntrn_vault<'a>(
     runner: &'a TestRunner<'a>,
     admin: &SigningAccount,
     dependencies: &'a LockedVaultDependencies<'a>,

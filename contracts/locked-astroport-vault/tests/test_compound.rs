@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use common::DEPS_PATH;
+use common::{instantiate_axlr_ntrn_vault, DEPS_PATH};
 use cosmwasm_std::{Coins, Uint128};
 use cw_it::robot::TestRobot;
-use cw_it::test_tube::Account;
+use cw_it::test_tube::{Account, SigningAccount};
 use cw_it::traits::CwItRunner;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
@@ -13,14 +13,7 @@ pub use common::{get_test_runner, UNOPTIMIZED_PATH};
 
 use crate::common::default_instantiate;
 
-#[test]
-fn test_compound_vault() {
-    let runner = get_test_runner();
-    let admin = runner
-        .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
-        .unwrap();
-    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+fn test_compound_vault(robot: &LockedAstroportVaultRobot, admin: &SigningAccount) {
     let user = robot.new_user(&admin);
 
     // Deposit some funds and assert the vault token balance is correct
@@ -47,4 +40,28 @@ fn test_compound_vault() {
             .assert_vt_balance_converted_to_assets_gt(user.address(), base_token_balance_in_vault)
             .query_convert_to_assets(deposit_amount);
     }
+}
+
+#[test]
+fn compound_wsteth_eth_vault() {
+    let runner = get_test_runner();
+    let admin = runner
+        .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
+        .unwrap();
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+
+    test_compound_vault(&robot, &admin)
+}
+
+#[test]
+fn compound_axlr_ntrn_vault() {
+    let runner = get_test_runner();
+    let admin = runner
+        .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
+        .unwrap();
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = instantiate_axlr_ntrn_vault(&runner, &admin, &dependencies);
+
+    test_compound_vault(&robot, &admin)
 }
