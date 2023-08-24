@@ -75,11 +75,10 @@ pub fn execute_force_redeem(
     }
 
     // Check that only vault tokens were sent and that the amount is correct
-    let unlock_amount = helpers::correct_funds(&info, &vt_denom, amount)?;
+    helpers::assert_correct_funds(&info, &vt_denom, amount)?;
 
     // Calculate claim amount and create msg to burn vault tokens
-    let (burn_msg, release_amount) =
-        burn_vault_tokens(deps.branch(), &env, unlock_amount.amount, &vt_denom)?;
+    let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
 
     // Unstake LP tokens
     let staking = STAKING.load(deps.storage)?;

@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, Addr, Coin, Coins, Decimal, Uint128};
+use cosmwasm_std::{coin, coins, Addr, Coin, Coins, Decimal, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::astroport::astroport::factory::PairType;
 use cw_dex::astroport::AstroportPool;
@@ -516,7 +516,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     pub fn new_user(&self, admin: &SigningAccount) -> SigningAccount {
         let user = self
             .runner
-            .init_account(&[coin(1000000000, "uosmo")])
+            .init_account(&[coin(1_000_000_000_000_000, "uosmo")])
             .unwrap();
 
         self.send_cw20(
@@ -561,12 +561,13 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         amount: Uint128,
         recipient: Option<String>,
         unwrap_choice: Unwrap,
+        funds: Option<Vec<Coin>>,
         signer: &SigningAccount,
     ) -> &Self {
         unwrap_choice.unwrap(self.wasm().execute(
             &self.vault_addr,
             &ExecuteMsg::Redeem { amount, recipient },
-            &[coin(amount.u128(), self.vault_token())],
+            &funds.unwrap_or_else(|| coins(amount.u128(), self.vault_token())),
             signer,
         ));
         self

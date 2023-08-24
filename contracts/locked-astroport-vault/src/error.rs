@@ -1,4 +1,4 @@
-use cosmwasm_std::{OverflowError, StdError};
+use cosmwasm_std::{Coin, OverflowError, StdError};
 use cw_dex::CwDexError;
 use cw_ownable::OwnershipError;
 
@@ -27,6 +27,12 @@ pub enum ContractError {
 
     #[error("Lockup is disabled for this vault")]
     LockupDisabled {},
+
+    #[error("Unexpected funds sent. Expected: {expected:?}, Actual: {actual:?}")]
+    UnexpectedFunds {
+        expected: Vec<Coin>,
+        actual: Vec<Coin>,
+    },
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;

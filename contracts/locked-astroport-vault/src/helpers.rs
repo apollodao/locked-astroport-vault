@@ -1,39 +1,26 @@
-use cosmwasm_std::{coin, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
+use cosmwasm_std::{coin, coins, Addr, Api, CosmosMsg, Decimal, Deps, DepsMut, Env, Uint128};
 use cw_utils::Duration;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgMint};
 
-use crate::error::ContractResult;
+use crate::error::{ContractError, ContractResult};
 use crate::state::STATE;
 
-use cosmwasm_std::{Coin, MessageInfo, StdError, StdResult};
+use cosmwasm_std::{Coin, MessageInfo, StdResult};
 
-/// Return the `Coin` from `info.funds` if it is the only denom in the funds.
-/// Otherwise, return an error.
-pub fn one_coin(info: &MessageInfo, denom: &str) -> StdResult<Coin> {
-    if info.funds.len() != 1 {
-        Err(StdError::generic_err("Must deposit exactly one token"))
-    } else if info.funds[0].denom != denom {
-        Err(StdError::generic_err(format!(
-            "Must deposit denom {}",
-            denom
-        )))
-    } else {
-        Ok(info.funds[0].clone())
+/// Asserts that exactly `amount` of `denom` is sent to the contract, with no
+/// extra funds.
+pub fn assert_correct_funds(
+    info: &MessageInfo,
+    denom: &str,
+    amount: Uint128,
+) -> ContractResult<()> {
+    if info.funds.len() != 1 || info.funds[0].denom != denom || info.funds[0].amount != amount {
+        return Err(ContractError::UnexpectedFunds {
+            expected: coins(amount.u128(), denom),
+            actual: info.funds.clone(),
+        });
     }
-}
-
-/// Return the `Coin` from `info.funds` if it is the only denom in the funds
-/// and the amount is exactly `amount`. Otherwise, return an error.
-pub fn correct_funds(info: &MessageInfo, denom: &str, amount: Uint128) -> StdResult<Coin> {
-    let coin = one_coin(info, denom)?;
-    if coin.amount != amount {
-        Err(StdError::generic_err(format!(
-            "Invalid amount {} expected {}",
-            coin.amount, amount
-        )))
-    } else {
-        Ok(coin)
-    }
+    Ok(())
 }
 
 /// Converts an `Option<String>` to an `Addr` by unwrapping the string and
