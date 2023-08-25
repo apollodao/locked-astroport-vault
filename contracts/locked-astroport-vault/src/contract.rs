@@ -23,7 +23,8 @@ use crate::query::{
     query_vault_standard_info,
 };
 use crate::state::{
-    ConfigUnchecked, VaultState, BASE_TOKEN, CONFIG, POOL, STAKING, STATE, VAULT_TOKEN_DENOM,
+    ConfigUnchecked, VaultState, BASE_TOKEN, CONFIG, FORCE_WITHDRAW_WHITELIST, POOL, STAKING,
+    STATE, VAULT_TOKEN_DENOM,
 };
 
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -149,11 +150,11 @@ pub fn execute(
             ExtensionExecuteMsg::Lockup(msg) => match msg {
                 LockupExecuteMsg::Unlock { amount } => {
                     let recipient = info.sender.clone();
-                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
+                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient, false)
                 }
                 LockupExecuteMsg::EmergencyUnlock { amount } => {
                     let recipient = info.sender.clone();
-                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
+                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient, false)
                 }
                 LockupExecuteMsg::WithdrawUnlocked {
                     recipient,
@@ -164,7 +165,14 @@ pub fn execute(
             },
             ExtensionExecuteMsg::ForceUnlock(msg) => match msg {
                 ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
-                    execute::lockup::execute_force_redeem(deps, env, info, amount, recipient)
+                    // Check that the sender is whitelisted, then call redeem handler with
+                    // force_redeem=true
+                    if !FORCE_WITHDRAW_WHITELIST.contains(deps.storage, &info.sender) {
+                        return Err(ContractError::Unauthorized {});
+                    }
+                    let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
+
+                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient, true)
                 }
                 ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
                     lockup_id,
@@ -204,7 +212,9 @@ pub fn execute(
                         deps, env, amount, depositor, recipient,
                     ),
                     InternalMsg::Redeem { recipient, amount } => {
-                        execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
+                        execute::basic_vault::execute_redeem(
+                            deps, env, info, amount, recipient, false,
+                        )
                     }
                 }
             }

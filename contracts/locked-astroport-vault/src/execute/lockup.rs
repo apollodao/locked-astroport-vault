@@ -2,8 +2,8 @@ use apollo_cw_asset::Asset;
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Uint128};
 
 use crate::error::{ContractError, ContractResponse};
-use crate::helpers::{self, burn_vault_tokens, unwrap_recipient};
-use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, STAKING, VAULT_TOKEN_DENOM};
+use crate::helpers::unwrap_recipient;
+use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, STAKING};
 
 use cw_dex::traits::Unstake;
 
@@ -56,38 +56,6 @@ pub fn execute_update_force_withdraw_whitelist(
     }
 
     Ok(Response::new())
-}
-
-pub fn execute_force_redeem(
-    mut deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    amount: Uint128,
-    recipient: Option<String>,
-) -> ContractResponse {
-    let base_token = BASE_TOKEN.load(deps.storage)?;
-    let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
-    let recipient = unwrap_recipient(recipient, &info, deps.api)?;
-
-    // Check that the sender is whitelisted
-    if !FORCE_WITHDRAW_WHITELIST.contains(deps.storage, &info.sender) {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    // Check that only vault tokens were sent and that the amount is correct
-    helpers::assert_correct_funds(&info, &vt_denom, amount)?;
-
-    // Calculate claim amount and create msg to burn vault tokens
-    let (burn_msg, release_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
-
-    // Unstake LP tokens
-    let staking = STAKING.load(deps.storage)?;
-    let staking_res = staking.unstake(deps.as_ref(), &env, release_amount)?;
-
-    // Send LP tokens to recipient
-    let send_msg = Asset::cw20(base_token, release_amount).transfer_msg(recipient)?;
-
-    Ok(staking_res.add_message(burn_msg).add_message(send_msg))
 }
 
 pub fn execute_force_withdraw_unlocking(
