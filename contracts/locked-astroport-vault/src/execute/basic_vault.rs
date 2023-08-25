@@ -3,6 +3,9 @@ use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{
     coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
 };
+use cw_vault_standard::extensions::lockup::{
+    UNLOCKING_POSITION_ATTR_KEY, UNLOCKING_POSITION_CREATED_EVENT_TYPE,
+};
 use optional_struct::Applyable;
 
 use crate::error::{ContractError, ContractResponse};
@@ -90,13 +93,15 @@ pub fn execute_redeem(
         res.add_message(send_msg)
     } else {
         // Create claim for recipient
-        state::claims().create_claim(
+        let claim = state::claims().create_claim(
             deps.storage,
             &recipient,
             claim_amount,
             cfg.lock_duration.after(&env.block),
         )?;
-        Response::new()
+        let event = Event::new(UNLOCKING_POSITION_CREATED_EVENT_TYPE)
+            .add_attribute(UNLOCKING_POSITION_ATTR_KEY, format!("{}", claim.id));
+        Response::new().add_event(event)
     };
 
     let event = Event::new("apollo/vaults/execute_redeem")
