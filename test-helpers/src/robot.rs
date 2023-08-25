@@ -46,6 +46,8 @@ pub const NTRN_DENOM: &str = "untrn";
 /// The default coins to fund new accounts with
 pub const DEFAULT_COINS: &str = "1000000000000000000uosmo,1000000000000000000uwsteth,1000000000000000000ueth,1000000000000000000uastro,1000000000000000000uusdc,1000000000000000000uaxl,1000000000000000000untrn";
 
+pub const INITIAL_LIQ: u128 = 1_000_000_000_000_000u128;
+
 /// Contracts that are required for the LockedAstroportVaultRobot to function.
 pub struct LockedVaultDependencies<'a> {
     pub astroport_contracts: AstroportContracts,
@@ -225,10 +227,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [axl.clone().into(), ntrn.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let axl_ntrn_pool = AstroportPool {
             lp_token_addr: Addr::unchecked(&axl_ntrn_lp),
@@ -245,10 +244,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [astro.clone().into(), ntrn.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let astro_ntrn_pool = AstroportPool {
             lp_token_addr: Addr::unchecked(&astro_ntrn_lp),
@@ -357,10 +353,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [wsteth.clone().into(), eth.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let (astro_usdc_pair, astro_usdc_lp) = create_astroport_pair(
             runner,
@@ -369,10 +362,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [astro.clone().into(), usdc.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let (ntrn_usdc_pair, ntrn_usdc_lp) = create_astroport_pair(
             runner,
@@ -381,10 +371,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [ntrn.clone().into(), usdc.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let (eth_usdc_pair, eth_usdc_lp) = create_astroport_pair(
             runner,
@@ -393,10 +380,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [eth.clone().into(), usdc.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let (axl_ntrn_pair, axl_ntrn_lp) = create_astroport_pair(
             runner,
@@ -405,10 +389,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             [axl.clone().into(), ntrn.clone().into()],
             None,
             signer,
-            Some([
-                Uint128::from(1_000_000_000u128),
-                Uint128::from(1_000_000_000u128),
-            ]),
+            Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
 
         // Set routes in cw-dex-router
@@ -519,7 +500,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap();
 
         self.send_cw20(
-            Uint128::new(1000000),
+            Uint128::new(1_000_000),
             &self.base_token(),
             &user.address(),
             admin,
@@ -691,6 +672,16 @@ impl<'a> LockedAstroportVaultRobot<'a> {
 
     // Assertions //
 
+    /// Asserts that value a and b are equal, or off by only one.
+    pub fn assert_eq_or_off_by_one(a: impl Into<Uint128>, b: impl Into<Uint128>) {
+        let a = a.into();
+        let b = b.into();
+
+        if a != b && a.abs_diff(b) != Uint128::new(1) {
+            panic!("assert_eq_or_off_by_one failed. {} != {}", a, b);
+        }
+    }
+
     /// Asserts that the vault token balance of the given address, when
     /// converted to an amount of base tokens using the current exchange
     /// rate, is equal to the given amount.
@@ -699,8 +690,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         address: impl Into<String>,
         amount: impl Into<Uint128>,
     ) -> &Self {
-        let assets = self.query_convert_to_assets(self.query_vault_token_balance(address));
-        assert_eq!(assets, amount.into());
+        let vault_token_balance = self.query_vault_token_balance(address);
+        let assets = self.query_convert_to_assets(vault_token_balance);
+        Self::assert_eq_or_off_by_one(assets, amount);
         self
     }
 

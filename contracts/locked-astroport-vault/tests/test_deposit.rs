@@ -6,6 +6,7 @@ use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
+use locked_astroport_vault::helpers::INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
 use locked_astroport_vault::state::ConfigUpdates;
 use locked_astroport_vault_test_helpers::helpers::Unwrap;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
@@ -30,8 +31,11 @@ fn test_deposit() {
     let deposit_amount = base_token_balance / Uint128::new(2);
     robot
         .deposit_cw20(deposit_amount, None, &user)
-        .assert_vault_token_balance_eq(user.address(), deposit_amount)
-        .assert_total_vault_token_supply_eq(deposit_amount)
+        .assert_vault_token_balance_eq(
+            user.address(),
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+        )
+        .assert_total_vault_token_supply_eq(deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN)
         .assert_total_vault_assets_eq(deposit_amount);
 }
 
@@ -50,7 +54,10 @@ fn can_only_deposit_when_despoits_enabled() {
     let deposit_amount = Uint128::new(100);
     robot
         .deposit_cw20(deposit_amount, None, &user)
-        .assert_vault_token_balance_eq(user.address(), deposit_amount);
+        .assert_vault_token_balance_eq(
+            user.address(),
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+        );
 
     // Disable deposits
     robot.update_config(

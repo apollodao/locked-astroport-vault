@@ -37,12 +37,12 @@ pub fn execute_deposit(
     let staking_res = staking.stake(deps.as_ref(), &env, amount)?;
 
     // Mint vault tokens
-    let mint_msg = mint_vault_tokens(deps, env, amount, &vault_token_denom)?;
+    let (mint_msg, mint_amount) = mint_vault_tokens(deps, env, amount, &vault_token_denom)?;
 
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
         to_address: recipient.to_string(),
-        amount: coins(amount.u128(), vault_token_denom),
+        amount: coins(mint_amount.u128(), vault_token_denom),
     }
     .into();
 

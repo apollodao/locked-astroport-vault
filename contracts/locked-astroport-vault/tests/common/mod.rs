@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Coin, Decimal};
 use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler};
 use cw_it::multi_test::modules::TokenFactory;
@@ -11,6 +12,8 @@ use locked_astroport_vault_test_helpers::robot::{
     LockedAstroportVaultRobot, LockedVaultDependencies,
 };
 
+pub mod compound;
+
 pub const UNOPTIMIZED_PATH: &str = "../../target/wasm32-unknown-unknown/release";
 pub const DEPS_PATH: &str = "tests/test_artifacts";
 
@@ -20,6 +23,7 @@ const TOKEN_FACTORY: &TokenFactory =
     &TokenFactory::new("factory", 32, 16, 59 + 16, DENOM_CREATION_FEE);
 
 /// An enum to represent the different default vault setups
+#[cw_serde]
 pub enum VaultSetup {
     WstEth,
     AxlrNtrn,
