@@ -2,6 +2,7 @@ extend = [{ path = "coverage_grcov.Makefile.toml" }]
 
 [config]
 default_to_workspace = false
+skip_core_tasks = true
 
 [env]
 # If you bump this version, verify RUST_VERSION correctness
@@ -153,10 +154,9 @@ alias = "coverage-grcov-html"
 [tasks.coverage-lcov]
 alias = "coverage-grcov-lcov"
 
-# Run automatically on "cargo make". This is the default task. We keep all the
-# default tasks and add our own "custom" task.
-[tasks.dev-test-flow]
-run_task = "custom-default"
+# Run automatically on "cargo make". This is the default task.
+[tasks.default]
+alias = "custom-default"
 
 # Custom tasks to run on "cargo make"
 [tasks.custom-default]
@@ -165,4 +165,4 @@ dependencies = ["format", "clippy-fix", "deny", "machete-fix", "unit-test", "int
 
 # Docs and Test coverage are not run by default. Can run all with "cargo make all".
 [tasks.all]
-dependencies = ["dev-test-flow", "cov"]
+dependencies = ["custom-default", "coverage-html"]
