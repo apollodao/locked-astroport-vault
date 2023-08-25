@@ -57,6 +57,7 @@ pub fn execute_redeem(
     info: MessageInfo,
     amount: Uint128,
     recipient: Addr,
+    force_redeem: bool,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
     let base_token = BASE_TOKEN.load(deps.storage)?;
@@ -68,9 +69,10 @@ pub fn execute_redeem(
     // Calculate claim amount and create msg to burn vault tokens
     let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
 
-    // If lock duration is zero, unstake LP tokens and send them to recipient,
-    // else create a claim for recipient so they can call `WithdrawUnlocked` later.
-    let res = if cfg.lock_duration.is_zero() {
+    // If lock duration is zero or this is a force redeem, unstake LP tokens and
+    // send them to recipient, else create a claim for recipient so they can
+    // call `WithdrawUnlocked` later.
+    let res = if cfg.lock_duration.is_zero() || force_redeem {
         // Unstake LP tokens
         let staking = STAKING.load(deps.storage)?;
         let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
