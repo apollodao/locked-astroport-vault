@@ -104,6 +104,15 @@ impl ConfigUnchecked {
         let reward_liquidation_target = self.reward_liquidation_target.check(api)?;
         let router = self.router.check(api)?;
 
+        // Reward liquidation target must be one of the pool assets
+        let pool_assets = POOL.load(deps.storage)?.pool_assets;
+        if !pool_assets.contains(&reward_liquidation_target) {
+            return Err(StdError::generic_err(format!(
+                "Reward liquidation target {:?} is not in the pool assets {:?}",
+                reward_liquidation_target, pool_assets
+            )));
+        }
+
         // Check that the router can route between all reward assets and the
         // reward liquidation target. We discard the actual path because we
         // don't need it here. We just need to make sure the paths exist.

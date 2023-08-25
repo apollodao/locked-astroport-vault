@@ -21,7 +21,6 @@ use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
 use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use liquidity_helper::LiquidityHelperUnchecked;
-use locked_astroport_vault;
 use locked_astroport_vault::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
     ExtensionQueryMsg, InstantiateMsg, QueryMsg,
@@ -541,17 +540,20 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     }
 
     /// Update the config of the vault and return a reference to the robot.
-    pub fn update_config(&self, updates: ConfigUpdates<String>, signer: &SigningAccount) -> &Self {
-        self.wasm()
-            .execute(
-                &self.vault_addr,
-                &ExecuteMsg::VaultExtension(ExtensionExecuteMsg::Apollo(
-                    ApolloExtensionExecuteMsg::UpdateConfig { updates },
-                )),
-                &[],
-                signer,
-            )
-            .unwrap();
+    pub fn update_config(
+        &self,
+        updates: ConfigUpdates<String>,
+        unwrap_choice: Unwrap,
+        signer: &SigningAccount,
+    ) -> &Self {
+        unwrap_choice.unwrap(self.wasm().execute(
+            &self.vault_addr,
+            &ExecuteMsg::VaultExtension(ExtensionExecuteMsg::Apollo(
+                ApolloExtensionExecuteMsg::UpdateConfig { updates },
+            )),
+            &[],
+            signer,
+        ));
         self
     }
 

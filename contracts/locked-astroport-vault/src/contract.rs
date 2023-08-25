@@ -43,6 +43,18 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.owner))?;
 
+    // Query pair info from astroport pair
+    let pair_info = deps
+        .querier
+        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
+            contract_addr: msg.pool_addr.clone(),
+            msg: to_binary(&astroport::pair::QueryMsg::Pair {})?,
+        }))?;
+
+    // Store pool info
+    let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?)?;
+    POOL.save(deps.storage, &pool)?;
+
     // Create, validate and store config
     let config = ConfigUnchecked {
         lock_duration: Duration::Time(msg.lock_duration),
@@ -56,18 +68,6 @@ pub fn instantiate(
     }
     .check(deps.as_ref())?;
     CONFIG.save(deps.storage, &config)?;
-
-    // Query pair info from astroport pair
-    let pair_info = deps
-        .querier
-        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: msg.pool_addr.clone(),
-            msg: to_binary(&astroport::pair::QueryMsg::Pair {})?,
-        }))?;
-
-    // Store pool info
-    let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?)?;
-    POOL.save(deps.storage, &pool)?;
 
     // Store base token and vault token denom
     let vault_token_denom = format!(
