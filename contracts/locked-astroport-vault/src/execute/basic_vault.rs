@@ -1,6 +1,8 @@
 use apollo_cw_asset::Asset;
 use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
+use cosmwasm_std::{
+    coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+};
 use optional_struct::Applyable;
 
 use crate::error::{ContractError, ContractResponse};
@@ -46,9 +48,14 @@ pub fn execute_deposit(
     }
     .into();
 
+    let event = Event::new("apollo/vaults/execute_deposit")
+        .add_attribute("deposit_amount", amount)
+        .add_attribute("vault_tokens_minted", mint_amount);
+
     Ok(merge_responses(vec![transfer_from_res, staking_res])
         .add_message(mint_msg)
-        .add_message(send_msg))
+        .add_message(send_msg)
+        .add_event(event))
 }
 
 pub fn execute_redeem(
@@ -92,7 +99,12 @@ pub fn execute_redeem(
         Response::new()
     };
 
-    Ok(res.add_message(burn_msg))
+    let event = Event::new("apollo/vaults/execute_redeem")
+        .add_attribute("is_force_redeem", format!("{}", force_redeem))
+        .add_attribute("vault_tokens_redeemed", amount)
+        .add_attribute("lp_tokens_claimed", claim_amount);
+
+    Ok(res.add_message(burn_msg).add_event(event))
 }
 
 pub fn execute_update_config(
@@ -104,6 +116,9 @@ pub fn execute_update_config(
         return Err(ContractError::Unauthorized {});
     }
 
+    let event = Event::new("apollo/vaults/execute_update_config")
+        .add_attribute("updates", format!("{:?}", updates));
+
     let mut config: ConfigUnchecked = CONFIG.load(deps.storage)?.into();
 
     updates.apply_to(&mut config);
@@ -112,5 +127,5 @@ pub fn execute_update_config(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new())
+    Ok(Response::new().add_event(event))
 }
