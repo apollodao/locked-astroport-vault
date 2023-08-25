@@ -13,7 +13,7 @@ use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute;
-use crate::helpers::{self, IntoInternalCall, IsZero};
+use crate::helpers::{self, IntoInternalCall};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
     ExtensionQueryMsg, InstantiateMsg, InternalMsg, QueryMsg,
@@ -108,7 +108,6 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    let cfg = CONFIG.load(deps.storage)?;
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
             // Call contract itself first to compound, but as a SubMsg so that we can still
@@ -147,56 +146,44 @@ pub fn execute(
                 .add_message(redeem_msg))
         }
         ExecuteMsg::VaultExtension(msg) => match msg {
-            ExtensionExecuteMsg::Lockup(msg) => {
-                if cfg.lock_duration.is_zero() {
-                    return Err(ContractError::LockupDisabled {});
+            ExtensionExecuteMsg::Lockup(msg) => match msg {
+                LockupExecuteMsg::Unlock { amount } => {
+                    let recipient = info.sender.clone();
+                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
                 }
-
-                match msg {
-                    LockupExecuteMsg::Unlock { amount } => {
-                        let recipient = info.sender.clone();
-                        execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
-                    }
-                    LockupExecuteMsg::EmergencyUnlock { amount } => {
-                        let recipient = info.sender.clone();
-                        execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
-                    }
-                    LockupExecuteMsg::WithdrawUnlocked {
-                        recipient,
-                        lockup_id,
-                    } => execute::lockup::execute_withdraw_unlocked(
-                        deps, env, info, recipient, lockup_id,
-                    ),
+                LockupExecuteMsg::EmergencyUnlock { amount } => {
+                    let recipient = info.sender.clone();
+                    execute::basic_vault::execute_redeem(deps, env, info, amount, recipient)
                 }
-            }
-            ExtensionExecuteMsg::ForceUnlock(msg) => {
-                if cfg.lock_duration.is_zero() {
-                    return Err(ContractError::LockupDisabled {});
+                LockupExecuteMsg::WithdrawUnlocked {
+                    recipient,
+                    lockup_id,
+                } => execute::lockup::execute_withdraw_unlocked(
+                    deps, env, info, recipient, lockup_id,
+                ),
+            },
+            ExtensionExecuteMsg::ForceUnlock(msg) => match msg {
+                ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
+                    execute::lockup::execute_force_redeem(deps, env, info, amount, recipient)
                 }
-
-                match msg {
-                    ForceUnlockExecuteMsg::ForceRedeem { recipient, amount } => {
-                        execute::lockup::execute_force_redeem(deps, env, info, amount, recipient)
-                    }
-                    ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
-                        lockup_id,
-                        amount,
-                        recipient,
-                    } => execute::lockup::execute_force_withdraw_unlocking(
-                        deps, env, info, amount, recipient, lockup_id,
-                    ),
-                    ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
-                        add_addresses,
-                        remove_addresses,
-                    } => execute::lockup::execute_update_force_withdraw_whitelist(
-                        deps,
-                        env,
-                        info,
-                        add_addresses,
-                        remove_addresses,
-                    ),
-                }
-            }
+                ForceUnlockExecuteMsg::ForceWithdrawUnlocking {
+                    lockup_id,
+                    amount,
+                    recipient,
+                } => execute::lockup::execute_force_withdraw_unlocking(
+                    deps, env, info, amount, recipient, lockup_id,
+                ),
+                ForceUnlockExecuteMsg::UpdateForceWithdrawWhitelist {
+                    add_addresses,
+                    remove_addresses,
+                } => execute::lockup::execute_update_force_withdraw_whitelist(
+                    deps,
+                    env,
+                    info,
+                    add_addresses,
+                    remove_addresses,
+                ),
+            },
             ExtensionExecuteMsg::Internal(msg) => {
                 // Assert that only the contract itself can call internal messages
                 if info.sender != env.contract.address {
