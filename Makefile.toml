@@ -1,7 +1,9 @@
 extend = [{ path = "coverage_grcov.Makefile.toml" }]
 
+[config]
+default_to_workspace = false
+
 [env]
-CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
 # If you bump this version, verify RUST_VERSION correctness
 RUST_OPTIMIZER_VERSION = "0.12.13"
 # Use rust version from rust-optimizer Dockerfile (see https://github.com/CosmWasm/rust-optimizer/blob/main/Dockerfile#L1)
@@ -112,6 +114,12 @@ args = [
     "--lib",
     "--release",
 ]
+
+# Run all tests
+[tasks.test]
+toolchain = "${RUST_VERSION}"
+command = "cargo"
+args = ["test", "--locked"]
 
 # Run unit tests
 [tasks.unit-test]
