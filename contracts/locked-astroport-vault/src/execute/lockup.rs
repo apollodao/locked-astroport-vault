@@ -49,12 +49,18 @@ pub fn execute_update_force_withdraw_whitelist(
         .add_attribute("add_addresses", format!("{:?}", add_addresses))
         .add_attribute("remove_addresses", format!("{:?}", remove_addresses));
 
-    for addr in add_addresses {
-        FORCE_WITHDRAW_WHITELIST.insert(deps.storage, &deps.api.addr_validate(&addr)?)?;
+    for addr in add_addresses.iter() {
+        FORCE_WITHDRAW_WHITELIST.insert(deps.storage, &deps.api.addr_validate(addr)?)?;
     }
 
-    for addr in remove_addresses {
-        let addr = deps.api.addr_validate(&addr)?;
+    for addr in remove_addresses.iter() {
+        if add_addresses.contains(addr) {
+            return Err(ContractError::Std(StdError::generic_err(
+                "Cannot add and remove the same address",
+            )));
+        }
+
+        let addr = deps.api.addr_validate(addr)?;
         let was_removed = FORCE_WITHDRAW_WHITELIST.remove(deps.storage, &addr)?;
         if !was_removed {
             return Err(ContractError::Std(StdError::generic_err(
