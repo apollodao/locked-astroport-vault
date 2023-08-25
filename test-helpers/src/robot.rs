@@ -677,11 +677,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let a = a.into();
         let b = b.into();
 
-        if a == b {
-            return;
-        } else if a.abs_diff(b) == Uint128::new(1) {
-            return;
-        } else {
+        if a != b && a.abs_diff(b) != Uint128::new(1) {
             panic!("assert_eq_or_off_by_one failed. {} != {}", a, b);
         }
     }

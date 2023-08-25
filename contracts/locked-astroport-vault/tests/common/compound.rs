@@ -23,7 +23,7 @@ pub fn test_compound_vault(
 
     // Deposit some funds and assert the vault token balance is correct
     let vt_balance_after_deposit = robot
-        .deposit_cw20(deposit_amount, None, &user)
+        .deposit_cw20(deposit_amount, None, user)
         .assert_vt_balance_converted_to_assets_eq(
             user.address(),
             bt_balance_in_vault_before_deposit + deposit_amount,
@@ -47,7 +47,7 @@ pub fn test_compound_vault(
         robot
             .send_native_tokens(admin, &robot.vault_addr, donation_amount, token.to_string())
             .assert_vt_balance_converted_to_assets_eq(user.address(), base_token_balance_in_vault)
-            .compound_vault(&user)
+            .compound_vault(user)
             .assert_native_token_balance_eq(
                 treasury.to_string(),
                 token.to_string(),
