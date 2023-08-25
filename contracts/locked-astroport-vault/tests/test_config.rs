@@ -1,7 +1,8 @@
 use apollo_cw_asset::AssetInfoUnchecked;
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
 use locked_astroport_vault::state::ConfigUpdates;
-use locked_astroport_vault_test_helpers::{helpers::Unwrap, robot::LockedAstroportVaultRobot};
+use locked_astroport_vault_test_helpers::helpers::Unwrap;
+use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 pub mod common;
 
