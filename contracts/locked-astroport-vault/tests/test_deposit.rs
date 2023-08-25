@@ -7,7 +7,10 @@ use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use locked_astroport_vault::state::ConfigUpdates;
-use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
+use locked_astroport_vault_test_helpers::{
+    helpers::Unwrap,
+    robot::{LockedAstroportVaultRobot, DEFAULT_COINS},
+};
 
 pub mod common;
 pub use common::get_test_runner;
@@ -57,6 +60,7 @@ fn can_only_deposit_when_despoits_enabled() {
             deposits_enabled: Some(false),
             ..Default::default()
         },
+        Unwrap::Ok,
         &admin,
     );
 
