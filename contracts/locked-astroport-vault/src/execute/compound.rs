@@ -32,31 +32,33 @@ pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
 pub fn execute_sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
 
+    // Create event
+    let mut event = Event::new("apollo/vaults/execute_compound")
+        .add_attributes(vec![attr("action", "sell_tokens")]);
+
     // Calculate performance fees and tokens to sell
     let mut performance_fees = AssetList::new();
     let mut tokens_to_sell = AssetList::new();
     for asset_info in cfg.reward_tokens.into_iter() {
         let balance = asset_info.query_balance(&deps.querier, &env.contract.address)?;
-        let fee = balance * cfg.performance_fee;
-        performance_fees.add(&Asset::new(asset_info.clone(), fee))?;
-        // Don't add to list of tokens to sell if it is the reward liquidation target
-        if asset_info != cfg.reward_liquidation_target {
-            tokens_to_sell.add(&Asset::new(asset_info, balance - fee))?;
+        let fee_amount = balance * cfg.performance_fee;
+        let amount_to_sell = balance - fee_amount;
+
+        if fee_amount > Uint128::zero() {
+            let fee_asset = Asset::new(asset_info.clone(), fee_amount);
+            performance_fees.add(&fee_asset)?;
+            event = event.add_attributes(vec![attr("fee", fee_asset.to_string())]);
+        }
+
+        if amount_to_sell > Uint128::zero() && asset_info != cfg.reward_liquidation_target {
+            let token = Asset::new(asset_info.clone(), amount_to_sell);
+            tokens_to_sell.add(&token)?;
+            event = event.add_attributes(vec![attr("sold_token", token.to_string())]);
         }
     }
 
     // Create msgs to transfer performance fees to treasury
     let mut msgs = performance_fees.transfer_msgs(cfg.treasury)?;
-
-    // Create event
-    let mut event = Event::new("apollo/vaults/execute_compound")
-        .add_attributes(vec![attr("action", "sell_tokens")]);
-    for fee in performance_fees.iter() {
-        event = event.add_attributes(vec![attr("performance_fee", fee.to_string())]);
-    }
-    for token in tokens_to_sell.iter() {
-        event = event.add_attributes(vec![attr("sold_token", token.to_string())]);
-    }
 
     // Add msg to sell reward tokens
     if tokens_to_sell.len() > 0 {
