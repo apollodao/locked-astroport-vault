@@ -67,7 +67,7 @@ pub(crate) fn mint_vault_tokens(
     env: Env,
     deposit_amount: Uint128,
     vault_token_denom: &str,
-) -> ContractResult<CosmosMsg> {
+) -> ContractResult<(CosmosMsg, Uint128)> {
     let mut state = STATE.load(deps.storage)?;
 
     let mint_amount = convert_to_shares(deps.as_ref(), deposit_amount);
@@ -77,11 +77,14 @@ pub(crate) fn mint_vault_tokens(
 
     STATE.save(deps.storage, &state)?;
 
-    Ok(MsgMint {
-        sender: env.contract.address.to_string(),
-        amount: Some(coin(mint_amount.u128(), vault_token_denom).into()),
-    }
-    .into())
+    Ok((
+        MsgMint {
+            sender: env.contract.address.to_string(),
+            amount: Some(coin(mint_amount.u128(), vault_token_denom).into()),
+        }
+        .into(),
+        mint_amount,
+    ))
 }
 
 /// Return a token factory burn message to burn `amount` of vault tokens from\
