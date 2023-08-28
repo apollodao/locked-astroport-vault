@@ -117,9 +117,7 @@ pub fn execute_update_config(
     info: MessageInfo,
     updates: ConfigUpdates<String>,
 ) -> ContractResponse {
-    if !cw_ownable::is_owner(deps.storage, &info.sender)? {
-        return Err(ContractError::Unauthorized {});
-    }
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
     let event = Event::new("apollo/vaults/execute_update_config")
         .add_attribute("updates", format!("{:?}", updates));
