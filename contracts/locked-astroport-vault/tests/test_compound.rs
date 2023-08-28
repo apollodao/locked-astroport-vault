@@ -16,7 +16,8 @@ use common::get_test_runner;
 #[test_case(VaultSetup::WstEth, Decimal::percent(100); "Compound wsteth_eth vault, 100% fee.")]
 #[test_case(VaultSetup::AxlrNtrn, Decimal::percent(100); "Compound axlr_ntrn vault, 100% fee.")]
 fn compound_vault(setup: VaultSetup, fee: Decimal) {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = instantiate_vault(&runner, &admin, setup, fee, &dependencies);

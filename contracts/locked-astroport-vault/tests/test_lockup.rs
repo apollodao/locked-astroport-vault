@@ -1,5 +1,6 @@
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
 use cosmwasm_std::{attr, coin, Uint128};
+use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
 use cw_vault_standard::extensions::lockup::{
@@ -15,19 +16,26 @@ pub mod common;
 #[test]
 #[should_panic(expected = "Cannot add and remove the same address")]
 fn cannot_add_and_remove_the_same_address_to_force_withdraw_whitelist() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
 
     let user = robot.new_user(&admin);
 
-    robot.update_force_withdraw_whitelist(&admin, vec![user.address()], vec![user.address()]);
+    robot.update_force_withdraw_whitelist(
+        vec![user.address()],
+        vec![user.address()],
+        Unwrap::Ok,
+        &admin,
+    );
 }
 
 #[test]
 fn unlocking_position_event_emitted_when_vault_has_lockup() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
@@ -35,7 +43,7 @@ fn unlocking_position_event_emitted_when_vault_has_lockup() {
 
     let deposit_amount = Uint128::new(100);
     let vault_token_balance = robot
-        .deposit_cw20(deposit_amount, None, &user)
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
         .query_vault_token_balance(user.address());
 
     let res = robot

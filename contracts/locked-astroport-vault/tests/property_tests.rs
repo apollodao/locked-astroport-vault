@@ -28,7 +28,8 @@ proptest! {
     /// amounts of vault tokens are minted.
     #[test]
     fn minted_vault_token_amount_decreases_as_rewards_compound(setup in vault_setup(), fee in 0..99u64) {
-        let runner = get_test_runner();
+        let owned_runner = get_test_runner();
+        let runner = owned_runner.as_ref();
         let admin = LockedAstroportVaultRobot::new_admin(&runner);
         let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
         let fee = Decimal::percent(fee);

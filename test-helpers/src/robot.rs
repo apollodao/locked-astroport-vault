@@ -11,6 +11,7 @@ use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchec
 use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::astroport::utils::{create_astroport_pair, AstroportContracts};
 use cw_it::cw_multi_test::ContractWrapper;
+use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
 use cw_it::traits::CwItRunner;
@@ -27,7 +28,6 @@ use locked_astroport_vault::msg::{
 };
 use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates};
 
-use crate::helpers::Unwrap;
 use crate::router::CwDexRouterRobot;
 
 pub const LOCKED_ASTROPORT_VAULT_WASM_NAME: &str = "locked_astroport_vault.wasm";
@@ -514,10 +514,11 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         &self,
         amount: Uint128,
         recipient: Option<String>,
+        unwrap_choice: Unwrap,
         signer: &SigningAccount,
     ) -> &Self {
         self.increase_cw20_allowance(&self.base_token(), &self.vault_addr, amount, signer)
-            .deposit(amount, recipient, &[], signer)
+            .deposit_with_funds(amount, recipient, &[], unwrap_choice, signer)
     }
 
     /// Update the config of the vault and return a reference to the robot.
@@ -731,6 +732,24 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     /// to the given amount
     pub fn assert_total_vault_assets_eq(&self, amount: impl Into<Uint128>) -> &Self {
         assert_eq!(self.query_total_vault_assets(), amount.into());
+        self
+    }
+
+    /// Asserts that the unlocking position at the given id `lockup_id` has the
+    /// properties `owner`, and `base_token_amount`.
+    pub fn assert_unlocking_position_has_props(
+        &self,
+        lockup_id: u64,
+        owner: &str,
+        base_token_amount: impl Into<Uint128>,
+    ) -> &Self {
+        let unlocking_position = self.query_unlocking_position(lockup_id);
+        assert_eq!(unlocking_position.id, lockup_id);
+        assert_eq!(unlocking_position.owner, owner.to_string());
+        assert_eq!(
+            unlocking_position.base_token_amount,
+            base_token_amount.into()
+        );
         self
     }
 }

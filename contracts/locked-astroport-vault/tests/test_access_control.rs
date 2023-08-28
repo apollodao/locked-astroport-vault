@@ -1,9 +1,9 @@
 use cosmwasm_std::{Addr, Uint128};
+use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
 
 use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
-use locked_astroport_vault_test_helpers::helpers::Unwrap;
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
@@ -15,7 +15,8 @@ pub mod common;
 
 #[test]
 fn update_ownership_can_only_be_called_by_admin() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
@@ -39,7 +40,8 @@ fn update_ownership_can_only_be_called_by_admin() {
 
 #[test]
 fn update_config_can_only_be_called_by_admin() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
@@ -64,18 +66,20 @@ fn update_config_can_only_be_called_by_admin() {
 #[test]
 #[should_panic(expected = "Caller is not the contract's current owner")]
 fn update_force_withdraw_whitelist_can_only_be_called_by_admin() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
-    robot.update_force_withdraw_whitelist(&user, vec![user.address()], vec![]);
+    robot.update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &user);
 }
 
 #[test]
 fn internal_msg_can_only_be_called_by_contract() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
     let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
