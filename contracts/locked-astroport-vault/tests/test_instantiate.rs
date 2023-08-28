@@ -12,7 +12,8 @@ use crate::common::{default_instantiate, DEPS_PATH};
 
 #[test]
 fn test_instantiation() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();

@@ -5,9 +5,10 @@ use cosmwasm_std::{Coin, Decimal};
 use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler};
 use cw_it::multi_test::modules::TokenFactory;
 use cw_it::multi_test::MultiTestRunner;
+use cw_it::osmosis_test_tube::OsmosisTestApp;
 use cw_it::test_tube::{Account, SigningAccount};
 use cw_it::traits::CwItRunner;
-use cw_it::TestRunner;
+use cw_it::{OwnedTestRunner, TestRunner};
 use locked_astroport_vault_test_helpers::robot::{
     LockedAstroportVaultRobot, LockedVaultDependencies,
 };
@@ -29,18 +30,16 @@ pub enum VaultSetup {
     AxlrNtrn,
 }
 
-pub fn get_test_runner<'a>() -> TestRunner<'a> {
+pub fn get_test_runner<'a>() -> OwnedTestRunner<'a> {
     match option_env!("TEST_RUNNER").unwrap_or("multi-test") {
         "multi-test" => {
             let mut stargate_keeper = StargateKeeper::new();
             TOKEN_FACTORY.register_msgs(&mut stargate_keeper);
 
-            TestRunner::MultiTest(MultiTestRunner::new_with_stargate("osmo", stargate_keeper))
+            OwnedTestRunner::MultiTest(MultiTestRunner::new_with_stargate("osmo", stargate_keeper))
         }
         #[cfg(feature = "osmosis-test-tube")]
-        "osmosis-test-app" => {
-            TestRunner::OsmosisTestApp(cw_it::osmosis_test_tube::OsmosisTestApp::new())
-        }
+        "osmosis-test-app" => OwnedTestRunner::OsmosisTestApp(OsmosisTestApp::new()),
         _ => panic!("Unsupported test runner type"),
     }
 }

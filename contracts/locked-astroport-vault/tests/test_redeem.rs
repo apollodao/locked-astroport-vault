@@ -2,11 +2,11 @@ use std::str::FromStr;
 
 use common::instantiate_axlr_ntrn_vault;
 use cosmwasm_std::{Coins, Decimal, Uint128};
+use cw_it::helpers::Unwrap;
 use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use locked_astroport_vault::helpers::INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
-use locked_astroport_vault_test_helpers::helpers::Unwrap;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
@@ -16,7 +16,8 @@ use crate::common::{default_instantiate, DEPS_PATH};
 
 #[test]
 fn test_redeem_with_lockup() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
@@ -40,7 +41,7 @@ fn test_redeem_with_lockup() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, &user)
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -67,7 +68,8 @@ fn test_redeem_with_lockup() {
 
 #[test]
 fn test_redeem_without_lockup() {
-    let runner = get_test_runner();
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
     let admin = runner
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
@@ -91,7 +93,7 @@ fn test_redeem_without_lockup() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, &user)
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
