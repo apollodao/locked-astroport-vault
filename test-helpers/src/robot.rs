@@ -571,6 +571,18 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
+    /// Updates the contract's ownership
+    pub fn update_ownership(
+        &self,
+        action: cw_ownable::Action,
+        unwrap_choice: Unwrap,
+        signer: &SigningAccount,
+    ) -> &Self {
+        let msg = ExecuteMsg::VaultExtension(ExtensionExecuteMsg::UpdateOwnership(action));
+        unwrap_choice.unwrap(self.wasm().execute(&self.vault_addr, &msg, &[], signer));
+        self
+    }
+
     // Queries //
 
     /// Queries the ownership info of the vault

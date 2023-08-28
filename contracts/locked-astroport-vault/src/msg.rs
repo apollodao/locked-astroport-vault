@@ -6,7 +6,7 @@ use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::{LockupExecuteMsg, LockupQueryMsg};
 use liquidity_helper::LiquidityHelperUnchecked;
-use strum::EnumVariantNames;
+use strum::{EnumCount, EnumVariantNames};
 
 use crate::helpers::IntoInternalCall;
 use crate::state::ConfigUpdates;
@@ -43,6 +43,7 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+#[derive(EnumCount)]
 pub enum InternalMsg {
     /// Sell reward tokens
     SellTokens {},
