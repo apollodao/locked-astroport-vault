@@ -17,6 +17,7 @@ use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
 use cw_it::traits::CwItRunner;
 use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
+use cw_utils::Duration;
 use cw_vault_standard::extensions::lockup::{LockupQueryMsg, UnlockingPosition};
 use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
 use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
@@ -581,6 +582,21 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     ) -> &Self {
         let msg = ExecuteMsg::VaultExtension(ExtensionExecuteMsg::UpdateOwnership(action));
         unwrap_choice.unwrap(self.wasm().execute(&self.vault_addr, &msg, &[], signer));
+        self
+    }
+
+    /// Increases the test runner's block time by the given number of seconds
+    pub fn increase_time(&self, seconds: u64) -> &Self {
+        self.runner.increase_time(seconds).unwrap();
+        self
+    }
+
+    pub fn increase_time_by_lockup_duration(&self) -> &Self {
+        let seconds = match self.query_lockup_duration() {
+            Duration::Time(s) => s,
+            Duration::Height(_) => panic!("Expected time duration, got height duration"),
+        };
+        self.increase_time(seconds);
         self
     }
 
