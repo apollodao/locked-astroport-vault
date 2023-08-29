@@ -168,6 +168,23 @@ impl From<Config> for ConfigUnchecked {
 pub struct VaultState {
     /// The total amount of base tokens staked in the vault.
     pub staked_base_tokens: Uint128,
-    /// The total amount of vault tokens that have been minted.
+    /// The total amount of vault tokens in circulation.
     pub vault_token_supply: Uint128,
+}
+
+#[cw_serde]
+pub struct StateResponse {
+    /// The total amount of base tokens staked in the vault.
+    pub staked_base_tokens: Uint128,
+    /// The total amount of vault tokens in circulation.
+    pub vault_token_supply: Uint128,
+    /// The CW20 token address of the base token.
+    pub base_token: Addr,
+    //// The denom of the native vault token that represents shares of the vault.
+    pub vault_token_denom: String,
+    /// The address of the Astroport pool that this vault is compounding rewards
+    /// into.
+    pub pool: AstroportPool,
+    /// The AstroportStaking object config.
+    pub staking: AstroportStaking,
 }

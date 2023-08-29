@@ -23,7 +23,7 @@ fn test_deposit() {
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // Deposit some funds and assert the vault token balance is correct
@@ -47,7 +47,7 @@ fn can_only_deposit_when_despoits_enabled() {
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // Deposit, should work

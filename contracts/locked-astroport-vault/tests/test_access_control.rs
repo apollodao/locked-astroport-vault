@@ -20,7 +20,7 @@ fn update_ownership_can_only_be_called_by_admin() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     let action = cw_ownable::Action::TransferOwnership {
@@ -45,7 +45,7 @@ fn update_config_can_only_be_called_by_admin() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     let config_updates = ConfigUpdates {
@@ -71,7 +71,7 @@ fn update_force_withdraw_whitelist_can_only_be_called_by_admin() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     robot.update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &user);
@@ -83,7 +83,7 @@ fn internal_msg_can_only_be_called_by_contract() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     let msgs: [InternalMsg; InternalMsg::COUNT] = [
@@ -121,7 +121,7 @@ fn force_redeem_can_only_be_called_by_whitelisted_address() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // Deposit from user, then try to force redeem, should fail. Then whitelist user
@@ -140,7 +140,7 @@ fn force_withdraw_unlocking_can_only_be_called_by_whitelisted_address() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // Deposit from user, call unlock, then try to force withdraw unlocking, should

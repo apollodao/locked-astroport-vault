@@ -38,7 +38,7 @@ fn rewards_are_compounded_when_in_vault_before_first_deposit() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // Donate some reward tokens to the vault
