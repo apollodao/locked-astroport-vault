@@ -6,11 +6,11 @@ skip_core_tasks = true
 
 [env]
 # If you bump this version, verify RUST_VERSION correctness
-RUST_OPTIMIZER_VERSION = "0.12.13"
+RUST_OPTIMIZER_VERSION = "0.13.0"
 # Use rust version from rust-optimizer Dockerfile (see https://github.com/CosmWasm/rust-optimizer/blob/main/Dockerfile#L1)
 # to be sure that we compile / test against the same version
 RUST_VERSION = "1.69.0"
-NIGHTLY_VERSION = "nightly-2023-07-18"
+NIGHTLY_VERSION = "nightly-2023-08-29"
 
 [tasks.install-stable]
 script = '''
@@ -56,7 +56,7 @@ args = ["clippy","--all-features","--","-D","warnings"]
 [tasks.clippy-fix]
 toolchain = "${NIGHTLY_VERSION}"
 command = "cargo"
-args = ["clippy","--fix","--allow-staged", "--allow-dirty", "--","-D","warnings"]
+args = ["clippy","--all-features", "--fix","--allow-staged", "--allow-dirty", "--","-D","warnings"]
 
 [tasks.todo-check]
 script = { file = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/scripts/todo-lint.sh", absolute_path = true }
@@ -161,7 +161,6 @@ alias = "custom-default"
 # Custom tasks to run on "cargo make"
 [tasks.custom-default]
 dependencies = ["format", "clippy-fix", "deny", "machete-fix", "unit-test", "integration-test"]
-
 
 # Docs and Test coverage are not run by default. Can run all with "cargo make all".
 [tasks.all]
