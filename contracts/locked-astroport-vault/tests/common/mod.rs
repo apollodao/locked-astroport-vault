@@ -5,13 +5,15 @@ use cosmwasm_std::{Coin, Decimal};
 use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler};
 use cw_it::multi_test::modules::TokenFactory;
 use cw_it::multi_test::MultiTestRunner;
-use cw_it::osmosis_test_tube::OsmosisTestApp;
 use cw_it::test_tube::{Account, SigningAccount};
 use cw_it::traits::CwItRunner;
 use cw_it::{OwnedTestRunner, TestRunner};
 use locked_astroport_vault_test_helpers::robot::{
     LockedAstroportVaultRobot, LockedVaultDependencies,
 };
+
+#[cfg(feature = "osmosis-test-tube")]
+use cw_it::osmosis_test_tube::OsmosisTestApp;
 
 pub mod compound;
 

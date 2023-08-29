@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 # Disable osmosis-test-tube to enable vs-code debugging via multi-test
-default = ["osmosis-test-tube"]
+default = []
 # for more explicit tests, cargo test --features=backtraces
 #backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
