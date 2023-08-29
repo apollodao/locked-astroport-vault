@@ -19,8 +19,8 @@ use crate::msg::{
     ExtensionQueryMsg, InstantiateMsg, InternalMsg, QueryMsg,
 };
 use crate::query::{
-    query_unlocking_position, query_unlocking_positions, query_vault_info,
-    query_vault_standard_info,
+    query_force_withdraw_whitelist, query_unlocking_position, query_unlocking_positions,
+    query_vault_info, query_vault_standard_info,
 };
 use crate::state::{
     ConfigUnchecked, VaultState, BASE_TOKEN, CONFIG, FORCE_WITHDRAW_WHITELIST, POOL, STAKING,
@@ -283,6 +283,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 ApolloExtensionQueryMsg::ContractVersion {} => {
                     let version = cw2::get_contract_version(deps.storage)?;
                     to_binary(&version)
+                }
+                ApolloExtensionQueryMsg::ForceWithdrawWhitelist { start_after, limit } => {
+                    let whitelist = query_force_withdraw_whitelist(deps, start_after, limit)?;
+                    to_binary(&whitelist)
                 }
             },
         },
