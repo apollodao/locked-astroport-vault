@@ -4,6 +4,7 @@ use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
 
 use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
+use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
@@ -112,4 +113,43 @@ fn internal_msg_can_only_be_called_by_contract() {
             .unwrap_err();
         assert!(err.to_string().contains("Unauthorized"));
     }
+}
+
+#[test]
+fn force_redeem_can_only_be_called_by_whitelisted_address() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = LockedAstroportVaultRobot::new_admin(&runner);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let user = robot.new_user(&admin);
+
+    // Deposit from user, then try to force redeem, should fail. Then whitelist user
+    // and try again.
+    let deposit_amount = Uint128::new(100);
+    robot
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .force_redeem_all(None, Unwrap::Err("Unauthorized"), &user)
+        .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
+        .force_redeem_all(None, Unwrap::Ok, &user);
+}
+
+#[test]
+fn force_withdraw_unlocking_can_only_be_called_by_whitelisted_address() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = LockedAstroportVaultRobot::new_admin(&runner);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let user = robot.new_user(&admin);
+
+    // Deposit from user, call unlock, then try to force withdraw unlocking, should
+    // fail. Then whitelist user and try again.
+    let deposit_amount = Uint128::new(100);
+    robot
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .unlock_all(Unwrap::Ok, &user)
+        .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Err("Unauthorized"), &user)
+        .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
+        .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Ok, &user);
 }
