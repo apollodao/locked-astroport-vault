@@ -12,7 +12,10 @@ pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
 
     // Claim any pending rewards
-    let claim_rewards_res = staking.claim_rewards(deps.as_ref(), &env)?;
+    let claim_rewards_res = staking
+        .claim_rewards(deps.as_ref(), &env)
+        .unwrap_or_default(); // Astroport throws an error on query pending rewards if we have never
+                              // staked before, so we just ignore the error here.
 
     // Sell rewards
     let sell_msg = InternalMsg::SellTokens {}.into_internal_call(&env, vec![])?;

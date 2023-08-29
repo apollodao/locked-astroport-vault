@@ -40,8 +40,16 @@ pub fn unwrap_recipient(
 /// `base_token_amount` base tokens.
 pub(crate) fn convert_to_shares(deps: Deps, base_token_amount: Uint128) -> Uint128 {
     let state = STATE.load(deps.storage).unwrap();
-    if state.staked_base_tokens.is_zero() {
-        return base_token_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
+    // vault_token_supply can be zero when staked_base_tokens is not zero, if there
+    // are rewards in the vault before the first deposit since in this case they
+    // would get compounded and the staked_base_tokens would increase without
+    // minting any vault tokens. Therefore, we base the initial amount of vault
+    // tokens on the total amount of base tokens staked in the vault,
+    // rather than just the deposited amount so that the vault token price cannot be
+    // manipulated.
+    if state.staked_base_tokens.is_zero() || state.vault_token_supply.is_zero() {
+        return (state.staked_base_tokens + base_token_amount)
+            * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
     }
     state
         .vault_token_supply
