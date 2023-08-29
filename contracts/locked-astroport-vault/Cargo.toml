@@ -9,13 +9,14 @@ license       = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# Disable osmosis-test-tube to enable vs-code debugging via multi-test
 default = []
 # for more explicit tests, cargo test --features=backtraces
 #backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
-osmosis-test-tube = ["cw-it/osmosis-test-tube", "locked-astroport-vault-test-helpers/osmosis-test-tube"]
+# Enables running tests against the OsmosisTestApp.
+# Disabled by default as it breaks vs-code debugging via multi-test.
+osmosis-test-tube = ["cw-it/osmosis-test-tube"]
 
 [dependencies]
 apollo-cw-asset     = { workspace = true }
