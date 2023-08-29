@@ -97,7 +97,7 @@ pub fn execute_provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
 
     let provide_liquidity_msgs = cfg.liquidity_helper.balancing_provide_liquidity(
         pool_asset_balances,
-        Uint128::zero(), // TODO: Set slippage?
+        Uint128::zero(),
         to_binary(&pool)?,
         None,
     )?;

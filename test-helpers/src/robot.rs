@@ -860,10 +860,6 @@ impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a
     }
 }
 
-// TODO: figure out how to refactor to get around the need to create the
-// AstroportPool like this. should probably take an unchecked pool as argument,
-// which would mean we need to change the cw-dex-router message to take an
-// unchecked pool as well.
 fn swap_operation(
     pair_addr: &str,
     lp_addr: &str,

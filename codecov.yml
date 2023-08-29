@@ -8,7 +8,7 @@ coverage:
   status:
     project:
       default:
-        threshold: 0% # TODO: Update this before first release
+        threshold: 95% # TODO: Update this before first release
     patch:
       default:
-        threshold: 80%
+        threshold: 90%
