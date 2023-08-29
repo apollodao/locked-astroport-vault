@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
@@ -699,6 +700,21 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    pub fn query_force_withdraw_whitelist(
+        &self,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> Vec<String> {
+        self.wasm()
+            .query::<_, Vec<String>>(
+                &self.vault_addr,
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
+                    ApolloExtensionQueryMsg::ForceWithdrawWhitelist { start_after, limit },
+                )),
+            )
+            .unwrap()
+    }
+
     // Assertions //
 
     /// Asserts that value a and b are equal, or off by only one.
@@ -766,6 +782,16 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             unlocking_position.base_token_amount,
             base_token_amount.into()
         );
+        self
+    }
+
+    pub fn assert_force_withdraw_whitelist_eq(&self, expected: &[&str]) -> &Self {
+        let actual: HashSet<String> = self
+            .query_force_withdraw_whitelist(None, None)
+            .into_iter()
+            .collect();
+        let expected: HashSet<String> = expected.iter().map(|s| s.to_string()).collect();
+        assert_eq!(actual, expected);
         self
     }
 }

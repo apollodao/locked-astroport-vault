@@ -3,6 +3,7 @@ use cosmwasm_std::{attr, coin, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
+use cw_it::traits::CwItRunner;
 use cw_vault_standard::extensions::lockup::{
     UNLOCKING_POSITION_ATTR_KEY, UNLOCKING_POSITION_CREATED_EVENT_TYPE,
 };
@@ -45,7 +46,73 @@ fn withdrawing_from_vault_with_lockup_works() {
 }
 
 #[test]
-#[should_panic(expected = "Cannot add and remove the same address")]
+fn update_force_withdraw_whitelist_works_correctly() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = LockedAstroportVaultRobot::new_admin(&runner);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+
+    let user = robot.new_user(&admin);
+
+    robot
+        .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
+        .assert_force_withdraw_whitelist_eq(&[&user.address()])
+        .update_force_withdraw_whitelist(vec![], vec![user.address()], Unwrap::Ok, &admin)
+        .assert_force_withdraw_whitelist_eq(&[])
+        .update_force_withdraw_whitelist(
+            vec![],
+            vec![user.address()],
+            Unwrap::Err("Address not in whitelist"),
+            &admin,
+        );
+}
+
+#[test]
+fn query_force_withdraw_whitelist_pagination_works() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = LockedAstroportVaultRobot::new_admin(&runner);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+
+    // Instantiate and whitelist 15 addresses
+    let accs = runner.init_accounts(&[], 15).unwrap();
+    let mut addrs: Vec<String> = accs.iter().map(|a| a.address()).collect();
+    addrs.sort();
+    robot.update_force_withdraw_whitelist(addrs.clone(), vec![], Unwrap::Ok, &admin);
+
+    // Query with no pagination args
+    let res = robot.query_force_withdraw_whitelist(None, None);
+    assert_eq!(res.len(), 10); // Default limit of 10
+    assert_eq!(res, addrs[0..10]);
+
+    // Query starting after the first address
+    let res = robot.query_force_withdraw_whitelist(Some(addrs[0].clone()), None);
+    assert_eq!(res.len(), 10);
+    assert_eq!(res, addrs[1..11]);
+
+    // Query starting after the last address
+    let res = robot.query_force_withdraw_whitelist(Some(addrs[14].clone()), None);
+    assert_eq!(res.len(), 0);
+
+    // Query with a limit of 5
+    let res = robot.query_force_withdraw_whitelist(None, Some(5));
+    assert_eq!(res.len(), 5);
+    assert_eq!(res, addrs[0..5]);
+
+    // Query with a limit of 5 and starting after the first address
+    let res = robot.query_force_withdraw_whitelist(Some(addrs[0].clone()), Some(5));
+    assert_eq!(res.len(), 5);
+    assert_eq!(res, addrs[1..6]);
+
+    // Query with limit of 15
+    let res = robot.query_force_withdraw_whitelist(None, Some(15));
+    assert_eq!(res.len(), 15);
+    assert_eq!(res, addrs[0..15]);
+}
+
+#[test]
 fn cannot_add_and_remove_the_same_address_to_force_withdraw_whitelist() {
     let owned_runner = get_test_runner();
     let runner = owned_runner.as_ref();
@@ -58,7 +125,7 @@ fn cannot_add_and_remove_the_same_address_to_force_withdraw_whitelist() {
     robot.update_force_withdraw_whitelist(
         vec![user.address()],
         vec![user.address()],
-        Unwrap::Ok,
+        Unwrap::Err("Cannot add and remove the same address"),
         &admin,
     );
 }
