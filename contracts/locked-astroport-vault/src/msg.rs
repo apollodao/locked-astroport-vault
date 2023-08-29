@@ -133,8 +133,16 @@ pub enum ApolloExtensionQueryMsg {
     #[returns(crate::state::Config)]
     Config {},
 
+    /// Returns the current version of the contract.
     #[returns(cw2::ContractVersion)]
     ContractVersion {},
+
+    /// Returns the list of addresses that are whitelisted for force withdrawal.
+    #[returns(Vec<Addr>)]
+    ForceWithdrawWhitelist {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
 }
 
 #[cw_serde]
