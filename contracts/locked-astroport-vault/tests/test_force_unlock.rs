@@ -178,7 +178,14 @@ fn force_withdraw_unlocking_works() {
         .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
         .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit)
-        .assert_vault_token_balance_eq(user.address(), 0u128);
+        .assert_vault_token_balance_eq(user.address(), 0u128)
+        .force_withdraw_unlocking(
+            0,
+            None::<Uint128>,
+            None,
+            Unwrap::Err("UnlockingPosition not found"),
+            &user,
+        );
 }
 
 #[test]
@@ -217,5 +224,91 @@ fn force_withdraw_unlocking_to_recipient_works() {
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(user.address(), 0u128)
         .assert_base_token_balance_eq(recipient.address(), deposit_amount)
-        .assert_vault_token_balance_eq(recipient.address(), 0u128);
+        .assert_vault_token_balance_eq(recipient.address(), 0u128)
+        .force_withdraw_unlocking(
+            0,
+            None::<Uint128>,
+            None,
+            Unwrap::Err("UnlockingPosition not found"),
+            &user,
+        );
+}
+
+#[test]
+fn force_withdraw_unlocking_with_partial_amount_works() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = LockedAstroportVaultRobot::new_admin(&runner);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+
+    let user = robot.new_user(&admin);
+
+    // Deposit from user, begin unlocking, whitelist user, then call force withdraw
+    // unlocking
+    let balance_before_deposit = robot.query_base_token_balance(user.address());
+    let deposit_amount = Uint128::new(100);
+    robot
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
+        .assert_vault_token_balance_eq(
+            user.address(),
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+        )
+        .unlock_all(Unwrap::Ok, &user)
+        .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
+        .assert_vault_token_balance_eq(user.address(), 0u128)
+        .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
+        .force_withdraw_unlocking(
+            0,
+            Some(deposit_amount / Uint128::new(2)),
+            None,
+            Unwrap::Ok,
+            &user,
+        )
+        .assert_base_token_balance_eq(
+            user.address(),
+            balance_before_deposit - deposit_amount / Uint128::new(2),
+        )
+        .assert_vault_token_balance_eq(user.address(), 0u128)
+        .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Ok, &user)
+        .assert_base_token_balance_eq(user.address(), balance_before_deposit)
+        .assert_vault_token_balance_eq(user.address(), 0u128)
+        .force_withdraw_unlocking(
+            0,
+            None::<Uint128>,
+            None,
+            Unwrap::Err("UnlockingPosition not found"),
+            &user,
+        );
+}
+
+#[test]
+fn cannot_force_withdraw_unlocking_more_than_position_amount() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = LockedAstroportVaultRobot::new_admin(&runner);
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+
+    let user = robot.new_user(&admin);
+
+    // Deposit from user, begin unlocking, whitelist user, then call force withdraw
+    // unlocking
+    let deposit_amount = Uint128::new(100);
+    robot
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .assert_vault_token_balance_eq(
+            user.address(),
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+        )
+        .unlock_all(Unwrap::Ok, &user)
+        .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
+        .force_withdraw_unlocking(
+            0,
+            Some(deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN + Uint128::one()),
+            None,
+            Unwrap::Err("Claim amount is greater than the claimable amount"),
+            &user,
+        );
 }
