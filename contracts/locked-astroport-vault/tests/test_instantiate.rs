@@ -3,6 +3,7 @@ use std::str::FromStr;
 use cosmwasm_std::Coins;
 use cw_it::traits::CwItRunner;
 use cw_ownable::Ownership;
+use cw_vault_standard::VaultStandardInfoResponse;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
@@ -40,4 +41,20 @@ fn test_instantiation() {
             version: locked_astroport_vault::contract::CONTRACT_VERSION.to_string(),
         }
     );
+
+    // Query vault standard info
+    let vault_standard_info = robot.query_vault_standard_info();
+    assert_eq!(
+        vault_standard_info,
+        VaultStandardInfoResponse {
+            version: 0,
+            extensions: vec![
+                "internal".to_string(),
+                "lockup".to_string(),
+                "force-unlock".to_string(),
+                "apollo".to_string(),
+                "update-ownership".to_string(),
+            ]
+        }
+    )
 }

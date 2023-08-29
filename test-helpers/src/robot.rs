@@ -20,6 +20,7 @@ use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
 use cw_utils::Duration;
 use cw_vault_standard::extensions::lockup::{LockupQueryMsg, UnlockingPosition};
+use cw_vault_standard::VaultStandardInfoResponse;
 use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
 use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
@@ -711,6 +712,15 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
                     ApolloExtensionQueryMsg::ForceWithdrawWhitelist { start_after, limit },
                 )),
+            )
+            .unwrap()
+    }
+
+    pub fn query_vault_standard_info(&self) -> VaultStandardInfoResponse {
+        self.wasm()
+            .query::<_, VaultStandardInfoResponse>(
+                &self.vault_addr,
+                &QueryMsg::VaultStandardInfo {},
             )
             .unwrap()
     }
