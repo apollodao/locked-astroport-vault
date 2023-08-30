@@ -5,7 +5,10 @@ use cw_vault_standard::{VaultInfoResponse, VaultStandardInfoResponse};
 use strum::VariantNames;
 
 use crate::msg::ExtensionExecuteMsg;
-use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, VAULT_TOKEN_DENOM};
+use crate::state::{
+    self, StateResponse, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, POOL, STAKING, STATE,
+    VAULT_TOKEN_DENOM,
+};
 
 /// The default limit for pagination
 pub const DEFAULT_LIMIT: u32 = 10;
@@ -68,4 +71,16 @@ pub fn query_force_withdraw_whitelist(
         .collect::<StdResult<_>>()?;
 
     Ok(whitelist)
+}
+
+pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
+    let state = STATE.load(deps.storage)?;
+    Ok(StateResponse {
+        base_token: BASE_TOKEN.load(deps.storage)?,
+        vault_token_denom: VAULT_TOKEN_DENOM.load(deps.storage)?,
+        pool: POOL.load(deps.storage)?,
+        staked_base_tokens: state.staked_base_tokens,
+        vault_token_supply: state.vault_token_supply,
+        staking: STAKING.load(deps.storage)?,
+    })
 }

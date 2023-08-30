@@ -127,8 +127,6 @@ impl<'a> Claims<'a> {
     /// Bypass expiration and claim `claim_amount`. Should only be called if the
     /// caller is whitelisted. Will return an error if the claim does not exist
     /// or if the caller is not the owner of the claim.
-    /// TODO: Move whitelist logic into Claims struct? That way we won't need to
-    /// have a separate ForceUnlock message.
     pub fn force_claim(
         &self,
         storage: &mut dyn Storage,

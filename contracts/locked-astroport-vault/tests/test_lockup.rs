@@ -20,7 +20,7 @@ fn withdrawing_from_vault_with_lockup_works() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     // First deposit, then try unlocking. Query claim to ensure it was created, then
@@ -49,7 +49,7 @@ fn unlocking_position_event_emitted_when_vault_has_lockup() {
     let runner = owned_runner.as_ref();
     let admin = LockedAstroportVaultRobot::new_admin(&runner);
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) = default_instantiate(&runner, &admin, &dependencies);
+    let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
     let user = robot.new_user(&admin);
 
     let deposit_amount = Uint128::new(100);

@@ -29,7 +29,7 @@ use locked_astroport_vault::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
     ExtensionQueryMsg, InstantiateMsg, QueryMsg,
 };
-use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates};
+use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates, StateResponse};
 
 use crate::router::CwDexRouterRobot;
 
@@ -334,7 +334,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         performance_fee: Decimal,
         dependencies: &'a LockedVaultDependencies<'a>,
         signer: &SigningAccount,
-    ) -> Self {
+    ) -> (Self, AstroportPool) {
         let wsteth = AssetInfo::native(WSTETH_DENOM.to_string());
         let eth = AssetInfo::native(ETH_DENOM.to_string());
         let astro = AssetInfo::native(ASTRO_DENOM.to_string());
@@ -358,6 +358,12 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
+        let wsteth_eth_pool = AstroportPool {
+            lp_token_addr: Addr::unchecked(&wsteth_eth_lp),
+            pair_addr: Addr::unchecked(&wsteth_eth_pair),
+            pair_type: PairType::Xyk {},
+            pool_assets: [wsteth.clone(), eth.clone()].to_vec(),
+        };
         let (astro_usdc_pair, astro_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
@@ -464,13 +470,16 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             liquidity_helper: LiquidityHelperUnchecked::new(liquidity_helper_addr.clone()),
         };
 
-        Self::new_with_instantiate_msg(
-            runner,
-            vault_contract,
-            token_factory_fee,
-            &init_msg,
-            dependencies,
-            signer,
+        (
+            Self::new_with_instantiate_msg(
+                runner,
+                vault_contract,
+                token_factory_fee,
+                &init_msg,
+                dependencies,
+                signer,
+            ),
+            wsteth_eth_pool,
         )
     }
 
@@ -725,6 +734,17 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    pub fn query_state(&self) -> StateResponse {
+        self.wasm()
+            .query::<_, StateResponse>(
+                &self.vault_addr,
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
+                    ApolloExtensionQueryMsg::State {},
+                )),
+            )
+            .unwrap()
+    }
+
     // Assertions //
 
     /// Asserts that value a and b are equal, or off by only one.
@@ -840,10 +860,6 @@ impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a
     }
 }
 
-// TODO: figure out how to refactor to get around the need to create the
-// AstroportPool like this. should probably take an unchecked pool as argument,
-// which would mean we need to change the cw-dex-router message to take an
-// unchecked pool as well.
 fn swap_operation(
     pair_addr: &str,
     lp_addr: &str,

@@ -143,6 +143,10 @@ pub enum ApolloExtensionQueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+
+    /// Returns the non-configurable state of the contract.
+    #[returns(crate::state::StateResponse)]
+    State {},
 }
 
 #[cw_serde]

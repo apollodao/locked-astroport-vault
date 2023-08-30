@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Coin, Decimal};
+use cw_dex::astroport::AstroportPool;
 use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler};
 use cw_it::multi_test::modules::TokenFactory;
 use cw_it::multi_test::MultiTestRunner;
@@ -50,12 +51,12 @@ pub fn default_instantiate<'a>(
     runner: &'a TestRunner<'a>,
     admin: &SigningAccount,
     dependencies: &'a LockedVaultDependencies<'a>,
-) -> (LockedAstroportVaultRobot<'a>, SigningAccount) {
+) -> (LockedAstroportVaultRobot<'a>, AstroportPool, SigningAccount) {
     let vault_contract = LockedAstroportVaultRobot::contract(runner, UNOPTIMIZED_PATH);
     let treasury_addr = runner.init_account(&[]).unwrap();
     let token_factory_fee = Coin::from_str(DENOM_CREATION_FEE).unwrap();
 
-    let robot = LockedAstroportVaultRobot::new_wsteth_eth_vault(
+    let (robot, wsteth_eth_pool) = LockedAstroportVaultRobot::new_wsteth_eth_vault(
         runner,
         vault_contract,
         token_factory_fee,
@@ -65,7 +66,7 @@ pub fn default_instantiate<'a>(
         admin,
     );
 
-    (robot, treasury_addr)
+    (robot, wsteth_eth_pool, treasury_addr)
 }
 
 pub fn instantiate_wsteth_eth_vault<'a>(
@@ -78,7 +79,7 @@ pub fn instantiate_wsteth_eth_vault<'a>(
     let treasury_addr = runner.init_account(&[]).unwrap();
     let token_factory_fee = Coin::from_str(DENOM_CREATION_FEE).unwrap();
 
-    let robot = LockedAstroportVaultRobot::new_wsteth_eth_vault(
+    let (robot, _) = LockedAstroportVaultRobot::new_wsteth_eth_vault(
         runner,
         vault_contract,
         token_factory_fee,

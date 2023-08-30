@@ -21,13 +21,13 @@ fi
 LINT="todo[^!]"
 FORMAT="s/\.\/([a-zA-Z0-9_/.-]+):([0-9]+):(.+)/$UL\1$RESET ${BD}@ line \2:$RESET\n\t$IT$RED\3$RESET/"
 
-N=$(grep -riIo --include=*.{rs,toml,md,ts,js} -E $LINT $GREP_DIR | wc -l | xargs)
+N=$(grep -riIo --include=*.{rs,ts,js} -E $LINT $GREP_DIR | wc -l | xargs)
 
 
 if [ $N -gt 0 ]; then
     echo "${BD}Found $UL$RED$N$RESET$BD occurrences matching pattern '$RESET$IT$LINT$RESET$BD':$RESET"
     echo "------------------------------------------------"
-    grep -rniI --include=*.{rs,toml,md,ts,js} -E $LINT $GREP_DIR | sed -E "$FORMAT"
+    grep -rniI --include=*.{rs,ts,js} -E $LINT $GREP_DIR | sed -E "$FORMAT"
     exit 1
 fi
 

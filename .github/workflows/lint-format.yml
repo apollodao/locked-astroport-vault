@@ -30,4 +30,4 @@ jobs:
         run: cargo make machete-check
 
       - name: Lint todo comments
-        run: ./scripts/todo-lint.sh
+        run: cargo make todo-check
