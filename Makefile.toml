@@ -29,6 +29,20 @@ rustup component add rustfmt --toolchain ${NIGHTLY_VERSION}
 rustup component add clippy --toolchain ${NIGHTLY_VERSION}
 '''
 
+[tasks.rust-optimizer]
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}"
+script = """
+if [[ $(arch) == "arm64" ]]; then
+  image="cosmwasm/workspace-optimizer-arm64:${RUST_OPTIMIZER_VERSION}"
+else
+  image="cosmwasm/workspace-optimizer:${RUST_OPTIMIZER_VERSION}"
+fi
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  ${image}
+"""
+
 [tasks.format]
 toolchain = "${NIGHTLY_VERSION}"
 install_crate = { crate_name = "rustfmt-nightly", rustup_component_name = "rustfmt-preview", binary = "rustfmt", test_arg = "--help" }
