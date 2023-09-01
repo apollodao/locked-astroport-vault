@@ -2,8 +2,8 @@
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
-    Response, StdResult, SubMsg, Uint128, WasmQuery,
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, Event, MessageInfo, QueryRequest,
+    Reply, Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
 use cw_utils::Duration;
@@ -309,4 +309,9 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
         return Ok(Response::new().add_event(event));
     }
     Ok(Response::new())
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+    Ok(Response::default())
 }
