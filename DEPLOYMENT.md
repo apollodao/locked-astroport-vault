@@ -18,10 +18,22 @@ Details of deployment on Neutron testnet `pion-1`.
 
 ## Locked Astroport Vault
 
+### `0.1.0-rc.1`
 - Checksum: `160d7604aaaa34bda8f986b04be6a7afb4e056acc982c676b44fa78165277e8b`
-- Used optimized wasm built locally with rust-optimizer-arm 0.13.0.
 - CodeID: `1460`
+- Used optimized wasm built locally with rust-optimizer-arm 0.13.0.
+
+### `0.1.0-rc.2`
+- Checksum: `d8be8a2311500aa1fc38d177c024eafc4d1f8185b752f5b654f2b367cfab6cc7`
+- CodeID: `1481`
+- Used optimized wasm built locally with rust-optimizer-arm 0.13.0.
 
 ### ASTRO/NTRN Unlocked Vault
 
 - Contract Address: `neutron1675p0u4eflqgvfwf3tlk8rhkvfjggrenjlc4jqtyjgsrfp9kyrus6r8hly`
+- CodeID: `1481`
+
+### AXL/NTRN Unlocked Vault
+
+- Contract Address: `neutron10r7q0pv5ms8t7pspuy0vry5mc38sfxh8nvmn5qm6cp30m409ln7qgnrx7v`
+- CodeID: `1481`
