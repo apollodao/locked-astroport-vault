@@ -37,3 +37,8 @@ Details of deployment on Neutron testnet `pion-1`.
 
 - Contract Address: `neutron10r7q0pv5ms8t7pspuy0vry5mc38sfxh8nvmn5qm6cp30m409ln7qgnrx7v`
 - CodeID: `1481`
+
+### wstETH/ETH 5min Locked Vault
+
+- Contract Address: `neutron136cnpu03hghrguj0s4ew5xvfq6hhaz0z4s95wvglz3y4zvwja3ws0agu8w`
+- CodeID: `1481`
