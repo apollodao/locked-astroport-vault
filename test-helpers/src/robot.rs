@@ -66,7 +66,7 @@ struct AstroportLiquidityHelperInstantiateMsg {
 pub struct LockedAstroportVaultRobot<'a> {
     pub runner: &'a TestRunner<'a>,
     pub vault_addr: String,
-    pub dependencies: &'a LockedVaultDependencies<'a>,
+    pub astroport_contracts: AstroportContracts,
 }
 
 impl<'a> LockedAstroportVaultRobot<'a> {
@@ -181,7 +181,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         vault_contract: ContractType,
         token_factory_fee: Coin,
         instantiate_msg: &InstantiateMsg,
-        dependencies: &'a LockedVaultDependencies<'a>,
+        dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> Self {
         let code_id = runner.store_code(vault_contract, signer).unwrap();
@@ -203,7 +203,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         Self {
             runner,
             vault_addr,
-            dependencies,
+            astroport_contracts: dependencies.astroport_contracts.clone(),
         }
     }
 
@@ -215,7 +215,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         token_factory_fee: Coin,
         treasury_addr: String,
         performance_fee: Decimal,
-        dependencies: &'a LockedVaultDependencies<'a>,
+        dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool, AstroportPool) {
         let axl = AssetInfo::native(AXL_DENOM.to_string());
@@ -856,7 +856,7 @@ impl<'a> ForceUnlockVaultRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot
 
 impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a> {
     fn astroport_contracts(&self) -> &AstroportContracts {
-        &self.dependencies.astroport_contracts
+        &self.astroport_contracts
     }
 }
 
