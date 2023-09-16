@@ -208,13 +208,14 @@ impl<'a> LockedAstroportVaultRobot<'a> {
     }
 
     /// Creates a AXL/NTRN pool and a new LockedAstroportVaultRobot for the pool
-    /// with no lockup.
-    pub fn new_unlocked_axlr_ntrn_vault(
+    /// with the specified lockup duration.
+    pub fn new_axlr_ntrn_vault(
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
         treasury_addr: String,
         performance_fee: Decimal,
+        lock_duration: u64,
         dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool, AstroportPool) {
@@ -285,10 +286,22 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             signer,
         );
 
+        // ASTRO <-> NTRN <-> AXL
+        dependencies.cw_dex_router_robot.set_path(
+            astro.clone().into(),
+            axl.clone().into(),
+            SwapOperationsListUnchecked::new(vec![
+                swap_operation(&astro_ntrn_pair, &astro_ntrn_lp, &astro, &ntrn),
+                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &ntrn, &axl),
+            ]),
+            true,
+            signer,
+        );
+
         let instantiate_msg = InstantiateMsg {
             owner: signer.address().to_string(),
             vault_token_subdenom: "testVaultToken".to_string(),
-            lock_duration: 0u64,
+            lock_duration,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.clone().into()],
             deposits_enabled: true,
             treasury: treasury_addr,
@@ -318,6 +331,29 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ),
             axl_ntrn_pool,
             astro_ntrn_pool,
+        )
+    }
+
+    /// Creates a AXL/NTRN pool and a new LockedAstroportVaultRobot for the pool
+    /// with no lockup.
+    pub fn new_unlocked_axlr_ntrn_vault(
+        runner: &'a TestRunner<'a>,
+        vault_contract: ContractType,
+        token_factory_fee: Coin,
+        treasury_addr: String,
+        performance_fee: Decimal,
+        dependencies: &LockedVaultDependencies<'a>,
+        signer: &SigningAccount,
+    ) -> (Self, AstroportPool, AstroportPool) {
+        Self::new_axlr_ntrn_vault(
+            runner,
+            vault_contract,
+            token_factory_fee,
+            treasury_addr,
+            performance_fee,
+            0,
+            dependencies,
+            signer,
         )
     }
 
