@@ -1825,7 +1825,7 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault"
-version = "0.1.0-rc.3"
+version = "0.1.0-rc.4"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1857,7 +1857,7 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault-test-helpers"
-version = "0.1.0-rc.3"
+version = "0.1.0-rc.4"
 dependencies = [
  "apollo-cw-asset",
  "astroport-liquidity-helper",
