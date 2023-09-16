@@ -824,9 +824,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex"
-version = "0.4.0-rc.1"
+version = "0.4.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f47a1ee3e2d331dfda1c2f0c7752476b6ca3b866bf5dcb75f1a4f30845bc537"
+checksum = "6754c95d50772679629d18644b5764c715c2adea10b21b4b8b31ccd197a7c66e"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -842,9 +842,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex-router"
-version = "0.2.0-rc.1"
+version = "0.2.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "997acbdb4a41033b64dc1f764686bf19e6e045aa2bafd41d638fb8b296ade7e7"
+checksum = "a4dcc1413a73797fbc909eb606d889350ef0b345dddeda82f904fe7de34e96e6"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -998,9 +998,9 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard-test-helpers"
-version = "0.3.3-rc.3"
+version = "0.3.3-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95a8c9f2a8cfece90d1790d92dc636ab40948f3688ba35745ab97c8da67d86b6"
+checksum = "5c8ec267767fbf156d6150b071cdfae2a42d6389dbb2d214e9d2b52b3cf13018"
 dependencies = [
  "cosmwasm-std",
  "cw-it",
