@@ -16,6 +16,13 @@ Details of deployment on Neutron testnet `pion-1`.
 - CodeID: `1456`
 - Contract Address: `neutron1w7s7erc7th2pkjch78td7l5shjmec39x4tc0rs64ul7z2m23nyfs4s8pl8`
 
+## Vault Zapper
+
+- Checksum: `8233e7c689d4e5fe0d9850ae5511fab402e25ada90a0ff4971852e9b6d0b7c39`
+- Used optimized wasm built on CI with rust-optimizer 0.13.0.
+- CodeID: `1608`
+- Contract Address: `neutron1g0g25nry5aqy9k0fc0auk0hsnzv09dl0n7c6n424vvyfyd567xhshghwlx`
+
 ## Locked Astroport Vault
 
 ### `0.1.0-rc.1`
@@ -35,10 +42,10 @@ Details of deployment on Neutron testnet `pion-1`.
 
 ### AXL/NTRN Unlocked Vault
 
-- Contract Address: `neutron10r7q0pv5ms8t7pspuy0vry5mc38sfxh8nvmn5qm6cp30m409ln7qgnrx7v`
+- Contract Address: `neutron17dhpuf4fduc3mshw3e8t0wymkp42sz82uwmr8865r6hngm4fk4yscrmgyz`
 - CodeID: `1481`
 
 ### wstETH/ETH 5min Locked Vault
 
-- Contract Address: `neutron136cnpu03hghrguj0s4ew5xvfq6hhaz0z4s95wvglz3y4zvwja3ws0agu8w`
+- Contract Address: `neutron18repwf8rfsu6qsj6avyxe7r5n9h0jzqza85yzxmsn5uj59f42nes3u5nn3`
 - CodeID: `1481`
