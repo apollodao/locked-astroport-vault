@@ -38,12 +38,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "android-tzdata"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e999941b234f3131b00bc13c22d06e8c5ff726d1b6318ac7eb276997bbb4fef0"
-
-[[package]]
 name = "anyhow"
 version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -65,9 +59,9 @@ dependencies = [
 
 [[package]]
 name = "apollo-cw-multi-test"
-version = "0.16.2"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1c7e04dcaeab52c3390867822b3019f81e239b8bbd3146fb91a83b10fb1f27b"
+checksum = "27b88d6037608a781a95ab1125941e2358c37272dcf0d4613de795b81b6ffbf3"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
@@ -75,8 +69,8 @@ dependencies = [
  "cw-utils 1.0.1",
  "derivative",
  "itertools",
- "k256",
- "osmosis-std 0.16.1",
+ "k256 0.11.6",
+ "osmosis-std 0.19.2",
  "prost 0.9.0",
  "regex",
  "schemars",
@@ -171,9 +165,9 @@ dependencies = [
 
 [[package]]
 name = "astroport-liquidity-helper"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3217f55114759b6569fd724dca8f3c5b90286059003a3b5377373256e2c03973"
+checksum = "e82d19c3b921f14561fcb976fcf5b621a1e159e45448f2b85122585d78576746"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -184,7 +178,7 @@ dependencies = [
  "cw-storage-plus 1.1.0",
  "cw2 1.1.0",
  "cw20 1.1.0",
- "liquidity-helper 0.2.0",
+ "liquidity-helper",
  "thiserror",
 ]
 
@@ -380,10 +374,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349a06037c7bf932dd7e7d1f653678b2038b9ad46a74102f1fc7bd7872678cce"
 
 [[package]]
+name = "base16ct"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
+
+[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
+
+[[package]]
+name = "base64"
+version = "0.21.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ba43ea6f343b788c8764558649e08df62f86c6ef251fdaeb1ffd010a9ae50a2"
 
 [[package]]
 name = "base64ct"
@@ -422,7 +428,7 @@ checksum = "b30ed1d6f8437a487a266c8293aeb95b61a23261273e3e02912cdb8b68bf798b"
 dependencies = [
  "bs58",
  "hmac",
- "k256",
+ "k256 0.11.6",
  "once_cell",
  "pbkdf2",
  "rand_core 0.6.4",
@@ -479,9 +485,9 @@ dependencies = [
 
 [[package]]
 name = "bnum"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "845141a4fade3f790628b7daaaa298a25b204fb28907eb54febe5142db6ce653"
+checksum = "128a44527fc0d6abf05f9eda748b9027536e12dff93f5acc8449f51583309350"
 
 [[package]]
 name = "bs58"
@@ -536,11 +542,10 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.26"
+version = "0.4.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec837a71355b28f6556dbd569b37b3f363091c0bd4b2e735674521b4c5fd9bc5"
+checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
 dependencies = [
- "android-tzdata",
  "num-traits",
 ]
 
@@ -639,10 +644,10 @@ checksum = "3903590099dcf1ea580d9353034c9ba1dbf55d1389a5bd2ade98535c3445d1f9"
 dependencies = [
  "bip32",
  "cosmos-sdk-proto",
- "ecdsa",
+ "ecdsa 0.14.8",
  "eyre",
  "getrandom",
- "k256",
+ "k256 0.11.6",
  "rand_core 0.6.4",
  "serde",
  "serde_json",
@@ -654,31 +659,31 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-crypto"
-version = "1.3.3"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "871ce1d5a4b00ed1741f84b377eec19fadd81a904a227bc1e268d76539d26f5e"
+checksum = "1ca101fbf2f76723711a30ea3771ef312ec3ec254ad021b237871ed802f9f175"
 dependencies = [
  "digest 0.10.7",
  "ed25519-zebra",
- "k256",
+ "k256 0.13.1",
  "rand_core 0.6.4",
  "thiserror",
 ]
 
 [[package]]
 name = "cosmwasm-derive"
-version = "1.3.3"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ce8b44b45a7c8c6d6f770cd0a51458c2445c7c15b6115e1d215fa35c77b305c"
+checksum = "c73d2dd292f60e42849d2b07c03d809cf31e128a4299a805abd6d24553bcaaf5"
 dependencies = [
  "syn 1.0.109",
 ]
 
 [[package]]
 name = "cosmwasm-schema"
-version = "1.3.3"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99222fa0401ee36389550d8a065700380877a2299c3043d24c38d705708c9d9d"
+checksum = "6ce34a08020433989af5cc470104f6bd22134320fe0221bd8aeb919fd5ec92d5"
 dependencies = [
  "cosmwasm-schema-derive",
  "schemars",
@@ -689,9 +694,9 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-schema-derive"
-version = "1.3.3"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b74eaf9e585ef8e5e3486b240b13ee593cb0f658b5879696937d8c22243d4fb"
+checksum = "96694ec781a7dd6dea1f968a2529ade009c21ad999c88b5f53d6cc495b3b96f7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -700,11 +705,11 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-std"
-version = "1.3.3"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da78abcf059181e8cb01e95e5003cf64fe95dde6c72b3fe37e5cabc75cdba32a"
+checksum = "2a44d3f9c25b2f864737c6605a98f2e4675d53fd8bbc7cf4d7c02475661a793d"
 dependencies = [
- "base64",
+ "base64 0.21.4",
  "bnum",
  "cosmwasm-crypto",
  "cosmwasm-derive",
@@ -748,6 +753,18 @@ name = "crypto-bigint"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef2b4b23cddf68b89b8f8069890e8c270d54e2d5fe1b143820234805e4cb17ef"
+dependencies = [
+ "generic-array",
+ "rand_core 0.6.4",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "crypto-bigint"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "740fe28e594155f10cfc383984cbefd529d7396050557148f79cb0f621204124"
 dependencies = [
  "generic-array",
  "rand_core 0.6.4",
@@ -824,9 +841,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex"
-version = "0.4.0-rc.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6754c95d50772679629d18644b5764c715c2adea10b21b4b8b31ccd197a7c66e"
+checksum = "cf88d647a4e7e27a1e309821e87488c0ba70a1ebb8c78c4b5ea8186615af4a32"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -842,9 +859,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex-router"
-version = "0.2.0-rc.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4dcc1413a73797fbc909eb606d889350ef0b345dddeda82f904fe7de34e96e6"
+checksum = "81e4ca1f705fb4477a393f4991a474929f15202a0eb2604fc0f25b4a9ae7223a"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -860,9 +877,9 @@ dependencies = [
 
 [[package]]
 name = "cw-it"
-version = "0.2.0-rc.3"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f746bf1c2b142e3a7ec38935ca64cd5c6388b441e24754a7eac66143ae867805"
+checksum = "9358cef40d4280d55429a38eebbf21c8cd95b2de620b13cc86740c6066706d34"
 dependencies = [
  "anyhow",
  "apollo-cw-multi-test",
@@ -883,7 +900,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw20 0.15.1",
- "osmosis-std 0.17.0-rc0",
+ "osmosis-std 0.19.2",
  "osmosis-test-tube",
  "paste",
  "prost 0.11.9",
@@ -985,9 +1002,9 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard"
-version = "0.3.3-rc.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12a9e148a205aebfb2bf069a5c3756617411c0d8a250f29ec800fa5811090e91"
+checksum = "908934004eb811c72acd4d2d4f6d936695a7e9236815c01c4b6ce3f47c29d272"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -998,9 +1015,9 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard-test-helpers"
-version = "0.3.3-rc.4"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c8ec267767fbf156d6150b071cdfae2a42d6389dbb2d214e9d2b52b3cf13018"
+checksum = "e9e5f04b9bc896433854415371e33480082d7d3047a0e9a1d2c633317088f9cd"
 dependencies = [
  "cosmwasm-std",
  "cw-it",
@@ -1119,6 +1136,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "der"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fffa369a668c8af7dbf8b5e56c9f744fbd399949ed171606040001947de40b1c"
+dependencies = [
+ "const-oid",
+ "zeroize",
+]
+
+[[package]]
 name = "derivative"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1145,6 +1172,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer 0.10.4",
+ "const-oid",
  "crypto-common",
  "subtle",
 ]
@@ -1173,10 +1201,24 @@ version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "413301934810f597c1d19ca71c8710e99a3f1ba28a0d2ebc01551a2daeea3c5c"
 dependencies = [
- "der",
- "elliptic-curve",
- "rfc6979",
- "signature",
+ "der 0.6.1",
+ "elliptic-curve 0.12.3",
+ "rfc6979 0.3.1",
+ "signature 1.6.4",
+]
+
+[[package]]
+name = "ecdsa"
+version = "0.16.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4b1e0c257a9e9f25f90ff76d7a68360ed497ee519c8e428d1825ef0000799d4"
+dependencies = [
+ "der 0.7.8",
+ "digest 0.10.7",
+ "elliptic-curve 0.13.5",
+ "rfc6979 0.4.0",
+ "signature 2.1.0",
+ "spki 0.7.2",
 ]
 
 [[package]]
@@ -1185,7 +1227,7 @@ version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91cff35c70bba8a626e3185d8cd48cc11b5437e1a5bcd15b9b5fa3c64b6dfee7"
 dependencies = [
- "signature",
+ "signature 1.6.4",
 ]
 
 [[package]]
@@ -1227,16 +1269,35 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7bb888ab5300a19b8e5bceef25ac745ad065f3c9f7efc6de1b91958110891d3"
 dependencies = [
- "base16ct",
- "crypto-bigint",
- "der",
+ "base16ct 0.1.1",
+ "crypto-bigint 0.4.9",
+ "der 0.6.1",
  "digest 0.10.7",
- "ff",
+ "ff 0.12.1",
  "generic-array",
- "group",
- "pkcs8",
+ "group 0.12.1",
+ "pkcs8 0.9.0",
  "rand_core 0.6.4",
- "sec1",
+ "sec1 0.3.0",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "elliptic-curve"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "968405c8fdc9b3bf4df0a6638858cc0b52462836ab6b1c87377785dd09cf1c0b"
+dependencies = [
+ "base16ct 0.2.0",
+ "crypto-bigint 0.5.3",
+ "digest 0.10.7",
+ "ff 0.13.0",
+ "generic-array",
+ "group 0.13.0",
+ "pkcs8 0.10.2",
+ "rand_core 0.6.4",
+ "sec1 0.7.3",
  "subtle",
  "zeroize",
 ]
@@ -1296,6 +1357,16 @@ name = "ff"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d013fc25338cc558c5c2cfbad646908fb23591e2404481826742b651c9af7160"
+dependencies = [
+ "rand_core 0.6.4",
+ "subtle",
+]
+
+[[package]]
+name = "ff"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ded41244b729663b1e574f1b4fb731469f69f79c17667b5d776b16cda0479449"
 dependencies = [
  "rand_core 0.6.4",
  "subtle",
@@ -1429,6 +1500,7 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
+ "zeroize",
 ]
 
 [[package]]
@@ -1462,7 +1534,18 @@ version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dfbfb3a6cfbd390d5c9564ab283a0349b9b9fcd46a706c1eb10e0db70bfbac7"
 dependencies = [
- "ff",
+ "ff 0.12.1",
+ "rand_core 0.6.4",
+ "subtle",
+]
+
+[[package]]
+name = "group"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0f9ef7462f7c099f518d754361858f86d8a07af53ba9af0fe635bbccb151a63"
+dependencies = [
+ "ff 0.13.0",
  "rand_core 0.6.4",
  "subtle",
 ]
@@ -1501,7 +1584,7 @@ version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3e372db8e5c0d213e0cd0b9be18be2aca3d44cf2fe30a9d46a65581cd454584"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "bitflags 1.3.2",
  "bytes",
  "headers-core",
@@ -1734,10 +1817,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72c1e0b51e7ec0a97369623508396067a486bd0cbed95a2659a4b863d28cfc8b"
 dependencies = [
  "cfg-if",
- "ecdsa",
- "elliptic-curve",
+ "ecdsa 0.14.8",
+ "elliptic-curve 0.12.3",
  "sha2 0.10.7",
  "sha3",
+]
+
+[[package]]
+name = "k256"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cadb76004ed8e97623117f3df85b17aaa6626ab0b0831e6573f104df16cd1bcc"
+dependencies = [
+ "cfg-if",
+ "ecdsa 0.16.8",
+ "elliptic-curve 0.13.5",
+ "once_cell",
+ "sha2 0.10.7",
+ "signature 2.1.0",
 ]
 
 [[package]]
@@ -1797,24 +1894,9 @@ checksum = "57bcfdad1b858c2db7c38303a6d2ad4dfaf5eb53dfeb0910128b2c26d6158503"
 
 [[package]]
 name = "liquidity-helper"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fcbaa0b50025e319bec34d39de1af4684252b22b0bdeff260bfb68b8c250d8f"
-dependencies = [
- "apollo-cw-asset",
- "apollo-utils",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw20 1.1.0",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "liquidity-helper"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db586fec0aa5d95ae9fccba0ee30ea75474709e0dcdb312b5f75302cd25262e9"
+checksum = "322987ddd8cd9e1e3a443423aeed36f8d95d378f0d5dc11f092d86384e7d3fba"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1825,7 +1907,7 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault"
-version = "0.1.0-rc.4"
+version = "0.1.0"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1843,7 +1925,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.0",
  "cw20 1.1.0",
- "liquidity-helper 0.1.0",
+ "liquidity-helper",
  "locked-astroport-vault-test-helpers",
  "optional_struct",
  "osmosis-std 0.14.0",
@@ -1857,7 +1939,7 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault-test-helpers"
-version = "0.1.0-rc.4"
+version = "0.1.0"
 dependencies = [
  "apollo-cw-asset",
  "astroport-liquidity-helper",
@@ -1872,7 +1954,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.0",
  "cw20 1.1.0",
- "liquidity-helper 0.1.0",
+ "liquidity-helper",
  "locked-astroport-vault",
 ]
 
@@ -2069,25 +2151,9 @@ dependencies = [
 
 [[package]]
 name = "osmosis-std"
-version = "0.16.1"
+version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fa46d2ad5ae738572887974e000934374ce3546b820505c0ee19ca708e49622"
-dependencies = [
- "chrono",
- "cosmwasm-std",
- "osmosis-std-derive 0.16.2",
- "prost 0.11.9",
- "prost-types",
- "schemars",
- "serde",
- "serde-cw-value",
-]
-
-[[package]]
-name = "osmosis-std"
-version = "0.17.0-rc0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0b022b748710ecdf1adc6a124c3bef29f17ef05e7fa1260a08889d1d53f9cc5"
+checksum = "798fade51443a0e07eb25b59a11b320b9e8f03e6e8fbe14c520258f04742fe13"
 dependencies = [
  "chrono",
  "cosmwasm-std",
@@ -2126,15 +2192,15 @@ dependencies = [
 
 [[package]]
 name = "osmosis-test-tube"
-version = "17.0.0-rc0"
+version = "19.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "977a2b4f088dd704a47e96b5914e28465cfcdb1cb1145a1f9b45c219a9b145c5"
+checksum = "d176b76c0142f7a047d4c4f12a553b10de557aa60304077ca88532249924da0f"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "osmosis-std 0.17.0-rc0",
+ "osmosis-std 0.19.2",
  "prost 0.11.9",
  "serde",
  "serde_json",
@@ -2284,8 +2350,18 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9eca2c590a5f85da82668fa685c09ce2888b9430e83299debf1f34b65fd4a4ba"
 dependencies = [
- "der",
- "spki",
+ "der 0.6.1",
+ "spki 0.6.0",
+]
+
+[[package]]
+name = "pkcs8"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f950b2377845cebe5cf8b5165cb3cc1a5e0fa5cfa3e1f7f55707d8fd82e0a7b7"
+dependencies = [
+ "der 0.7.8",
+ "spki 0.7.2",
 ]
 
 [[package]]
@@ -2521,9 +2597,19 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7743f17af12fa0b03b803ba12cd6a8d9483a587e89c69445e3909655c0b9fabb"
 dependencies = [
- "crypto-bigint",
+ "crypto-bigint 0.4.9",
  "hmac",
  "zeroize",
+]
+
+[[package]]
+name = "rfc6979"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8dd2a808d456c4a54e300a23e9f5a67e122c3024119acbfd73e3bf664491cb2"
+dependencies = [
+ "hmac",
+ "subtle",
 ]
 
 [[package]]
@@ -2567,7 +2653,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88073939a61e5b7680558e6be56b419e208420c2adb92be54921fa6b72283f1a"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "bitflags 1.3.2",
  "serde",
 ]
@@ -2613,7 +2699,7 @@ version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "log",
  "ring",
  "sct",
@@ -2714,10 +2800,24 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3be24c1842290c45df0a7bf069e0c268a747ad05a192f2fd7dcfdbc1cba40928"
 dependencies = [
- "base16ct",
- "der",
+ "base16ct 0.1.1",
+ "der 0.6.1",
  "generic-array",
- "pkcs8",
+ "pkcs8 0.9.0",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "sec1"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3e97a565f76233a6003f9f5c54be1d9c5bdfa3eccfb189469f11ec4901c47dc"
+dependencies = [
+ "base16ct 0.2.0",
+ "der 0.7.8",
+ "generic-array",
+ "pkcs8 0.10.2",
  "subtle",
  "zeroize",
 ]
@@ -2893,6 +2993,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "signature"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e1788eed21689f9cf370582dfc467ef36ed9c707f073528ddafa8d83e3b8500"
+dependencies = [
+ "digest 0.10.7",
+ "rand_core 0.6.4",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2955,7 +3065,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67cf02bbac7a337dc36e4f5a693db6c21e7863f45070f7064577eb4367a3212b"
 dependencies = [
  "base64ct",
- "der",
+ "der 0.6.1",
+]
+
+[[package]]
+name = "spki"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d1e996ef02c474957d681f1b05213dfb0abab947b446a62d37770b23500184a"
+dependencies = [
+ "base64ct",
+ "der 0.7.8",
 ]
 
 [[package]]
@@ -3076,7 +3196,7 @@ dependencies = [
  "ed25519-dalek",
  "flex-error",
  "futures",
- "k256",
+ "k256 0.11.6",
  "num-traits",
  "once_cell",
  "prost 0.11.9",
@@ -3087,7 +3207,7 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "sha2 0.9.9",
- "signature",
+ "signature 1.6.4",
  "subtle",
  "subtle-encoding",
  "tendermint-proto",
@@ -3206,14 +3326,14 @@ dependencies = [
 
 [[package]]
 name = "test-tube"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09b1f7cafdf7738331999fb1465d2d3032f08ac61940e1ef4601dbbef21d6a5e"
+checksum = "04de0d85f2438f0b64a5c135a1524564f2b89263cfbce011542446b6681d006f"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "cosmrs",
  "cosmwasm-std",
- "osmosis-std 0.17.0-rc0",
+ "osmosis-std 0.19.2",
  "prost 0.11.9",
  "serde",
  "serde_json",
