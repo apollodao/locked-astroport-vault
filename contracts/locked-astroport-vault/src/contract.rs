@@ -297,6 +297,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                     let state_res = query_state(deps)?;
                     to_json_binary(&state_res)
                 }
+                ApolloExtensionQueryMsg::Pool {} => {
+                    let pool = POOL.load(deps.storage)?;
+                    to_json_binary(&pool)
+                }
             },
         },
     }

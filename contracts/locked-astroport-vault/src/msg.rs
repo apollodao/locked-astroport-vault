@@ -149,6 +149,10 @@ pub enum ApolloExtensionQueryMsg {
     /// Returns the non-configurable state of the contract.
     #[returns(crate::state::StateResponse)]
     State {},
+
+    /// Returns the pool that the vault is compounding.
+    #[returns(cw_dex::astroport::AstroportPool)]
+    Pool {},
 }
 
 #[cw_serde]
