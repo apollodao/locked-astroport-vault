@@ -233,11 +233,14 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
+        let liq_manager =
+            Addr::unchecked(&dependencies.astroport_contracts.liquidity_manager.address);
         let axl_ntrn_pool = AstroportPool {
             lp_token_addr: Addr::unchecked(&axl_ntrn_lp),
             pair_addr: Addr::unchecked(&axl_ntrn_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [axl.clone(), ntrn.clone()].to_vec(),
+            liquidity_manager: liq_manager.clone(),
         };
 
         // Create ASTRO/NTRN astroport pool
@@ -255,6 +258,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             pair_addr: Addr::unchecked(&astro_ntrn_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [astro.clone(), ntrn.clone()].to_vec(),
+            liquidity_manager: liq_manager.clone(),
         };
 
         // Set routes in cw-dex-router
@@ -267,6 +271,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 &axl_ntrn_lp,
                 &axl,
                 &ntrn,
+                liq_manager.as_str(),
             )]),
             true,
             signer,
@@ -281,6 +286,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 &astro_ntrn_lp,
                 &astro,
                 &ntrn,
+                liq_manager.as_str(),
             )]),
             true,
             signer,
@@ -291,8 +297,20 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             astro.clone().into(),
             axl.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&astro_ntrn_pair, &astro_ntrn_lp, &astro, &ntrn),
-                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &ntrn, &axl),
+                swap_operation(
+                    &astro_ntrn_pair,
+                    &astro_ntrn_lp,
+                    &astro,
+                    &ntrn,
+                    liq_manager.as_str(),
+                ),
+                swap_operation(
+                    &axl_ntrn_pair,
+                    &axl_ntrn_lp,
+                    &ntrn,
+                    &axl,
+                    liq_manager.as_str(),
+                ),
             ]),
             true,
             signer,
@@ -318,6 +336,11 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             liquidity_helper: LiquidityHelperUnchecked::new(
                 dependencies.liquidity_helper_addr.clone(),
             ),
+            astroport_liquidity_manager: dependencies
+                .astroport_contracts
+                .liquidity_manager
+                .address
+                .clone(),
         };
 
         (
@@ -399,6 +422,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             pair_addr: Addr::unchecked(&wsteth_eth_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [wsteth.clone(), eth.clone()].to_vec(),
+            liquidity_manager: Addr::unchecked(&astroport_contracts.liquidity_manager.address),
         };
         let (astro_usdc_pair, astro_usdc_lp) = create_astroport_pair(
             runner,
@@ -439,6 +463,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
 
         // Set routes in cw-dex-router
         // WSTETH <-> ETH
+        let liq_manager = astroport_contracts.liquidity_manager.address.clone();
         cw_dex_router_robot.set_path(
             eth.clone().into(),
             wsteth.clone().into(),
@@ -447,6 +472,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 &wsteth_eth_lp,
                 &eth,
                 &wsteth,
+                &liq_manager,
             )]),
             true,
             signer,
@@ -456,8 +482,8 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ntrn.clone().into(),
             eth.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc),
-                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth),
+                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc, &liq_manager),
+                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth, &liq_manager),
             ]),
             true,
             signer,
@@ -467,8 +493,14 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             astro.clone().into(),
             eth.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&astro_usdc_pair, &astro_usdc_lp, &astro, &usdc),
-                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth),
+                swap_operation(
+                    &astro_usdc_pair,
+                    &astro_usdc_lp,
+                    &astro,
+                    &usdc,
+                    &liq_manager,
+                ),
+                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth, &liq_manager),
             ]),
             true,
             signer,
@@ -478,9 +510,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             axl.clone().into(),
             eth.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &axl, &ntrn),
-                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc),
-                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth),
+                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &axl, &ntrn, &liq_manager),
+                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc, &liq_manager),
+                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth, &liq_manager),
             ]),
             true,
             signer,
@@ -504,6 +536,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             astro_token: apollo_cw_asset::AssetInfoUnchecked::native("uastro"),
             astroport_generator: astroport_contracts.generator.address.clone(),
             liquidity_helper: LiquidityHelperUnchecked::new(liquidity_helper_addr.clone()),
+            astroport_liquidity_manager: astroport_contracts.liquidity_manager.address.clone(),
         };
 
         (
@@ -901,6 +934,7 @@ fn swap_operation(
     lp_addr: &str,
     from: &AssetInfo,
     to: &AssetInfo,
+    liquidity_manager: &str,
 ) -> SwapOperationUnchecked {
     SwapOperationUnchecked::new(
         Pool::Astroport(AstroportPool {
@@ -908,6 +942,7 @@ fn swap_operation(
             lp_token_addr: Addr::unchecked(lp_addr),
             pool_assets: vec![from.clone(), to.clone()],
             pair_type: PairType::Xyk {},
+            liquidity_manager: Addr::unchecked(liquidity_manager),
         }),
         from.into(),
         to.into(),

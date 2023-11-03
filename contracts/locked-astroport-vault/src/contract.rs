@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, Event, MessageInfo, QueryRequest,
+    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, Event, MessageInfo, QueryRequest,
     Reply, Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
@@ -48,11 +48,16 @@ pub fn instantiate(
         .querier
         .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: msg.pool_addr.clone(),
-            msg: to_binary(&astroport::pair::QueryMsg::Pair {})?,
+            msg: to_json_binary(&astroport::pair::QueryMsg::Pair {})?,
         }))?;
 
     // Store pool info
-    let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?)?;
+    let liquidity_manager = deps.api.addr_validate(&msg.astroport_liquidity_manager)?;
+    let pool = AstroportPool::new(
+        deps.as_ref(),
+        deps.api.addr_validate(&msg.pool_addr)?,
+        liquidity_manager,
+    )?;
     POOL.save(deps.storage, &pool)?;
 
     // Create, validate and store config
@@ -238,23 +243,23 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::VaultStandardInfo {} => to_binary(&query_vault_standard_info(deps)?),
-        QueryMsg::Info {} => to_binary(&query_vault_info(deps)?),
+        QueryMsg::VaultStandardInfo {} => to_json_binary(&query_vault_standard_info(deps)?),
+        QueryMsg::Info {} => to_json_binary(&query_vault_info(deps)?),
         QueryMsg::PreviewDeposit { .. } => unimplemented!("Cannot reliably preview deposit"),
         QueryMsg::PreviewRedeem { .. } => unimplemented!("Cannot reliably preview redeem"),
         QueryMsg::TotalAssets {} => {
             let state = STATE.load(deps.storage)?;
-            to_binary(&state.staked_base_tokens)
+            to_json_binary(&state.staked_base_tokens)
         }
         QueryMsg::TotalVaultTokenSupply {} => {
             let state = STATE.load(deps.storage)?;
-            to_binary(&state.vault_token_supply)
+            to_json_binary(&state.vault_token_supply)
         }
         QueryMsg::ConvertToShares { amount } => {
-            to_binary(&helpers::convert_to_shares(deps, amount))
+            to_json_binary(&helpers::convert_to_shares(deps, amount))
         }
         QueryMsg::ConvertToAssets { amount } => {
-            to_binary(&helpers::convert_to_assets(deps, amount))
+            to_json_binary(&helpers::convert_to_assets(deps, amount))
         }
         QueryMsg::VaultExtension(ext_msg) => match ext_msg {
             ExtensionQueryMsg::Lockup(lockup_msg) => match lockup_msg {
@@ -262,35 +267,35 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                     owner,
                     start_after,
                     limit,
-                } => to_binary(&query_unlocking_positions(deps, owner, start_after, limit)?),
+                } => to_json_binary(&query_unlocking_positions(deps, owner, start_after, limit)?),
                 cw_vault_standard::extensions::lockup::LockupQueryMsg::UnlockingPosition {
                     lockup_id,
-                } => to_binary(&query_unlocking_position(deps, lockup_id)?),
+                } => to_json_binary(&query_unlocking_position(deps, lockup_id)?),
                 cw_vault_standard::extensions::lockup::LockupQueryMsg::LockupDuration {} => {
                     let cfg = CONFIG.load(deps.storage)?;
-                    to_binary(&cfg.lock_duration)
+                    to_json_binary(&cfg.lock_duration)
                 }
             },
             ExtensionQueryMsg::Apollo(msg) => match msg {
                 ApolloExtensionQueryMsg::Config {} => {
                     let cfg = CONFIG.load(deps.storage)?;
-                    to_binary(&cfg)
+                    to_json_binary(&cfg)
                 }
                 ApolloExtensionQueryMsg::Ownership {} => {
                     let ownership = cw_ownable::get_ownership(deps.storage)?;
-                    to_binary(&ownership)
+                    to_json_binary(&ownership)
                 }
                 ApolloExtensionQueryMsg::ContractVersion {} => {
                     let version = cw2::get_contract_version(deps.storage)?;
-                    to_binary(&version)
+                    to_json_binary(&version)
                 }
                 ApolloExtensionQueryMsg::ForceWithdrawWhitelist { start_after, limit } => {
                     let whitelist = query_force_withdraw_whitelist(deps, start_after, limit)?;
-                    to_binary(&whitelist)
+                    to_json_binary(&whitelist)
                 }
                 ApolloExtensionQueryMsg::State {} => {
                     let state_res = query_state(deps)?;
-                    to_binary(&state_res)
+                    to_json_binary(&state_res)
                 }
             },
         },

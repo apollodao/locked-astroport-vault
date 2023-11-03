@@ -1,6 +1,6 @@
 use apollo_cw_asset::AssetInfoUnchecked;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{to_binary, Addr, Coin, CosmosMsg, Decimal, Env, StdResult, Uint128};
+use cosmwasm_std::{to_json_binary, Addr, Coin, CosmosMsg, Decimal, Env, StdResult, Uint128};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
 use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
@@ -40,6 +40,8 @@ pub struct InstantiateMsg {
     pub reward_liquidation_target: AssetInfoUnchecked,
     /// Helper for providing liquidity with unbalanced assets.
     pub liquidity_helper: LiquidityHelperUnchecked,
+    /// The address of the astroport liquidity manager contract.
+    pub astroport_liquidity_manager: String,
 }
 
 #[cw_serde]
@@ -119,7 +121,7 @@ impl IntoInternalCall for ExtensionExecuteMsg {
     fn into_internal_call(self, env: &Env, funds: Vec<Coin>) -> StdResult<CosmosMsg> {
         Ok(CosmosMsg::Wasm(cosmwasm_std::WasmMsg::Execute {
             contract_addr: env.contract.address.to_string(),
-            msg: to_binary(&ExecuteMsg::VaultExtension(self))?,
+            msg: to_json_binary(&ExecuteMsg::VaultExtension(self))?,
             funds,
         }))
     }
