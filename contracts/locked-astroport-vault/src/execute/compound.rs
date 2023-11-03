@@ -1,5 +1,5 @@
 use apollo_cw_asset::{Asset, AssetInfo, AssetList};
-use cosmwasm_std::{attr, to_binary, DepsMut, Env, Event, Response, StdError, Uint128};
+use cosmwasm_std::{attr, to_json_binary, DepsMut, Env, Event, Response, StdError, Uint128};
 
 use crate::error::ContractResponse;
 use crate::helpers::IntoInternalCall;
@@ -98,7 +98,7 @@ pub fn execute_provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
     let provide_liquidity_msgs = cfg.liquidity_helper.balancing_provide_liquidity(
         pool_asset_balances,
         Uint128::zero(),
-        to_binary(&pool)?,
+        to_json_binary(&pool)?,
         None,
     )?;
 
