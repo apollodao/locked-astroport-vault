@@ -108,7 +108,11 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - Checksum: `0977f0cacf5e47fb9b0d4c7a4c688864240b7d7cf9b727d3a7454ef83bcc552c`
 - Used optimized wasm downloaded from [Github Releases v0.2.0](https://github.com/apollodao/neutron-reward-distributor/releases/tag/v0.2.0).
 - CodeID: `499`
-- Contract Address: ``
+
+### Reward Distributor for wstETH/axlWETH 7d Locked Vault
+
+- CodeID: `499`
+- Contract Address: `neutron1hztlr9f5gesalqqzzdd0klr2pmvrzrxpv9ae53rzv22ycgrzng4stag887`
 
 ## Locked Astroport Vault
 
