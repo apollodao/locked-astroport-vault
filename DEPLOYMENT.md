@@ -138,7 +138,7 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - Used optimized wasm built on CI with workspace-optimizer 0.13.0.
 
 ### AXL/NTRN Unlocked Vault
-car
+
 - Contract Address: `neutron12pdx3z009fx92kcsr8fhvnkh92w98n5f5xaecz3sn0kzxthz20js0llxjw`
 - CodeID: `266`
 
@@ -156,3 +156,4 @@ car
 
 - Contract Address: `neutron1yvhe4f0q3swtf37pkf9kku59l52nevr3trxs62vah004a08pkl8qlaccc7`
 - CodeID: `451`
+- Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
