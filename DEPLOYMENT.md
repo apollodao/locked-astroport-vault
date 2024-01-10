@@ -114,6 +114,11 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - CodeID: `499`
 - Contract Address: `neutron1hztlr9f5gesalqqzzdd0klr2pmvrzrxpv9ae53rzv22ycgrzng4stag887`
 
+### Reward Distributor for NTRN/wstETH 7d Locked Vault
+
+- CodeID: `499`
+- Contract Address: `neutron1qv9t4s9hzv3vphe6f5grffv5n0uag49qjfw9n4r66v769cq48fwqhtdhsq`
+
 ## Locked Astroport Vault
 
 ### `0.1.0`
@@ -155,5 +160,11 @@ Details of deployment on Neutron mainnet `neutron-1`.
 ### PCL wstETH/axlWETH 7d Vault
 
 - Contract Address: `neutron1yvhe4f0q3swtf37pkf9kku59l52nevr3trxs62vah004a08pkl8qlaccc7`
+- CodeID: `451`
+- Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
+
+### PCL NTRN/wstETH 7d Vault
+
+- Contract Address: `neutron17vedy2clhctw0654k93m375ud7h5jsy8nj9gnlkjnyd4mcfnfrdql226al`
 - CodeID: `451`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
