@@ -9,6 +9,7 @@ use cw_it::multi_test::MultiTestRunner;
 use cw_it::test_tube::{Account, SigningAccount};
 use cw_it::traits::CwItRunner;
 use cw_it::{OwnedTestRunner, TestRunner};
+use locked_astroport_vault::state::FeeConfig;
 use locked_astroport_vault_test_helpers::robot::{
     LockedAstroportVaultRobot, LockedVaultDependencies,
 };
@@ -60,8 +61,12 @@ pub fn default_instantiate<'a>(
         runner,
         vault_contract,
         token_factory_fee,
-        treasury_addr.address(),
-        Decimal::percent(5),
+        Some(FeeConfig {
+            fee_rate: Decimal::percent(5),
+            fee_recipients: vec![(treasury_addr.address(), Decimal::percent(100))],
+        }),
+        None,
+        None,
         dependencies,
         admin,
     );
@@ -72,34 +77,37 @@ pub fn default_instantiate<'a>(
 pub fn instantiate_wsteth_eth_vault<'a>(
     runner: &'a TestRunner<'a>,
     admin: &SigningAccount,
-    performance_fee: Decimal,
+    performance_fee: Option<FeeConfig<String>>,
+    deposit_fee: Option<FeeConfig<String>>,
+    withdrawal_fee: Option<FeeConfig<String>>,
     dependencies: &'a LockedVaultDependencies<'a>,
-) -> (LockedAstroportVaultRobot<'a>, SigningAccount) {
+) -> LockedAstroportVaultRobot<'a> {
     let vault_contract = LockedAstroportVaultRobot::contract(runner, UNOPTIMIZED_PATH);
-    let treasury_addr = runner.init_account(&[]).unwrap();
     let token_factory_fee = Coin::from_str(DENOM_CREATION_FEE).unwrap();
 
     let (robot, _) = LockedAstroportVaultRobot::new_wsteth_eth_vault(
         runner,
         vault_contract,
         token_factory_fee,
-        treasury_addr.address(),
         performance_fee,
+        deposit_fee,
+        withdrawal_fee,
         dependencies,
         admin,
     );
 
-    (robot, treasury_addr)
+    robot
 }
 
 pub fn instantiate_axlr_ntrn_vault<'a>(
     runner: &'a TestRunner<'a>,
     admin: &SigningAccount,
-    performance_fee: Decimal,
+    performance_fee: Option<FeeConfig<String>>,
+    deposit_fee: Option<FeeConfig<String>>,
+    withdrawal_fee: Option<FeeConfig<String>>,
     dependencies: &'a LockedVaultDependencies<'a>,
-) -> (LockedAstroportVaultRobot<'a>, SigningAccount) {
+) -> LockedAstroportVaultRobot<'a> {
     let vault_contract = LockedAstroportVaultRobot::contract(runner, UNOPTIMIZED_PATH);
-    let treasury_addr = runner.init_account(&[]).unwrap();
     let token_factory_fee = Coin::from_str(DENOM_CREATION_FEE).unwrap();
 
     let (robot, _axl_ntrn_pool, _astro_ntrn_pool) =
@@ -107,13 +115,14 @@ pub fn instantiate_axlr_ntrn_vault<'a>(
             runner,
             vault_contract,
             token_factory_fee,
-            treasury_addr.address(),
             performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             dependencies,
             admin,
         );
 
-    (robot, treasury_addr)
+    robot
 }
 
 pub fn instantiate_vault<'a>(
@@ -123,12 +132,20 @@ pub fn instantiate_vault<'a>(
     performance_fee: Decimal,
     dependencies: &'a LockedVaultDependencies<'a>,
 ) -> (LockedAstroportVaultRobot<'a>, SigningAccount) {
-    match setup {
+    let treasury_addr = runner.init_account(&[]).unwrap();
+    let performance_fee = Some(FeeConfig {
+        fee_rate: performance_fee,
+        fee_recipients: vec![(treasury_addr.address(), Decimal::percent(100))],
+    });
+
+    let robot = match setup {
         VaultSetup::WstEth => {
-            instantiate_wsteth_eth_vault(runner, admin, performance_fee, dependencies)
+            instantiate_wsteth_eth_vault(runner, admin, performance_fee, None, None, dependencies)
         }
         VaultSetup::AxlrNtrn => {
-            instantiate_axlr_ntrn_vault(runner, admin, performance_fee, dependencies)
+            instantiate_axlr_ntrn_vault(runner, admin, performance_fee, None, None, dependencies)
         }
-    }
+    };
+
+    (robot, treasury_addr)
 }

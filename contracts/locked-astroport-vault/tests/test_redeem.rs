@@ -7,6 +7,7 @@ use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use locked_astroport_vault::helpers::INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
+use locked_astroport_vault::state::FeeConfig;
 use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFAULT_COINS};
 
 pub mod common;
@@ -74,8 +75,13 @@ fn test_redeem_without_lockup() {
         .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
         .unwrap();
     let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
-    let (robot, _treasury) =
-        instantiate_axlr_ntrn_vault(&runner, &admin, Decimal::percent(5), &dependencies);
+    let treasury = runner.init_account(&[]).unwrap();
+    let performance_fee = Some(FeeConfig {
+        fee_rate: Decimal::percent(5),
+        fee_recipients: vec![(treasury.address(), Decimal::percent(100))],
+    });
+    let robot =
+        instantiate_axlr_ntrn_vault(&runner, &admin, performance_fee, None, None, &dependencies);
     let user = robot.new_user(&admin);
 
     // Try redeeming without first depositing, should fail
@@ -108,4 +114,48 @@ fn test_redeem_without_lockup() {
         )
         .assert_base_token_balance_eq(user.address(), base_token_balance)
         .assert_vault_token_balance_eq(user.address(), Uint128::zero());
+}
+
+#[test]
+fn withdrawal_fee_works_without_lockup() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = runner
+        .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
+        .unwrap();
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let treasury = runner.init_account(&[]).unwrap();
+    let fee_rate: Decimal = Decimal::percent(1);
+    let withdrawal_fee = Some(FeeConfig {
+        fee_rate,
+        fee_recipients: vec![(treasury.address(), Decimal::percent(100))],
+    });
+    let robot =
+        instantiate_axlr_ntrn_vault(&runner, &admin, None, None, withdrawal_fee, &dependencies);
+    let user = robot.new_user(&admin);
+
+    // Deposit some funds, assert that vt and bt balances are correct, redeem, and
+    // assert again. Assert user's and treasury's balances are correct.
+    let base_token_balance = robot.query_base_token_balance(user.address());
+    let deposit_amount = Uint128::new(100);
+    robot
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .assert_vault_token_balance_eq(
+            user.address(),
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+        )
+        .assert_base_token_balance_eq(user.address(), base_token_balance - deposit_amount)
+        .redeem(
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+            None,
+            Unwrap::Ok,
+            None,
+            &user,
+        )
+        .assert_base_token_balance_eq(
+            user.address(),
+            base_token_balance - deposit_amount * fee_rate,
+        )
+        .assert_vault_token_balance_eq(user.address(), Uint128::zero())
+        .assert_base_token_balance_eq(treasury.address(), deposit_amount * fee_rate);
 }

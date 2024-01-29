@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, coins, Addr, Coin, Coins, Decimal, Uint128};
+use cosmwasm_std::{coin, coins, Addr, Coin, Coins, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::astroport::astroport::factory::PairType;
 use cw_dex::astroport::AstroportPool;
@@ -213,8 +213,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
-        treasury_addr: String,
-        performance_fee: Decimal,
+        performance_fee: Option<FeeConfig<String>>,
+        deposit_fee: Option<FeeConfig<String>>,
+        withdrawal_fee: Option<FeeConfig<String>>,
         lock_duration: u64,
         dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
@@ -322,12 +323,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             lock_duration,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.clone().into()],
             deposits_enabled: true,
-            performance_fee: Some(FeeConfig {
-                fee_rate: performance_fee,
-                fee_recipients: vec![(treasury_addr, Decimal::one())],
-            }),
-            deposit_fee: None,    // TODO: Test deposit fee
-            withdrawal_fee: None, //TODO: Test withdrawal fee
+            performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router
@@ -367,8 +365,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
-        treasury_addr: String,
-        performance_fee: Decimal,
+        performance_fee: Option<FeeConfig<String>>,
+        deposit_fee: Option<FeeConfig<String>>,
+        withdrawal_fee: Option<FeeConfig<String>>,
         dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool, AstroportPool) {
@@ -376,8 +375,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             runner,
             vault_contract,
             token_factory_fee,
-            treasury_addr,
             performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             0,
             dependencies,
             signer,
@@ -393,8 +393,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
-        treasury_addr: String,
-        performance_fee: Decimal,
+        performance_fee: Option<FeeConfig<String>>,
+        deposit_fee: Option<FeeConfig<String>>,
+        withdrawal_fee: Option<FeeConfig<String>>,
         dependencies: &'a LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool) {
@@ -528,12 +529,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             lock_duration: TWO_WEEKS_IN_SECS,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.into()],
             deposits_enabled: true,
-            performance_fee: Some(FeeConfig {
-                fee_rate: performance_fee,
-                fee_recipients: vec![(treasury_addr, Decimal::one())],
-            }),
-            deposit_fee: None,    // TODO: Test deposit fee
-            withdrawal_fee: None, //TODO: Test withdrawal fee
+            performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router

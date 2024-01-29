@@ -92,6 +92,10 @@ pub fn execute_redeem(
     let fee_msgs = cfg.withdrawal_fee.fee_msgs_from_asset(claim_asset, &env)?;
     let fee_amount = claim_amount * cfg.withdrawal_fee.fee_rate;
     let claim_amount_after_fee = claim_amount - fee_amount;
+    deps.api.debug(&format!(
+        "claim_amount: {}, fee_amount: {}, claim_amount_after_fee: {}",
+        claim_amount, fee_amount, claim_amount_after_fee
+    ));
 
     // If lock duration is zero or this is a force redeem, unstake LP tokens and
     // send them to recipient, else create a claim for recipient so they can
@@ -99,7 +103,9 @@ pub fn execute_redeem(
     let res = if cfg.lock_duration.is_zero() || force_redeem {
         // Unstake LP tokens
         let staking = STAKING.load(deps.storage)?;
-        let res = staking.unstake(deps.as_ref(), &env, claim_amount_after_fee)?;
+        let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
+
+        deps.api.debug(&format!("unstake res: {:?}", res));
 
         // Send LP tokens to recipient
         let send_msg = Asset::cw20(base_token, claim_amount_after_fee).transfer_msg(&recipient)?;
@@ -117,6 +123,8 @@ pub fn execute_redeem(
             .add_attribute(UNLOCKING_POSITION_ATTR_KEY, format!("{}", claim.id));
         Response::new().add_event(event)
     };
+
+    deps.api.debug(&format!("res: {:?}", res));
 
     let event = Event::new("apollo/vaults/execute_redeem")
         .add_attribute("is_force_redeem", format!("{}", force_redeem))
