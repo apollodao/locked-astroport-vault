@@ -83,6 +83,7 @@ impl IntoInternalCall for InternalMsg {
 /// Apollo extension messages define functionality that is part of all apollo
 /// vaults, but not part of the vault standard.
 #[cw_serde]
+#[allow(clippy::large_enum_variant)]
 pub enum ApolloExtensionExecuteMsg {
     /// Update the configuration of the vault.
     UpdateConfig {
