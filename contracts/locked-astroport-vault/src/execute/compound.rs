@@ -44,7 +44,7 @@ pub fn execute_sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
     let mut tokens_to_sell = AssetList::new();
     for asset_info in cfg.reward_tokens.into_iter() {
         let balance = asset_info.query_balance(&deps.querier, &env.contract.address)?;
-        let fee_amount = balance * cfg.performance_fee;
+        let fee_amount = balance * cfg.performance_fee.fee_rate;
         let amount_to_sell = balance - fee_amount;
 
         if fee_amount > Uint128::zero() {
@@ -61,7 +61,9 @@ pub fn execute_sell_tokens(deps: DepsMut, env: Env) -> ContractResponse {
     }
 
     // Create msgs to transfer performance fees to treasury
-    let mut msgs = performance_fees.transfer_msgs(cfg.treasury)?;
+    let mut msgs = cfg
+        .performance_fee
+        .transfer_assets_msgs(&performance_fees, &env)?;
 
     // Add msg to sell reward tokens
     if tokens_to_sell.len() > 0 {

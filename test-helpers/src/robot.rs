@@ -29,7 +29,7 @@ use locked_astroport_vault::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
     ExtensionQueryMsg, InstantiateMsg, QueryMsg,
 };
-use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates, StateResponse};
+use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates, FeeConfig, StateResponse};
 
 use crate::router::CwDexRouterRobot;
 
@@ -322,8 +322,12 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             lock_duration,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.clone().into()],
             deposits_enabled: true,
-            treasury: treasury_addr,
-            performance_fee,
+            performance_fee: Some(FeeConfig {
+                fee_rate: performance_fee,
+                fee_recipients: vec![(treasury_addr, Decimal::one())],
+            }),
+            deposit_fee: None,    // TODO: Test deposit fee
+            withdrawal_fee: None, //TODO: Test withdrawal fee
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router
@@ -524,8 +528,12 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             lock_duration: TWO_WEEKS_IN_SECS,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.into()],
             deposits_enabled: true,
-            treasury: treasury_addr,
-            performance_fee,
+            performance_fee: Some(FeeConfig {
+                fee_rate: performance_fee,
+                fee_recipients: vec![(treasury_addr, Decimal::one())],
+            }),
+            deposit_fee: None,    // TODO: Test deposit fee
+            withdrawal_fee: None, //TODO: Test withdrawal fee
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router

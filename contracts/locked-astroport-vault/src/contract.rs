@@ -65,11 +65,12 @@ pub fn instantiate(
         lock_duration: Duration::Time(msg.lock_duration),
         reward_tokens: msg.reward_tokens,
         deposits_enabled: msg.deposits_enabled,
-        treasury: msg.treasury,
-        performance_fee: msg.performance_fee,
         router: msg.router,
         reward_liquidation_target: msg.reward_liquidation_target,
         liquidity_helper: msg.liquidity_helper,
+        performance_fee: msg.performance_fee.unwrap_or_default(),
+        deposit_fee: msg.deposit_fee.unwrap_or_default(),
+        withdrawal_fee: msg.withdrawal_fee.unwrap_or_default(),
     }
     .check(deps.as_ref())?;
     CONFIG.save(deps.storage, &config)?;

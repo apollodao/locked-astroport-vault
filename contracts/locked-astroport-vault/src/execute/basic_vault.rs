@@ -33,16 +33,22 @@ pub fn execute_deposit(
     }
 
     // Transfer LP tokens from sender
-    let transfer_from_res = Response::new().add_message(
-        Asset::cw20(base_token, amount).transfer_from_msg(depositor, &env.contract.address)?,
-    );
+    let deposit_asset = Asset::cw20(base_token, amount);
+    let transfer_from_res = Response::new()
+        .add_message(deposit_asset.transfer_from_msg(depositor, &env.contract.address)?);
+
+    // Take deposit fee if set
+    let fee_msgs = cfg.deposit_fee.fee_msgs_from_asset(deposit_asset, &env)?;
+    let fee_amount = amount * cfg.deposit_fee.fee_rate;
+    let amount_after_fee = amount - fee_amount;
 
     // Stake deposited LP tokens
     let staking = STAKING.load(deps.storage)?;
-    let staking_res = staking.stake(deps.as_ref(), &env, amount)?;
+    let staking_res = staking.stake(deps.as_ref(), &env, amount_after_fee)?;
 
     // Mint vault tokens
-    let (mint_msg, mint_amount) = mint_vault_tokens(deps, env, amount, &vault_token_denom)?;
+    let (mint_msg, mint_amount) =
+        mint_vault_tokens(deps, env, amount_after_fee, &vault_token_denom)?;
 
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
@@ -53,9 +59,11 @@ pub fn execute_deposit(
 
     let event = Event::new("apollo/vaults/execute_deposit")
         .add_attribute("deposit_amount", amount)
+        .add_attribute("deposit_fee", fee_amount)
         .add_attribute("vault_tokens_minted", mint_amount);
 
     Ok(merge_responses(vec![transfer_from_res, staking_res])
+        .add_messages(fee_msgs)
         .add_message(mint_msg)
         .add_message(send_msg)
         .add_event(event))
@@ -79,16 +87,22 @@ pub fn execute_redeem(
     // Calculate claim amount and create msg to burn vault tokens
     let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
 
+    // Deduct withdrawal fee if set
+    let claim_asset = Asset::cw20(base_token.clone(), claim_amount);
+    let fee_msgs = cfg.withdrawal_fee.fee_msgs_from_asset(claim_asset, &env)?;
+    let fee_amount = claim_amount * cfg.withdrawal_fee.fee_rate;
+    let claim_amount_after_fee = claim_amount - fee_amount;
+
     // If lock duration is zero or this is a force redeem, unstake LP tokens and
     // send them to recipient, else create a claim for recipient so they can
     // call `WithdrawUnlocked` later.
     let res = if cfg.lock_duration.is_zero() || force_redeem {
         // Unstake LP tokens
         let staking = STAKING.load(deps.storage)?;
-        let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
+        let res = staking.unstake(deps.as_ref(), &env, claim_amount_after_fee)?;
 
         // Send LP tokens to recipient
-        let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(&recipient)?;
+        let send_msg = Asset::cw20(base_token, claim_amount_after_fee).transfer_msg(&recipient)?;
 
         res.add_message(send_msg)
     } else {
@@ -96,7 +110,7 @@ pub fn execute_redeem(
         let claim = state::claims().create_claim(
             deps.storage,
             &recipient,
-            claim_amount,
+            claim_amount_after_fee,
             cfg.lock_duration.after(&env.block),
         )?;
         let event = Event::new(UNLOCKING_POSITION_CREATED_EVENT_TYPE)
@@ -107,9 +121,13 @@ pub fn execute_redeem(
     let event = Event::new("apollo/vaults/execute_redeem")
         .add_attribute("is_force_redeem", format!("{}", force_redeem))
         .add_attribute("vault_tokens_redeemed", amount)
-        .add_attribute("lp_tokens_claimed", claim_amount);
+        .add_attribute("lp_tokens_claimed", claim_amount)
+        .add_attribute("withdrawal_fee", fee_amount);
 
-    Ok(res.add_message(burn_msg).add_event(event))
+    Ok(res
+        .add_message(burn_msg)
+        .add_messages(fee_msgs)
+        .add_event(event))
 }
 
 pub fn execute_update_config(
