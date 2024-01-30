@@ -151,4 +151,49 @@ fn deposit_fee_works_with_multiple_recipients() {
         );
 }
 
+#[test]
+fn deposit_fee_works_with_vault_as_recipient() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = runner
+        .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
+        .unwrap();
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let fee_rate = Decimal::percent(1);
+    let robot = instantiate_wsteth_eth_vault(&runner, &admin, None, None, None, &dependencies);
+    let user = robot.new_user(&admin);
+
+    // Update deposit fee to include vault as recipient
+    let deposit_fee = Some(FeeConfig {
+        fee_rate,
+        fee_recipients: vec![(robot.vault_addr.clone(), Decimal::percent(100))],
+    });
+    robot.update_config(
+        ConfigUpdates {
+            deposit_fee,
+            ..Default::default()
+        },
+        Unwrap::Ok,
+        &admin,
+    );
+
+    // Deposit some funds and assert the vault token balance is correct
+    let base_token_balance = robot.query_base_token_balance(user.address());
+    let deposit_amount = base_token_balance / Uint128::new(2);
+    let expected_amount =
+        deposit_amount * (Decimal::one() - fee_rate) * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
+    robot
+        .assert_base_token_balance_eq(robot.vault_addr.clone(), Uint128::zero())
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .assert_vault_token_balance_eq(user.address(), expected_amount)
+        .assert_total_vault_token_supply_eq(expected_amount)
+        .assert_total_vault_assets_eq(deposit_amount * (Decimal::one() - fee_rate))
+        .assert_base_token_balance_eq(robot.vault_addr.clone(), deposit_amount * fee_rate); // Vault should have just the fee, as rest would be staked
+
+    // Compound the vault, the fees in the vault should be staked
+    robot
+        .compound_vault(&admin)
+        .assert_base_token_balance_eq(robot.vault_addr.clone(), Uint128::zero())
+        .assert_total_vault_token_supply_eq(expected_amount)
+        .assert_total_vault_assets_eq(deposit_amount);
 }
