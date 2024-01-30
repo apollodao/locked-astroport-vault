@@ -290,3 +290,59 @@ pub struct StateResponse {
     /// The AstroportStaking object config.
     pub staking: AstroportStaking,
 }
+
+#[cfg(test)]
+pub mod tests {
+    use cosmwasm_std::{testing::mock_dependencies, Decimal};
+
+    #[test]
+    fn fee_config_rate_cannot_be_larger_than_one() {
+        let deps = mock_dependencies();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::one() + Decimal::percent(1),
+            fee_recipients: vec![],
+        };
+        assert!(fee_config
+            .check(&deps.as_ref())
+            .unwrap_err()
+            .to_string()
+            .contains("Fee rate can't be higher than 100%"));
+    }
+
+    #[test]
+    fn fee_config_recipients_must_sum_to_one() {
+        let deps = mock_dependencies();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::percent(1),
+            fee_recipients: vec![
+                ("addr1".to_string(), Decimal::percent(20)),
+                ("addr2".to_string(), Decimal::percent(50)),
+            ],
+        };
+        assert!(fee_config
+            .check(&deps.as_ref())
+            .unwrap_err()
+            .to_string()
+            .contains("Sum of fee recipient percentages must be 100%"));
+    }
+
+    #[test]
+    fn fee_config_recipient_weights_must_be_greater_than_zero() {
+        let deps = mock_dependencies();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::percent(1),
+            fee_recipients: vec![
+                ("addr1".to_string(), Decimal::percent(100)),
+                ("addr2".to_string(), Decimal::zero()),
+            ],
+        };
+        assert!(fee_config
+            .check(&deps.as_ref())
+            .unwrap_err()
+            .to_string()
+            .contains("Fee recipient percentages must be greater than zero"));
+    }
+}
