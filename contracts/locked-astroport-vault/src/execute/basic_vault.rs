@@ -38,17 +38,15 @@ pub fn execute_deposit(
         .add_message(deposit_asset.transfer_from_msg(depositor, &env.contract.address)?);
 
     // Take deposit fee if set
-    let fee_msgs = cfg.deposit_fee.fee_msgs_from_asset(deposit_asset, &env)?;
-    let fee_amount = amount * cfg.deposit_fee.fee_rate;
-    let amount_after_fee = amount - fee_amount;
+    let (fee_msgs, asset_after_fee) = cfg.deposit_fee.fee_msgs_from_asset(deposit_asset, &env)?;
 
     // Stake deposited LP tokens
     let staking = STAKING.load(deps.storage)?;
-    let staking_res = staking.stake(deps.as_ref(), &env, amount_after_fee)?;
+    let staking_res = staking.stake(deps.as_ref(), &env, asset_after_fee.amount)?;
 
     // Mint vault tokens
     let (mint_msg, mint_amount) =
-        mint_vault_tokens(deps, env, amount_after_fee, &vault_token_denom)?;
+        mint_vault_tokens(deps, env, asset_after_fee.amount, &vault_token_denom)?;
 
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
@@ -59,7 +57,7 @@ pub fn execute_deposit(
 
     let event = Event::new("apollo/vaults/execute_deposit")
         .add_attribute("deposit_amount", amount)
-        .add_attribute("deposit_fee", fee_amount)
+        .add_attribute("deposit_fee", amount - asset_after_fee.amount)
         .add_attribute("vault_tokens_minted", mint_amount);
 
     Ok(merge_responses(vec![transfer_from_res, staking_res])
@@ -90,9 +88,9 @@ pub fn execute_redeem(
 
     // Deduct withdrawal fee if set
     let claim_asset = Asset::cw20(base_token.clone(), claim_amount);
-    let fee_msgs = cfg.withdrawal_fee.fee_msgs_from_asset(claim_asset, &env)?;
-    let fee_amount = claim_amount * cfg.withdrawal_fee.fee_rate;
-    let claim_amount_after_fee = claim_amount - fee_amount;
+    let (fee_msgs, asset_after_fee) = cfg.withdrawal_fee.fee_msgs_from_asset(claim_asset, &env)?;
+    let fee_amount = claim_amount - asset_after_fee.amount;
+    let claim_amount_after_fee = asset_after_fee.amount;
 
     // If lock duration is zero or this is a force redeem, unstake LP tokens and
     // send them to recipient, else create a claim for recipient so they can

@@ -118,21 +118,51 @@ impl FeeConfig<Addr> {
 
     /// Calculates the fee from the input assets and returns messages to send
     /// them to the fee recipients.
-    pub fn fee_msgs_from_assets(&self, assets: &AssetList, env: &Env) -> StdResult<Vec<CosmosMsg>> {
+    ///
+    /// # Arguments
+    /// * `assets` - The assets to take the fee from.
+    ///
+    /// # Returns
+    /// * `Vec<CosmosMsg>` - The messages to send the fees to the fee
+    ///   recipients.
+    /// * `AssetList` - The assets after the fee has been taken.
+    pub fn fee_msgs_from_assets(
+        &self,
+        assets: &AssetList,
+        env: &Env,
+    ) -> StdResult<(Vec<CosmosMsg>, AssetList)> {
         // Take fee from input assets
-        let assets: AssetList = assets
+        let fees: AssetList = assets
             .iter()
             .map(|asset| Asset::new(asset.info.clone(), asset.amount * self.fee_rate))
             .collect::<Vec<_>>()
             .into();
+
+        let mut assets_after_fees = assets.clone();
+        assets_after_fees.deduct_many(&fees)?;
+
         // Send fee to fee recipients
-        self.transfer_assets_msgs(&assets, env)
+        Ok((self.transfer_assets_msgs(&fees, env)?, assets_after_fees))
     }
 
     /// Calculates the fee from the input asset and returns messages to send it
     /// to the fee recipients.
-    pub fn fee_msgs_from_asset(&self, asset: Asset, env: &Env) -> StdResult<Vec<CosmosMsg>> {
-        self.fee_msgs_from_assets(&AssetList::from(vec![asset]), env)
+    ///
+    /// # Arguments
+    /// * `asset` - The asset to take the fee from.
+    ///
+    /// # Returns
+    /// * `Vec<CosmosMsg>` - The messages to send the fees to the fee
+    ///   recipients.
+    /// * `Asset` - The asset after the fee has been taken.
+    pub fn fee_msgs_from_asset(
+        &self,
+        asset: Asset,
+        env: &Env,
+    ) -> StdResult<(Vec<CosmosMsg>, Asset)> {
+        let (msgs, assets_after_fee) =
+            self.fee_msgs_from_assets(&AssetList::from(vec![asset]), env)?;
+        Ok((msgs, assets_after_fee.to_vec()[0].clone()))
     }
 }
 
@@ -293,7 +323,9 @@ pub struct StateResponse {
 
 #[cfg(test)]
 pub mod tests {
-    use cosmwasm_std::{testing::mock_dependencies, Decimal};
+    use apollo_cw_asset::{Asset, AssetInfo};
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+    use cosmwasm_std::{Addr, Decimal, Uint128};
 
     #[test]
     fn fee_config_rate_cannot_be_larger_than_one() {
@@ -344,5 +376,72 @@ pub mod tests {
             .unwrap_err()
             .to_string()
             .contains("Fee recipient percentages must be greater than zero"));
+    }
+
+    #[test]
+    fn fee_msgs_from_asset_works() {
+        let env = mock_env();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::percent(1),
+            fee_recipients: vec![(Addr::unchecked("addr1"), Decimal::percent(100))],
+        };
+        let asset = Asset::new(AssetInfo::native("uusdc"), 100u128);
+        let (msgs, asset_after_fee) = fee_config.fee_msgs_from_asset(asset, &env).unwrap();
+        assert_eq!(msgs.len(), 1);
+        assert_eq!(asset_after_fee.amount, Uint128::new(99));
+    }
+
+    #[test]
+    fn fee_msgs_from_asset_works_with_zero_fee_rate() {
+        let env = mock_env();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::zero(),
+            fee_recipients: vec![],
+        };
+        let asset = Asset::new(AssetInfo::native("uusdc"), 100u128);
+        let (msgs, asset_after_fee) = fee_config.fee_msgs_from_asset(asset, &env).unwrap();
+        assert_eq!(msgs.len(), 0);
+        assert_eq!(asset_after_fee.amount, Uint128::new(100));
+    }
+
+    #[test]
+    fn fee_msgs_from_assets_works() {
+        let env = mock_env();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::percent(1),
+            fee_recipients: vec![(Addr::unchecked("addr1"), Decimal::percent(100))],
+        };
+        let assets = vec![
+            Asset::new(AssetInfo::native("uusdc"), 100u128),
+            Asset::new(AssetInfo::native("uatom"), 200u128),
+        ]
+        .into();
+        let (msgs, assets_after_fee) = fee_config.fee_msgs_from_assets(&assets, &env).unwrap();
+        println!("{:?}", msgs);
+        assert_eq!(msgs.len(), 2);
+        assert_eq!(assets_after_fee.to_vec()[0].amount, Uint128::new(99));
+        assert_eq!(assets_after_fee.to_vec()[1].amount, Uint128::new(198));
+    }
+
+    #[test]
+    fn fee_msgs_from_assets_works_with_zero_fee_rate() {
+        let env = mock_env();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::zero(),
+            fee_recipients: vec![],
+        };
+        let assets = vec![
+            Asset::new(AssetInfo::native("uusdc"), 100u128),
+            Asset::new(AssetInfo::native("uatom"), 200u128),
+        ]
+        .into();
+        let (msgs, assets_after_fee) = fee_config.fee_msgs_from_assets(&assets, &env).unwrap();
+        assert_eq!(msgs.len(), 0);
+        assert_eq!(assets_after_fee.to_vec()[0].amount, Uint128::new(100));
+        assert_eq!(assets_after_fee.to_vec()[1].amount, Uint128::new(200));
     }
 }
