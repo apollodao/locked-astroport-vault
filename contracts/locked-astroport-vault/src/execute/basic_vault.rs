@@ -104,8 +104,12 @@ pub fn execute_redeem(
 
         res.add_message(send_msg)
     } else {
-        // Unstake LP tokens for fee
-        let res = staking.unstake(deps.as_ref(), &env, fee_amount)?;
+        // Unstake LP tokens for fee if set
+        let res = if fee_amount.is_zero() {
+            Response::new()
+        } else {
+            staking.unstake(deps.as_ref(), &env, fee_amount)?
+        };
 
         // Create claim for recipient
         let claim = state::claims().create_claim(
