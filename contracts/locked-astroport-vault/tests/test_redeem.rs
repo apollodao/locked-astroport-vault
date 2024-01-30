@@ -13,7 +13,7 @@ use locked_astroport_vault_test_helpers::robot::{LockedAstroportVaultRobot, DEFA
 pub mod common;
 pub use common::get_test_runner;
 
-use crate::common::{default_instantiate, DEPS_PATH};
+use crate::common::{default_instantiate, instantiate_wsteth_eth_vault, DEPS_PATH};
 
 #[test]
 fn test_redeem_with_lockup() {
@@ -157,5 +157,45 @@ fn withdrawal_fee_works_without_lockup() {
             base_token_balance - deposit_amount * fee_rate,
         )
         .assert_vault_token_balance_eq(user.address(), Uint128::zero())
+        .assert_base_token_balance_eq(treasury.address(), deposit_amount * fee_rate);
+}
+
+#[test]
+fn withdrawal_fee_works_with_lockup() {
+    let owned_runner = get_test_runner();
+    let runner = owned_runner.as_ref();
+    let admin = runner
+        .init_account(&Coins::from_str(DEFAULT_COINS).unwrap().to_vec())
+        .unwrap();
+    let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+    let treasury = runner.init_account(&[]).unwrap();
+    let fee_rate: Decimal = Decimal::percent(1);
+    let withdrawal_fee = Some(FeeConfig {
+        fee_rate,
+        fee_recipients: vec![(treasury.address(), Decimal::percent(100))],
+    });
+    let robot =
+        instantiate_wsteth_eth_vault(&runner, &admin, None, None, withdrawal_fee, &dependencies);
+    let user = robot.new_user(&admin);
+
+    // Deposit some funds and then redeem.
+    let deposit_amount = Uint128::new(100);
+    robot
+        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .redeem(
+            deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
+            None,
+            Unwrap::Ok,
+            None,
+            &user,
+        );
+
+    // Assert that the claim was created correctly and that the fee was received
+    robot
+        .assert_unlocking_position_has_props(
+            0,
+            &user.address(),
+            deposit_amount * (Decimal::one() - fee_rate),
+        )
         .assert_base_token_balance_eq(treasury.address(), deposit_amount * fee_rate);
 }
