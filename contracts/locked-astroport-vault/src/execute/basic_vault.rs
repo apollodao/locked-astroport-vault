@@ -80,6 +80,7 @@ pub fn execute_redeem(
     let cfg = CONFIG.load(deps.storage)?;
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let vt_denom = VAULT_TOKEN_DENOM.load(deps.storage)?;
+    let staking = STAKING.load(deps.storage)?;
 
     // Check that only vault tokens were sent and that the amount is correct
     helpers::assert_correct_funds(&info, &vt_denom, amount)?;
@@ -97,8 +98,7 @@ pub fn execute_redeem(
     // send them to recipient, else create a claim for recipient so they can
     // call `WithdrawUnlocked` later.
     let res = if cfg.lock_duration.is_zero() || force_redeem {
-        // Unstake LP tokens
-        let staking = STAKING.load(deps.storage)?;
+        // Unstake LP tokens for claim plus fee
         let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
         // Send LP tokens to recipient
@@ -106,6 +106,9 @@ pub fn execute_redeem(
 
         res.add_message(send_msg)
     } else {
+        // Unstake LP tokens for fee
+        let res = staking.unstake(deps.as_ref(), &env, fee_amount)?;
+
         // Create claim for recipient
         let claim = state::claims().create_claim(
             deps.storage,
@@ -115,7 +118,7 @@ pub fn execute_redeem(
         )?;
         let event = Event::new(UNLOCKING_POSITION_CREATED_EVENT_TYPE)
             .add_attribute(UNLOCKING_POSITION_ATTR_KEY, format!("{}", claim.id));
-        Response::new().add_event(event)
+        res.add_event(event)
     };
 
     let event = Event::new("apollo/vaults/execute_redeem")
