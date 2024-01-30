@@ -73,6 +73,12 @@ impl FeeConfig<String> {
                 "Sum of fee recipient percentages must be 100%",
             ));
         }
+        // Fee recipients should not contain zero weights
+        if self.fee_recipients.iter().any(|(_, p)| p.is_zero()) {
+            return Err(StdError::generic_err(
+                "Fee recipient percentages must be greater than zero",
+            ));
+        }
         Ok(FeeConfig {
             fee_rate: self.fee_rate,
             fee_recipients: self
@@ -88,6 +94,9 @@ impl FeeConfig<Addr> {
     /// Creates messages to transfer an `AssetList` of assets to the fee
     /// recipients.
     pub fn transfer_assets_msgs(&self, assets: &AssetList, env: &Env) -> StdResult<Vec<CosmosMsg>> {
+        if self.fee_rate.is_zero() {
+            return Ok(vec![]);
+        }
         Ok(self
             .fee_recipients
             .iter()
