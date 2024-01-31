@@ -16,6 +16,9 @@ pub enum ContractError {
     #[error(transparent)]
     Overflow(#[from] OverflowError),
 
+    #[error(transparent)]
+    Semver(#[from] semver::Error),
+
     #[error("Unauthorized")]
     Unauthorized {},
 

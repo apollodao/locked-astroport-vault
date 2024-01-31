@@ -2014,6 +2014,35 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90e5a3204732fe68d983349ebcb9518a5c847b772cf06ca375f32fd9edbfe700"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-address-like",
+ "cw-dex",
+ "cw-dex-router",
+ "cw-item-set",
+ "cw-ownable",
+ "cw-storage-plus 1.1.0",
+ "cw-utils 1.0.2",
+ "cw-vault-standard",
+ "cw2 1.1.1",
+ "cw20 1.1.1",
+ "liquidity-helper",
+ "optional_struct",
+ "osmosis-std 0.14.0",
+ "schemars",
+ "serde",
+ "strum 0.25.0",
+ "thiserror",
+]
+
+[[package]]
+name = "locked-astroport-vault"
 version = "0.3.0"
 dependencies = [
  "apollo-cw-asset",
@@ -2033,15 +2062,40 @@ dependencies = [
  "cw2 1.1.1",
  "cw20 1.1.1",
  "liquidity-helper",
- "locked-astroport-vault-test-helpers",
+ "locked-astroport-vault-test-helpers 0.2.0",
+ "locked-astroport-vault-test-helpers 0.3.0",
  "optional_struct",
  "osmosis-std 0.14.0",
  "proptest",
  "schemars",
+ "semver",
  "serde",
  "strum 0.25.0",
  "test-case",
  "thiserror",
+]
+
+[[package]]
+name = "locked-astroport-vault-test-helpers"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7036cb51702be26d282b7fe18eba1a8fcea0bebe484563da23256fb9cdbf70bf"
+dependencies = [
+ "apollo-cw-asset",
+ "astroport-liquidity-helper",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-dex",
+ "cw-dex-router",
+ "cw-it",
+ "cw-ownable",
+ "cw-utils 1.0.2",
+ "cw-vault-standard",
+ "cw-vault-standard-test-helpers",
+ "cw2 1.1.1",
+ "cw20 1.1.1",
+ "liquidity-helper",
+ "locked-astroport-vault 0.2.0",
 ]
 
 [[package]]
@@ -2062,7 +2116,7 @@ dependencies = [
  "cw2 1.1.1",
  "cw20 1.1.1",
  "liquidity-helper",
- "locked-astroport-vault",
+ "locked-astroport-vault 0.3.0",
 ]
 
 [[package]]
@@ -2955,9 +3009,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.20"
+version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "836fa6a3e1e547f9a2c4040802ec865b5d85f4014efe00555d7090a3dcaa1090"
+checksum = "b97ed7a9823b74f99c7742f5336af7be5ecd3eeafcb1507d1fa93347b1d589b0"
 
 [[package]]
 name = "serde"

@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, coins, Addr, Coin, Coins, Uint128};
+use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::astroport::astroport::factory::PairType;
 use cw_dex::astroport::AstroportPool;
@@ -13,8 +13,11 @@ use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::astroport::utils::{create_astroport_pair, AstroportContracts};
 use cw_it::cw_multi_test::ContractWrapper;
 use cw_it::helpers::Unwrap;
+use cw_it::osmosis_std::types::cosmwasm::wasm::v1::{
+    MsgMigrateContract, MsgMigrateContractResponse,
+};
 use cw_it::robot::TestRobot;
-use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
+use cw_it::test_tube::{Account, Module, Runner, SigningAccount, Wasm};
 use cw_it::traits::CwItRunner;
 use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
@@ -556,6 +559,22 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ),
             wsteth_eth_pool,
         )
+    }
+
+    pub fn migrate(&self, new_code_id: u64, signer: &SigningAccount) -> &Self {
+        self.runner
+            .execute::<_, MsgMigrateContractResponse>(
+                MsgMigrateContract {
+                    sender: signer.address(),
+                    contract: self.vault_addr.clone(),
+                    code_id: new_code_id,
+                    msg: to_json_binary(&Empty {}).unwrap().0,
+                },
+                "/cosmwasm.wasm.v1.MsgMigrateContract",
+                signer,
+            )
+            .unwrap();
+        self
     }
 
     pub fn send_cw20(
