@@ -91,6 +91,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 locked_astroport_vault::contract::instantiate,
                 locked_astroport_vault::contract::query,
             )
+            .with_migrate(locked_astroport_vault::contract::migrate)
             .with_reply(locked_astroport_vault::contract::reply),
         ))
     }
