@@ -448,6 +448,56 @@ pub mod tests {
     }
 
     #[test]
+    fn fee_msgs_from_assets_works_with_multiple_recipients() {
+        let env = mock_env();
+
+        let fee_config = super::FeeConfig {
+            fee_rate: Decimal::percent(1),
+            fee_recipients: vec![
+                (Addr::unchecked("addr1"), Decimal::percent(50)),
+                (Addr::unchecked("addr2"), Decimal::percent(50)),
+            ],
+        };
+        let assets = vec![
+            Asset::new(AssetInfo::native("uusdc"), 1000u128),
+            Asset::new(AssetInfo::native("uatom"), 2000u128),
+        ]
+        .into();
+        let (msgs, assets_after_fee) = fee_config.fee_msgs_from_assets(&assets, &env).unwrap();
+        assert_eq!(msgs.len(), 4);
+        assert_eq!(
+            msgs[0],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr1".to_string(),
+                amount: vec![coin(5u128, "uusdc".to_string())]
+            })
+        );
+        assert_eq!(
+            msgs[1],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr1".to_string(),
+                amount: vec![coin(10u128, "uatom".to_string())]
+            })
+        );
+        assert_eq!(
+            msgs[2],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr2".to_string(),
+                amount: vec![coin(5u128, "uusdc".to_string())]
+            })
+        );
+        assert_eq!(
+            msgs[3],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr2".to_string(),
+                amount: vec![coin(10u128, "uatom".to_string())]
+            })
+        );
+        assert_eq!(assets_after_fee.to_vec()[0].amount, Uint128::new(990));
+        assert_eq!(assets_after_fee.to_vec()[1].amount, Uint128::new(1980));
+    }
+
+    #[test]
     fn fee_msgs_from_assets_works_with_zero_fee_rate() {
         let env = mock_env();
 
