@@ -57,7 +57,7 @@ pub fn execute_deposit(
 
     let event = Event::new("apollo/vaults/execute_deposit")
         .add_attribute("deposit_amount", amount)
-        .add_attribute("deposit_fee", amount - asset_after_fee.amount)
+        .add_attribute("deposit_fee_amount", amount - asset_after_fee.amount)
         .add_attribute("vault_tokens_minted", mint_amount);
 
     Ok(merge_responses(vec![transfer_from_res, staking_res])
@@ -127,7 +127,7 @@ pub fn execute_redeem(
         .add_attribute("is_force_redeem", format!("{}", force_redeem))
         .add_attribute("vault_tokens_redeemed", amount)
         .add_attribute("lp_tokens_claimed", claim_amount)
-        .add_attribute("withdrawal_fee", fee_amount);
+        .add_attribute("withdrawal_fee_amount", fee_amount);
 
     Ok(res
         .add_message(burn_msg)
