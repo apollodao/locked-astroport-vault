@@ -2062,6 +2062,7 @@ dependencies = [
  "cw2 1.1.1",
  "cw20 1.1.1",
  "liquidity-helper",
+ "locked-astroport-vault 0.2.0",
  "locked-astroport-vault-test-helpers 0.2.0",
  "locked-astroport-vault-test-helpers 0.3.0",
  "optional_struct",
