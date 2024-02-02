@@ -325,7 +325,7 @@ pub struct StateResponse {
 pub mod tests {
     use apollo_cw_asset::{Asset, AssetInfo};
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::{Addr, Decimal, Uint128};
+    use cosmwasm_std::{coin, Addr, BankMsg, CosmosMsg, Decimal, Uint128};
 
     #[test]
     fn fee_config_rate_cannot_be_larger_than_one() {
@@ -389,6 +389,13 @@ pub mod tests {
         let asset = Asset::new(AssetInfo::native("uusdc"), 100u128);
         let (msgs, asset_after_fee) = fee_config.fee_msgs_from_asset(asset, &env).unwrap();
         assert_eq!(msgs.len(), 1);
+        assert_eq!(
+            msgs[0],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr1".to_string(),
+                amount: vec![coin(1u128, "uusdc".to_string())]
+            })
+        );
         assert_eq!(asset_after_fee.amount, Uint128::new(99));
     }
 
@@ -422,6 +429,20 @@ pub mod tests {
         let (msgs, assets_after_fee) = fee_config.fee_msgs_from_assets(&assets, &env).unwrap();
         println!("{:?}", msgs);
         assert_eq!(msgs.len(), 2);
+        assert_eq!(
+            msgs[0],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr1".to_string(),
+                amount: vec![coin(1u128, "uusdc".to_string())]
+            })
+        );
+        assert_eq!(
+            msgs[1],
+            CosmosMsg::Bank(BankMsg::Send {
+                to_address: "addr1".to_string(),
+                amount: vec![coin(2u128, "uatom".to_string())]
+            })
+        );
         assert_eq!(assets_after_fee.to_vec()[0].amount, Uint128::new(99));
         assert_eq!(assets_after_fee.to_vec()[1].amount, Uint128::new(198));
     }
