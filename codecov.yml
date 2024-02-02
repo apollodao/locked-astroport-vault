@@ -12,3 +12,6 @@ coverage:
     patch:
       default:
         threshold: 90%
+
+ignore:
+  - "test-helpers/src/robot.rs"
