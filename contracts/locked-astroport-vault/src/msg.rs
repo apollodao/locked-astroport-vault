@@ -1,6 +1,6 @@
 use apollo_cw_asset::AssetInfoUnchecked;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{to_json_binary, Addr, Coin, CosmosMsg, Decimal, Env, StdResult, Uint128};
+use cosmwasm_std::{to_json_binary, Addr, Coin, CosmosMsg, Env, StdResult, Uint128};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
 use cw_ownable::Action as OwnerAction;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
@@ -9,7 +9,7 @@ use liquidity_helper::LiquidityHelperUnchecked;
 use strum::{EnumCount, EnumVariantNames};
 
 use crate::helpers::IntoInternalCall;
-use crate::state::ConfigUpdates;
+use crate::state::{ConfigUpdates, FeeConfig};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -29,10 +29,6 @@ pub struct InstantiateMsg {
     pub reward_tokens: Vec<AssetInfoUnchecked>,
     /// Whether or not deposits are enabled
     pub deposits_enabled: bool,
-    /// The treasury address to send fees to
-    pub treasury: String,
-    /// The fee that is taken on rewards accrued
-    pub performance_fee: Decimal,
     /// The router contract address
     pub router: CwDexRouterUnchecked,
     /// The asset to which we should swap reward_assets into before providing
@@ -42,6 +38,12 @@ pub struct InstantiateMsg {
     pub liquidity_helper: LiquidityHelperUnchecked,
     /// The address of the astroport liquidity manager contract.
     pub astroport_liquidity_manager: String,
+    /// The fee that is taken on rewards accrued
+    pub performance_fee: Option<FeeConfig<String>>,
+    /// A fee that is taken on deposits
+    pub deposit_fee: Option<FeeConfig<String>>,
+    /// A fee that is taken on withdrawals
+    pub withdrawal_fee: Option<FeeConfig<String>>,
 }
 
 #[cw_serde]
@@ -81,6 +83,7 @@ impl IntoInternalCall for InternalMsg {
 /// Apollo extension messages define functionality that is part of all apollo
 /// vaults, but not part of the vault standard.
 #[cw_serde]
+#[allow(clippy::large_enum_variant)]
 pub enum ApolloExtensionExecuteMsg {
     /// Update the configuration of the vault.
     UpdateConfig {

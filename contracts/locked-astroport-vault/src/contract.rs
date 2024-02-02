@@ -6,10 +6,11 @@ use cosmwasm_std::{
     Reply, Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
-use cw_utils::Duration;
+use cw_utils::{ensure_from_older_version, Duration};
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
+use semver::Version;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute;
@@ -65,11 +66,12 @@ pub fn instantiate(
         lock_duration: Duration::Time(msg.lock_duration),
         reward_tokens: msg.reward_tokens,
         deposits_enabled: msg.deposits_enabled,
-        treasury: msg.treasury,
-        performance_fee: msg.performance_fee,
         router: msg.router,
         reward_liquidation_target: msg.reward_liquidation_target,
         liquidity_helper: msg.liquidity_helper,
+        performance_fee: msg.performance_fee.unwrap_or_default(),
+        deposit_fee: msg.deposit_fee.unwrap_or_default(),
+        withdrawal_fee: msg.withdrawal_fee.unwrap_or_default(),
     }
     .check(deps.as_ref())?;
     CONFIG.save(deps.storage, &config)?;
@@ -317,6 +319,20 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+    let old_version = ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    // If old version is less than v0.2.0, migration is unsupported
+    if old_version < Version::new(0, 2, 0) {
+        return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
+            "Cannot migrate from a version of the contract before v0.2.0",
+        )));
+    }
+
+    // Migrate from v0.2.0 to v0.3.0
+    if old_version == Version::new(0, 2, 0) && CONTRACT_VERSION == "0.3.0" {
+        crate::migrations::migrate_from_0_2_0_to_0_3_0(deps)?;
+    }
+
     Ok(Response::default())
 }

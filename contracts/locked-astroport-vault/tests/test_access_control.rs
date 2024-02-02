@@ -49,7 +49,7 @@ fn update_config_can_only_be_called_by_admin() {
     let user = robot.new_user(&admin);
 
     let config_updates = ConfigUpdates {
-        treasury: Some(user.address()),
+        deposits_enabled: Some(false),
         ..Default::default()
     };
 

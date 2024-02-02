@@ -3,7 +3,7 @@ use common::{default_instantiate, get_test_runner, DEPS_PATH};
 use cosmwasm_std::Decimal;
 use cw_it::helpers::Unwrap;
 use cw_utils::Duration;
-use locked_astroport_vault::state::ConfigUpdates;
+use locked_astroport_vault::state::{ConfigUpdates, FeeConfig};
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 pub mod common;
@@ -51,12 +51,15 @@ fn config_validation_fails_if_performance_fee_exceeds_100_percent() {
     let (robot, _base_pool, _treasury) = default_instantiate(&runner, &admin, &dependencies);
 
     let updates = ConfigUpdates {
-        performance_fee: Some(Decimal::percent(101)),
+        performance_fee: Some(FeeConfig {
+            fee_rate: Decimal::percent(101),
+            fee_recipients: vec![],
+        }),
         ..Default::default()
     };
     robot.update_config(
         updates,
-        Unwrap::Err("Performance fee can't be higher than 100%"),
+        Unwrap::Err("Fee rate can't be higher than 100%"),
         &admin,
     );
 }

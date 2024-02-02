@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, coins, Addr, Coin, Coins, Decimal, Uint128};
+use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::astroport::astroport::factory::PairType;
 use cw_dex::astroport::AstroportPool;
@@ -13,8 +13,11 @@ use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::astroport::utils::{create_astroport_pair, AstroportContracts};
 use cw_it::cw_multi_test::ContractWrapper;
 use cw_it::helpers::Unwrap;
+use cw_it::osmosis_std::types::cosmwasm::wasm::v1::{
+    MsgMigrateContract, MsgMigrateContractResponse,
+};
 use cw_it::robot::TestRobot;
-use cw_it::test_tube::{Account, Module, SigningAccount, Wasm};
+use cw_it::test_tube::{Account, Module, Runner, SigningAccount, Wasm};
 use cw_it::traits::CwItRunner;
 use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
@@ -29,7 +32,7 @@ use locked_astroport_vault::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
     ExtensionQueryMsg, InstantiateMsg, QueryMsg,
 };
-use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates, StateResponse};
+use locked_astroport_vault::state::{Config, ConfigBase, ConfigUpdates, FeeConfig, StateResponse};
 
 use crate::router::CwDexRouterRobot;
 
@@ -88,6 +91,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 locked_astroport_vault::contract::instantiate,
                 locked_astroport_vault::contract::query,
             )
+            .with_migrate(locked_astroport_vault::contract::migrate)
             .with_reply(locked_astroport_vault::contract::reply),
         ))
     }
@@ -213,8 +217,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
-        treasury_addr: String,
-        performance_fee: Decimal,
+        performance_fee: Option<FeeConfig<String>>,
+        deposit_fee: Option<FeeConfig<String>>,
+        withdrawal_fee: Option<FeeConfig<String>>,
         lock_duration: u64,
         dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
@@ -322,8 +327,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             lock_duration,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.clone().into()],
             deposits_enabled: true,
-            treasury: treasury_addr,
             performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router
@@ -363,8 +369,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
-        treasury_addr: String,
-        performance_fee: Decimal,
+        performance_fee: Option<FeeConfig<String>>,
+        deposit_fee: Option<FeeConfig<String>>,
+        withdrawal_fee: Option<FeeConfig<String>>,
         dependencies: &LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool, AstroportPool) {
@@ -372,8 +379,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             runner,
             vault_contract,
             token_factory_fee,
-            treasury_addr,
             performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             0,
             dependencies,
             signer,
@@ -389,8 +397,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         runner: &'a TestRunner<'a>,
         vault_contract: ContractType,
         token_factory_fee: Coin,
-        treasury_addr: String,
-        performance_fee: Decimal,
+        performance_fee: Option<FeeConfig<String>>,
+        deposit_fee: Option<FeeConfig<String>>,
+        withdrawal_fee: Option<FeeConfig<String>>,
         dependencies: &'a LockedVaultDependencies<'a>,
         signer: &SigningAccount,
     ) -> (Self, AstroportPool) {
@@ -524,8 +533,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             lock_duration: TWO_WEEKS_IN_SECS,
             reward_tokens: vec![astro.into(), axl.into(), ntrn.into()],
             deposits_enabled: true,
-            treasury: treasury_addr,
             performance_fee,
+            deposit_fee,
+            withdrawal_fee,
             router: dependencies
                 .cw_dex_router_robot
                 .cw_dex_router
@@ -550,6 +560,22 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ),
             wsteth_eth_pool,
         )
+    }
+
+    pub fn migrate(&self, new_code_id: u64, signer: &SigningAccount) -> &Self {
+        self.runner
+            .execute::<_, MsgMigrateContractResponse>(
+                MsgMigrateContract {
+                    sender: signer.address(),
+                    contract: self.vault_addr.clone(),
+                    code_id: new_code_id,
+                    msg: to_json_binary(&Empty {}).unwrap().0,
+                },
+                "/cosmwasm.wasm.v1.MsgMigrateContract",
+                signer,
+            )
+            .unwrap();
+        self
     }
 
     pub fn send_cw20(

@@ -35,7 +35,7 @@ pub fn test_compound_vault(
     // compound and check that the base token amount corresponding to the users
     // vault token balance has increased.
     let config = robot.query_config();
-    let treasury = config.treasury;
+    let treasury = &config.performance_fee.fee_recipients[0].0;
     let reward_tokens = config.reward_tokens;
     let mut base_token_balance_in_vault = bt_balance_in_vault_before_deposit + deposit_amount;
     for token in reward_tokens {

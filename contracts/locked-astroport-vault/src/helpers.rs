@@ -69,7 +69,8 @@ pub(crate) fn convert_to_assets(deps: Deps, vault_token_amount: Uint128) -> Uint
 }
 
 /// Return a token factory mint message to mint `amount` of vault tokens to
-/// `env.contract.address`.
+/// `env.contract.address`. Also updates the contract's internal storage of the
+/// total amount of staked base tokens and the total supply of vault tokens.
 pub(crate) fn mint_vault_tokens(
     deps: DepsMut,
     env: Env,
