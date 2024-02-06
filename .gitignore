@@ -6,3 +6,5 @@ docs
 **/*.tmp
 
 artifacts/
+**/types/*.ts
+**/schema/**/*.json
