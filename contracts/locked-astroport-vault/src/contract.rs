@@ -2,11 +2,12 @@
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, Event, MessageInfo, QueryRequest,
-    Reply, Response, StdResult, SubMsg, Uint128, WasmQuery,
+    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
+    Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
+use cw2::ensure_from_older_version;
 use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
-use cw_utils::{ensure_from_older_version, Duration};
+use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
@@ -17,7 +18,7 @@ use crate::execute;
 use crate::helpers::{self, IntoInternalCall};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
-    ExtensionQueryMsg, InstantiateMsg, InternalMsg, QueryMsg,
+    ExtensionQueryMsg, InstantiateMsg, InternalMsg, MigrateMsg, QueryMsg,
 };
 use crate::query::{
     query_force_withdraw_whitelist, query_state, query_unlocking_position,
@@ -94,7 +95,7 @@ pub fn instantiate(
     // Store staking info
     let staking = AstroportStaking {
         lp_token_addr: pair_info.liquidity_token,
-        generator_addr: deps.api.addr_validate(&msg.astroport_generator)?,
+        incentives: deps.api.addr_validate(&msg.astroport_incentives_addr)?,
         astro_token: msg.astro_token.check(deps.api)?,
     };
     STAKING.save(deps.storage, &staking)?;
@@ -319,7 +320,9 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+pub fn migrate(mut deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    let incentives_contract = deps.api.addr_validate(&msg.incentives_contract)?;
+
     let old_version = ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // If old version is less than v0.2.0, migration is unsupported
@@ -330,8 +333,14 @@ pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, Contra
     }
 
     // Migrate from v0.2.0 to v0.3.0
-    if old_version == Version::new(0, 2, 0) && CONTRACT_VERSION == "0.3.0" {
-        crate::migrations::migrate_from_0_2_0_to_0_3_0(deps)?;
+    if old_version == Version::new(0, 2, 0)
+        && (CONTRACT_VERSION == "0.3.0" || CONTRACT_VERSION == "0.4.0")
+    {
+        crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
+    }
+
+    if old_version == Version::new(0, 3, 0) && CONTRACT_VERSION == "0.4.0" {
+        crate::migrations::migrate_from_0_3_0_to_0_4_0(deps, incentives_contract)?;
     }
 
     Ok(Response::default())

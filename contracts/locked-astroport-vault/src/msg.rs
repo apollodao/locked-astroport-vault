@@ -21,8 +21,8 @@ pub struct InstantiateMsg {
     pub pool_addr: String,
     /// Astroport token
     pub astro_token: AssetInfoUnchecked,
-    /// Astroport generator address
-    pub astroport_generator: String,
+    /// Address of the astroport incentives contract
+    pub astroport_incentives_addr: String,
     /// Lock duration in seconds
     pub lock_duration: u64,
     /// Reward tokens
@@ -166,3 +166,9 @@ pub enum ExtensionQueryMsg {
 pub type ExecuteMsg = cw_vault_standard::VaultStandardExecuteMsg<ExtensionExecuteMsg>;
 
 pub type QueryMsg = cw_vault_standard::VaultStandardQueryMsg<ExtensionQueryMsg>;
+
+#[cw_serde]
+pub struct MigrateMsg {
+    /// The address of the astroport incentives contract.
+    pub incentives_contract: String,
+}
