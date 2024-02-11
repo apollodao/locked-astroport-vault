@@ -13,7 +13,7 @@ pub fn migrate_from_0_2_0_to_0_3_0(deps: DepsMut) -> StdResult<()> {
         lock_duration: old_config.lock_duration,
         reward_tokens: old_config.reward_tokens,
         deposits_enabled: old_config.deposits_enabled,
-        router: old_config.router,
+        router: cw_dex_router::helpers::CwDexRouter::new(&old_config.router.0),
         reward_liquidation_target: old_config.reward_liquidation_target,
         liquidity_helper: old_config.liquidity_helper,
         performance_fee: FeeConfig {

@@ -337,8 +337,6 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 .into(),
             reward_liquidation_target: ntrn.into(),
             pool_addr: axl_ntrn_pair,
-            astro_token: apollo_cw_asset::AssetInfoUnchecked::native("uastro"),
-            astroport_generator: dependencies.astroport_contracts.generator.address.clone(),
             liquidity_helper: LiquidityHelperUnchecked::new(
                 dependencies.liquidity_helper_addr.clone(),
             ),
@@ -347,6 +345,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 .liquidity_manager
                 .address
                 .clone(),
+            astroport_incentives_addr: dependencies.astroport_contracts.incentives.address.clone(),
         };
 
         (
@@ -543,10 +542,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 .into(),
             reward_liquidation_target: eth.into(),
             pool_addr: wsteth_eth_pair,
-            astro_token: apollo_cw_asset::AssetInfoUnchecked::native("uastro"),
-            astroport_generator: astroport_contracts.generator.address.clone(),
             liquidity_helper: LiquidityHelperUnchecked::new(liquidity_helper_addr.clone()),
             astroport_liquidity_manager: astroport_contracts.liquidity_manager.address.clone(),
+            astroport_incentives_addr: astroport_contracts.incentives.address.clone(),
         };
 
         (
