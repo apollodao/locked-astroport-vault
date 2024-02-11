@@ -96,7 +96,6 @@ pub fn instantiate(
     let staking = AstroportStaking {
         lp_token_addr: pair_info.liquidity_token,
         incentives: deps.api.addr_validate(&msg.astroport_incentives_addr)?,
-        astro_token: msg.astro_token.check(deps.api)?,
     };
     STAKING.save(deps.storage, &staking)?;
 

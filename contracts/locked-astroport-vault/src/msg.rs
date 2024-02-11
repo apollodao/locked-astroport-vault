@@ -19,8 +19,6 @@ pub struct InstantiateMsg {
     pub vault_token_subdenom: String,
     /// Address of the pool.
     pub pool_addr: String,
-    /// Astroport token
-    pub astro_token: AssetInfoUnchecked,
     /// Address of the astroport incentives contract
     pub astroport_incentives_addr: String,
     /// Lock duration in seconds

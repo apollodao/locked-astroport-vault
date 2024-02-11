@@ -35,7 +35,6 @@ pub fn migrate_from_0_3_0_to_0_4_0(deps: DepsMut, incentives_contract: Addr) -> 
 
     let staking = AstroportStaking {
         lp_token_addr: old_staking.lp_token_addr,
-        astro_token: old_staking.astro_token,
         incentives: incentives_contract,
     };
 

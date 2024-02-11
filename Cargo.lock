@@ -969,9 +969,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex"
-version = "0.6.0-rc.2"
+version = "0.6.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f66b34f1c70638b8716635706e25be35b7fd8156baf84df0ca9db13f581180d"
+checksum = "07d2b5bd5414f198c2a9f27ed89018a4dd56da92a1341a28ab12386938a58aa5"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -2108,7 +2108,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-address-like",
- "cw-dex 0.6.0-rc.2",
+ "cw-dex 0.6.0-rc.3",
  "cw-dex-router",
  "cw-it",
  "cw-item-set",
@@ -2165,7 +2165,7 @@ dependencies = [
  "astroport-liquidity-helper",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex 0.6.0-rc.2",
+ "cw-dex 0.6.0-rc.3",
  "cw-dex-router",
  "cw-it",
  "cw-ownable",
