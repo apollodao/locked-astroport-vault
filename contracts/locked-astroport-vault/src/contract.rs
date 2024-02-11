@@ -331,14 +331,15 @@ pub fn migrate(mut deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response
         )));
     }
 
-    // Migrate from v0.2.0 to v0.3.0
+    // Migrate to v0.3.0
     if old_version == Version::new(0, 2, 0)
         && (CONTRACT_VERSION == "0.3.0" || CONTRACT_VERSION == "0.4.0")
     {
         crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
     }
 
-    if old_version == Version::new(0, 3, 0) && CONTRACT_VERSION == "0.4.0" {
+    // Migrate to v0.4.0
+    if old_version <= Version::new(0, 3, 0) && CONTRACT_VERSION == "0.4.0" {
         crate::migrations::migrate_from_0_3_0_to_0_4_0(deps, incentives_contract)?;
     }
 

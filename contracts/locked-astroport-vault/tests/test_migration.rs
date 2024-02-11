@@ -13,8 +13,10 @@ mod test {
     use cw_it::test_tube::{Account, Runner};
     use cw_it::traits::CwItRunner;
     use cw_it::TestRunner;
-    use locked_astroport_vault::msg::{ApolloExtensionQueryMsg, ExtensionQueryMsg, QueryMsg};
-    use locked_astroport_vault::state::{Config, FeeConfig};
+    use locked_astroport_vault::msg::{
+        ApolloExtensionQueryMsg, ExtensionQueryMsg, MigrateMsg, QueryMsg,
+    };
+    use locked_astroport_vault::state::{Config, FeeConfig, StateResponse};
     use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
     use locked_astroport_vault_test_helpers_0_2_0::robot::LockedAstroportVaultRobot as LockedAstroportVaultRobot_0_2_0;
@@ -23,7 +25,7 @@ mod test {
     use cw_it::{Artifact, ContractType};
 
     #[test]
-    fn test_migrate_from_0_2_0() {
+    fn test_migrate_from_0_2_0_to_0_4_0() {
         let owned_runner = get_test_runner();
         let runner = owned_runner.as_ref();
         let admin = LockedAstroportVaultRobot::new_admin(&runner);
@@ -53,6 +55,8 @@ mod test {
             &admin,
         );
 
+        let old_staking = robot.query_state().staking;
+
         // Upload new contract
         let new_contract = LockedAstroportVaultRobot::<'_>::contract(&runner, UNOPTIMIZED_PATH);
         let new_code_id = runner.store_code(new_contract, &admin).unwrap();
@@ -64,7 +68,11 @@ mod test {
                     sender: admin.address(),
                     contract: robot.vault_addr.clone(),
                     code_id: new_code_id,
-                    msg: to_json_binary(&Empty {}).unwrap().0,
+                    msg: to_json_binary(&MigrateMsg {
+                        incentives_contract: Addr::unchecked("incentives"),
+                    })
+                    .unwrap()
+                    .0,
                 },
                 "/cosmwasm.wasm.v1.MsgMigrateContract",
                 &admin,
@@ -94,5 +102,18 @@ mod test {
             FeeConfig::<String>::from(config.withdrawal_fee),
             FeeConfig::default()
         );
+
+        // Query state from contract
+        let state: StateResponse = robot
+            .wasm()
+            .query(
+                &robot.vault_addr,
+                &QueryMsg::VaultExtension(ApolloExtensionQueryMsg::State {}),
+            )
+            .unwrap();
+
+        // Check that the staking struct was migrated correctly
+        assert_eq!(state.staking.lp_token_addr, old_staking.lp_token_addr);
+        assert_eq!(state.staking.incentives, Addr::unchecked("incentives"));
     }
 }
