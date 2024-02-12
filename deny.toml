@@ -39,3 +39,7 @@ exceptions = [
     { allow = ["Unicode-DFS-2016"], name = "unicode-ident" },
     { allow = ["BUSL-1.1"], name = "locked-astroport-vault" },
 ]
+
+[[licenses.exceptions]]
+name = "cw-asset"
+license = "GPL-3.0"
