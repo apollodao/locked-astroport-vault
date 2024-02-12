@@ -179,13 +179,7 @@ fn force_withdraw_unlocking_works() {
         .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit)
         .assert_vault_token_balance_eq(user.address(), 0u128)
-        .force_withdraw_unlocking(
-            0,
-            None::<Uint128>,
-            None,
-            Unwrap::Err("UnlockingPosition not found"),
-            &user,
-        );
+        .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Err("not found"), &user);
 }
 
 #[test]
@@ -225,13 +219,7 @@ fn force_withdraw_unlocking_to_recipient_works() {
         .assert_vault_token_balance_eq(user.address(), 0u128)
         .assert_base_token_balance_eq(recipient.address(), deposit_amount)
         .assert_vault_token_balance_eq(recipient.address(), 0u128)
-        .force_withdraw_unlocking(
-            0,
-            None::<Uint128>,
-            None,
-            Unwrap::Err("UnlockingPosition not found"),
-            &user,
-        );
+        .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Err("not found"), &user);
 }
 
 #[test]
@@ -274,13 +262,7 @@ fn force_withdraw_unlocking_with_partial_amount_works() {
         .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit)
         .assert_vault_token_balance_eq(user.address(), 0u128)
-        .force_withdraw_unlocking(
-            0,
-            None::<Uint128>,
-            None,
-            Unwrap::Err("UnlockingPosition not found"),
-            &user,
-        );
+        .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Err("not found"), &user);
 }
 
 #[test]
