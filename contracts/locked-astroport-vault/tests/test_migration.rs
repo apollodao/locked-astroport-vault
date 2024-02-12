@@ -22,7 +22,7 @@ mod test {
     use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
     #[cfg(feature = "osmosis-test-tube")]
-    use cw_it::{Artifact, ContractType};
+    use cw_it::Artifact;
 
     #[test]
     fn test_migrate_from_0_2_0_to_0_4_0() {
