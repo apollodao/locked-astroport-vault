@@ -53,7 +53,8 @@ mod test {
         // Upload v0.2.0 code
         let code_id_v0_2_0 = runner.store_code(old_contract, &admin).unwrap();
 
-        // Use new Vault robot to setup a new vault. This also sets up the same pools etc. with astroport as the v0.2.0 robot
+        // Use new Vault robot to setup a new vault. This also sets up the same pools
+        // etc. with astroport as the v0.2.0 robot
         let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
         let (robot, wsteth_eth_pool) = LockedAstroportVaultRobot::new_wsteth_eth_vault(
             &runner,
