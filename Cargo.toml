@@ -45,6 +45,3 @@ cw-vault-standard-test-helpers      = { version = "0.4.0-rc.1", features = ["loc
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 astroport-liquidity-helper          = "0.3.0"
-
-[patch.crates-io]
-cw-dex = { path = "../cw-dex/cw-dex", version = "0.5.3-rc.1" }
