@@ -41,7 +41,7 @@ locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
 cw-it                               = { version = "0.3.0", features = ["astroport"] }
-cw-vault-standard-test-helpers      = { version = "0.4.0-rc.1", features = ["lockup", "force-unlock"] }
+cw-vault-standard-test-helpers      = { version = "0.4.0", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 astroport-liquidity-helper          = "0.3.0"
