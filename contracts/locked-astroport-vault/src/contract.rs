@@ -11,7 +11,7 @@ use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
-use semver::Version;
+
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute;
