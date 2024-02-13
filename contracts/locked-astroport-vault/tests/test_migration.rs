@@ -125,6 +125,8 @@ mod test {
             )
             .unwrap()
             .staking;
+        #[allow(deprecated)]
+        let lp_token_addr = old_staking.lp_token_addr.clone();
 
         // Upload v0.4.0 code
         let new_contract = LockedAstroportVaultRobot::<'_>::contract(&runner, UNOPTIMIZED_PATH);
@@ -188,7 +190,7 @@ mod test {
             .unwrap();
 
         // Check that the staking struct was migrated correctly
-        assert_eq!(state.staking.lp_token_addr, old_staking.lp_token_addr);
+        assert_eq!(state.staking.lp_token_addr, lp_token_addr);
         assert_eq!(
             state.staking.incentives.to_string(),
             dependencies.astroport_contracts.incentives.address

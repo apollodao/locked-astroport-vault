@@ -35,6 +35,7 @@ pub fn migrate_from_0_3_0_to_0_4_0(deps: DepsMut, incentives_contract: Addr) -> 
     let old_staking = locked_astroport_vault_0_2_0::state::STAKING.load(deps.storage)?;
 
     let staking = AstroportStaking {
+        #[allow(deprecated)]
         lp_token_addr: old_staking.lp_token_addr,
         incentives: incentives_contract,
     };

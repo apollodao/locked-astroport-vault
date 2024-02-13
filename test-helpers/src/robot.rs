@@ -5,7 +5,7 @@ use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
-use cw_dex::astroport::astroport::factory::PairType;
+use cw_dex_astroport::astroport::factory::PairType;
 use cw_dex_astroport::AstroportPool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
 use cw_it::astroport::robot::AstroportTestRobot;
@@ -961,6 +961,7 @@ fn swap_operation(
     liquidity_manager: &str,
 ) -> SwapOperationUnchecked {
     SwapOperationUnchecked::new(
+        #[allow(deprecated)]
         cw_dex::Pool::Astroport(cw_dex::astroport::AstroportPool {
             pair_addr: Addr::unchecked(pair_addr),
             lp_token_addr: Addr::unchecked(lp_addr),

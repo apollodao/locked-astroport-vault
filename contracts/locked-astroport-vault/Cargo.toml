@@ -51,4 +51,3 @@ cw-vault-standard-test-helpers      = { workspace = true, features = ["lockup", 
 proptest                            = { workspace = true }
 test-case                           = { workspace = true }
 locked-astroport-vault-test-helpers = { workspace = true }
-
