@@ -6,8 +6,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex::astroport::astroport::factory::PairType;
-use cw_dex::astroport::AstroportPool;
-use cw_dex::Pool;
+use cw_dex_astroport::AstroportPool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
 use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::astroport::utils::{create_astroport_pair, AstroportContracts};
@@ -953,6 +952,7 @@ impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a
     }
 }
 
+#[allow(deprecated)]
 fn swap_operation(
     pair_addr: &str,
     lp_addr: &str,
@@ -961,7 +961,7 @@ fn swap_operation(
     liquidity_manager: &str,
 ) -> SwapOperationUnchecked {
     SwapOperationUnchecked::new(
-        Pool::Astroport(AstroportPool {
+        cw_dex::Pool::Astroport(cw_dex::astroport::AstroportPool {
             pair_addr: Addr::unchecked(pair_addr),
             lp_token_addr: Addr::unchecked(lp_addr),
             pool_assets: vec![from.clone(), to.clone()],

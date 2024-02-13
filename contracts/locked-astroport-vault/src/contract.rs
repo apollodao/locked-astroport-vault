@@ -6,7 +6,7 @@ use cosmwasm_std::{
     Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw2::ensure_from_older_version;
-use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
+use cw_dex_astroport::{astroport, AstroportPool, AstroportStaking};
 use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;

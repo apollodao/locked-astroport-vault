@@ -24,6 +24,7 @@ mod test {
     #[cfg(feature = "osmosis-test-tube")]
     use cw_it::Artifact;
 
+    #[allow(deprecated)]
     #[test]
     fn test_migrate_from_0_2_0_to_0_4_0() {
         let owned_runner = get_test_runner();

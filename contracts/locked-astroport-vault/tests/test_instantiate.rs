@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use cosmwasm_std::{Addr, Coins};
-use cw_dex::astroport::AstroportStaking;
+use cw_dex_astroport::AstroportStaking;
 use cw_it::traits::CwItRunner;
 use cw_ownable::Ownership;
 use cw_vault_standard::VaultStandardInfoResponse;

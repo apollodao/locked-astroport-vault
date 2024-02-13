@@ -15,7 +15,8 @@ apollo-cw-asset         = "0.1.2"
 apollo-utils            = "0.1.1"
 cosmwasm-schema         = "1.1.0"
 cosmwasm-std            = "1.5.2"
-cw-dex                  = { version = "0.6.0-rc.3", features = ["astroport"] }
+cw-dex                  = { version = "0.5.3-rc.1" }
+cw-dex-astroport        = { version = "0.1.0" }
 cw-ownable              = "0.5.1"
 cw-storage-plus         = "1.1.0"
 cw-utils                = "1.0.1"
@@ -24,7 +25,7 @@ cw2                     = "1.1.0"
 cw20                    = "1.1.0"
 osmosis-std             = "0.14"
 thiserror               = "1.0.43"
-cw-dex-router           = { version = "0.4.0-rc.1", features = ["library"] }
+cw-dex-router           = { version = "0.3", features = ["library"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
 liquidity-helper        = "0.3.0"
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
@@ -44,3 +45,6 @@ cw-vault-standard-test-helpers      = { version = "0.4.0-rc.1", features = ["loc
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 astroport-liquidity-helper          = "0.3.0"
+
+[patch.crates-io]
+cw-dex = { path = "../cw-dex/cw-dex", version = "0.5.3-rc.1" }

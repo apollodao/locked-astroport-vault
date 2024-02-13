@@ -1,6 +1,6 @@
 use crate::state::{self, FeeConfig, CONFIG};
 use cosmwasm_std::{Addr, Decimal, DepsMut, StdResult};
-use cw_dex::astroport::AstroportStaking;
+use cw_dex_astroport::AstroportStaking;
 use cw_storage_plus::Item;
 use locked_astroport_vault_0_2_0::state::Config as Config0_2_0;
 
@@ -30,6 +30,7 @@ pub fn migrate_from_0_2_0_to_0_3_0(deps: DepsMut) -> StdResult<()> {
     Ok(())
 }
 
+#[allow(deprecated)]
 pub fn migrate_from_0_3_0_to_0_4_0(deps: DepsMut, incentives_contract: Addr) -> StdResult<()> {
     let old_staking = locked_astroport_vault_0_2_0::state::STAKING.load(deps.storage)?;
 
