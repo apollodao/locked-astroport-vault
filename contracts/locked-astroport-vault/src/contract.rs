@@ -320,6 +320,8 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(mut deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
     let incentives_contract = deps.api.addr_validate(&msg.incentives_contract)?;
 
     let old_version = ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
