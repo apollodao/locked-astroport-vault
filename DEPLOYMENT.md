@@ -119,6 +119,11 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - CodeID: `499`
 - Contract Address: `neutron1qv9t4s9hzv3vphe6f5grffv5n0uag49qjfw9n4r66v769cq48fwqhtdhsq`
 
+### stTIA Reward Distributor for stTIA/TIA Capped Vault
+
+- CodeID: `499`
+- Contract Address: `neutron1vhgyz0ttwcxpt8q9kyr4uy5fktmq284jjfma90q87a49zrcn7nfs98w8eg`
+
 ## Locked Astroport Vault
 
 ### `0.1.0`
