@@ -6,7 +6,8 @@ mod test {
 
     use crate::common::{get_test_runner, DENOM_CREATION_FEE, DEPS_PATH, UNOPTIMIZED_PATH};
     use apollo_cw_asset::AssetInfoUnchecked;
-    use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal};
+    use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal, Uint128};
+    use cw_dex_astroport::astroport_v3::incentives;
     use cw_it::cw_multi_test::ContractWrapper;
     use cw_it::osmosis_std::types::cosmwasm::wasm::v1::{
         MsgMigrateContract, MsgMigrateContractResponse,
@@ -15,6 +16,7 @@ mod test {
     use cw_it::test_tube::{Account, Module, Runner, Wasm};
     use cw_it::traits::CwItRunner;
     use cw_it::{ContractType, TestRunner};
+    use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
     use locked_astroport_vault::msg::{
         ApolloExtensionQueryMsg, ExtensionQueryMsg, MigrateMsg, QueryMsg,
     };
@@ -26,7 +28,7 @@ mod test {
 
     #[allow(deprecated)]
     #[test]
-    fn test_migrate_from_0_2_0_to_0_4_0() {
+    fn test_migrate_from_0_2_0_to_0_4_1() {
         let owned_runner = get_test_runner();
         let runner = owned_runner.as_ref();
         let admin = LockedAstroportVaultRobot::new_admin(&runner);
@@ -113,6 +115,34 @@ mod test {
             .data
             .address;
 
+        // Deposit some base tokens
+        let deposit_amount = Uint128::new(1_000_000);
+        robot
+            .wasm()
+            .execute(
+                &robot.base_token(),
+                &cw20::Cw20ExecuteMsg::IncreaseAllowance {
+                    spender: contract_addr.clone(),
+                    amount: deposit_amount,
+                    expires: None,
+                },
+                &[],
+                &admin,
+            )
+            .unwrap();
+        robot
+            .wasm()
+            .execute(
+                &contract_addr,
+                &locked_astroport_vault_0_2_0::msg::ExecuteMsg::Deposit {
+                    amount: deposit_amount,
+                    recipient: None,
+                },
+                &[],
+                &admin,
+            )
+            .unwrap();
+
         // Query state from v0.2.0 contract
         let old_staking = wasm
             .query::<_, locked_astroport_vault_0_2_0::state::StateResponse>(
@@ -128,9 +158,9 @@ mod test {
         #[allow(deprecated)]
         let lp_token_addr = old_staking.lp_token_addr.clone();
 
-        // Upload v0.4.0 code
+        // Upload v0.4.1 code
         let new_contract = LockedAstroportVaultRobot::<'_>::contract(&runner, UNOPTIMIZED_PATH);
-        let code_id_v0_4_0 = runner.store_code(new_contract, &admin).unwrap();
+        let code_id_v0_4_1 = runner.store_code(new_contract, &admin).unwrap();
 
         // Migrate
         runner
@@ -138,7 +168,7 @@ mod test {
                 MsgMigrateContract {
                     sender: admin.address(),
                     contract: contract_addr.clone(),
-                    code_id: code_id_v0_4_0,
+                    code_id: code_id_v0_4_1,
                     msg: to_json_binary(&MigrateMsg {
                         incentives_contract: dependencies
                             .astroport_contracts
@@ -195,5 +225,35 @@ mod test {
             state.staking.incentives.to_string(),
             dependencies.astroport_contracts.incentives.address
         );
+
+        // Check that the staked amount was migrated correctly
+        let staked_amount = state.staked_base_tokens;
+        assert_eq!(staked_amount, deposit_amount);
+
+        // Query generator contract staked balance
+        let generator_staked = robot
+            .wasm()
+            .query::<_, Uint128>(
+                &dependencies.astroport_contracts.generator.address,
+                &cw_dex::astroport::astroport::generator::QueryMsg::Deposit {
+                    lp_token: robot.base_token(),
+                    user: contract_addr.clone(),
+                },
+            )
+            .unwrap();
+        assert_eq!(generator_staked, Uint128::zero());
+
+        // Query incentive contract staked balance
+        let incentives_staked = robot
+            .wasm()
+            .query::<_, Uint128>(
+                &dependencies.astroport_contracts.incentives.address,
+                &incentives::QueryMsg::Deposit {
+                    lp_token: robot.base_token(),
+                    user: contract_addr,
+                },
+            )
+            .unwrap();
+        assert_eq!(staked_amount, incentives_staked);
     }
 }

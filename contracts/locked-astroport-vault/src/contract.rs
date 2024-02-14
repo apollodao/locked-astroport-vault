@@ -318,27 +318,27 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(mut deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
     let incentives_contract = deps.api.addr_validate(&msg.incentives_contract)?;
 
     let old_version = ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    match old_version.to_string().as_str() {
+    let res = match old_version.to_string().as_str() {
         "0.2.0" => {
             crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
-            crate::migrations::migrate_from_0_3_0_to_0_4_0(deps.branch(), incentives_contract)?;
+            crate::migrations::migrate_from_0_3_0_to_0_4_1(deps.branch(), env, incentives_contract)?
         }
         "0.3.0" => {
-            crate::migrations::migrate_from_0_3_0_to_0_4_0(deps.branch(), incentives_contract)?;
+            crate::migrations::migrate_from_0_3_0_to_0_4_1(deps.branch(), env, incentives_contract)?
         }
         _ => {
             return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-                "Cannot migrate from a version of the contract before v0.2.0",
+                "Cannot migrate from a version of the contract other than v0.2.0 or v0.3.0",
             )))
         }
-    }
+    };
 
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    Ok(Response::default())
+    Ok(res)
 }
