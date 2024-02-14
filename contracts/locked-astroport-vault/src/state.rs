@@ -3,7 +3,7 @@ use apollo_cw_asset::{Asset, AssetInfoBase, AssetList};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, CosmosMsg, Decimal, Deps, Env, StdError, StdResult, Uint128};
 use cw_address_like::AddressLike;
-use cw_dex::astroport::{AstroportPool, AstroportStaking};
+use cw_dex_astroport::{AstroportPool, AstroportStaking};
 use cw_dex_router::helpers::CwDexRouterBase;
 use cw_item_set::Set;
 use cw_storage_plus::Item;

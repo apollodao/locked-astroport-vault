@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [0.4.0] - 2024-02-13
+
+### Changed
+
+- Use Astroport incentives contract instead of generator for staking rewards.
+- Bumped `cw-dex` to `0.5.3`
+- Started using `cw-dex-astroport` crate for Pool and Staking implementations.
+- Bumped `cw-it` to `0.3.0`.
+
+# [0.3.0] - 2024-02-03
+
+### Added
+- Add optional deposit and withdrawal fees
+
 # [0.2.0] - 2023-11-03
 
 ### Changed

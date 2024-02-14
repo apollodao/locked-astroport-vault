@@ -9,16 +9,24 @@ env:
 jobs:
   lint-and-format:
     name: Lint and check formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+
+      - name: Set up Go 1.21.6
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21.6"
 
       - name: Install cargo make
         uses: davidB/rust-cargo-make@v1
 
       - name: Install nightly toolchain
         run: cargo make install-nightly
+
+      - name: Install stable toolchain
+        run: cargo make install-stable
 
       - name: Run cargo clippy
         run: cargo make clippy-check

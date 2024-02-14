@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Coin, Decimal};
-use cw_dex::astroport::AstroportPool;
+use cw_dex_astroport::AstroportPool;
 use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler};
 use cw_it::multi_test::modules::TokenFactory;
 use cw_it::multi_test::MultiTestRunner;

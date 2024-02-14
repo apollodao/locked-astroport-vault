@@ -6,7 +6,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 license = "BUSL-1.1"
 
@@ -15,7 +15,8 @@ apollo-cw-asset         = "0.1.2"
 apollo-utils            = "0.1.1"
 cosmwasm-schema         = "1.1.0"
 cosmwasm-std            = "1.5.2"
-cw-dex                  = { version = "0.5.0", features = ["astroport"] }
+cw-dex                  = { version = "0.5.3" }
+cw-dex-astroport        = { version = "0.1.1" }
 cw-ownable              = "0.5.1"
 cw-storage-plus         = "1.1.0"
 cw-utils                = "1.0.1"
@@ -35,12 +36,12 @@ schemars                = "0.8.12"
 semver                  = "1.0.21"
 
 # Repo packages
-locked-astroport-vault  = { version = "0.3.0", path = "./contracts/locked-astroport-vault" }
+locked-astroport-vault  = { version = "0.4.0", path = "./contracts/locked-astroport-vault" }
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-cw-it                               = { version = "0.2.0", features = ["astroport"] }
-cw-vault-standard-test-helpers      = { version = "0.3.3", features = ["lockup", "force-unlock"] }
+cw-it                               = { version = "0.3.0", features = ["astroport"] }
+cw-vault-standard-test-helpers      = { version = "0.4.0", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 astroport-liquidity-helper          = "0.3.0"

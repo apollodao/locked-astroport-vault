@@ -5,66 +5,149 @@ mod test {
     use std::str::FromStr;
 
     use crate::common::{get_test_runner, DENOM_CREATION_FEE, DEPS_PATH, UNOPTIMIZED_PATH};
-    use cosmwasm_std::{to_json_binary, Addr, Coin, Decimal, Empty};
+    use apollo_cw_asset::AssetInfoUnchecked;
+    use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal};
+    use cw_it::cw_multi_test::ContractWrapper;
     use cw_it::osmosis_std::types::cosmwasm::wasm::v1::{
         MsgMigrateContract, MsgMigrateContractResponse,
     };
     use cw_it::robot::TestRobot;
-    use cw_it::test_tube::{Account, Runner};
+    use cw_it::test_tube::{Account, Module, Runner, Wasm};
     use cw_it::traits::CwItRunner;
-    use cw_it::TestRunner;
-    use locked_astroport_vault::msg::{ApolloExtensionQueryMsg, ExtensionQueryMsg, QueryMsg};
-    use locked_astroport_vault::state::{Config, FeeConfig};
+    use cw_it::{ContractType, TestRunner};
+    use locked_astroport_vault::msg::{
+        ApolloExtensionQueryMsg, ExtensionQueryMsg, MigrateMsg, QueryMsg,
+    };
+    use locked_astroport_vault::state::{Config, FeeConfig, StateResponse};
     use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
-    use locked_astroport_vault_test_helpers_0_2_0::robot::LockedAstroportVaultRobot as LockedAstroportVaultRobot_0_2_0;
-
     #[cfg(feature = "osmosis-test-tube")]
-    use cw_it::{Artifact, ContractType};
+    use cw_it::Artifact;
 
+    #[allow(deprecated)]
     #[test]
-    fn test_migrate_from_0_2_0() {
+    fn test_migrate_from_0_2_0_to_0_4_0() {
         let owned_runner = get_test_runner();
         let runner = owned_runner.as_ref();
         let admin = LockedAstroportVaultRobot::new_admin(&runner);
-        let dependencies =
-            LockedAstroportVaultRobot_0_2_0::instantiate_deps(&runner, &admin, DEPS_PATH);
         let token_factory_fee = Coin::from_str(DENOM_CREATION_FEE).unwrap();
         let performance_fee = Decimal::percent(10);
         let treasury = runner.init_account(&[]).unwrap();
 
-        // Instantiate v0.2.0 vault
+        // Construct multitest contract for v0.2.0 vault
         let old_contract = match runner {
             #[cfg(feature = "osmosis-test-tube")]
             TestRunner::OsmosisTestApp(_) => {
                 let path = format!("{}/{}", DEPS_PATH, "locked_astroport_vault_0_2_0.wasm");
                 ContractType::Artifact(Artifact::Local(path))
             }
-            TestRunner::MultiTest(_) => LockedAstroportVaultRobot_0_2_0::multitest_contract(),
+            TestRunner::MultiTest(_) => {
+                ContractType::MultiTestContract(Box::new(ContractWrapper::new_with_empty(
+                    locked_astroport_vault_0_2_0::contract::execute,
+                    locked_astroport_vault_0_2_0::contract::instantiate,
+                    locked_astroport_vault_0_2_0::contract::query,
+                )))
+            }
             _ => panic!("Unsupported runner"),
         };
-        let (robot, _) = LockedAstroportVaultRobot_0_2_0::new_wsteth_eth_vault(
+
+        // Upload v0.2.0 code
+        let code_id_v0_2_0 = runner.store_code(old_contract, &admin).unwrap();
+
+        // Use new Vault robot to setup a new vault. This also sets up the same pools
+        // etc. with astroport as the v0.2.0 robot
+        let dependencies = LockedAstroportVaultRobot::instantiate_deps(&runner, &admin, DEPS_PATH);
+        let (robot, wsteth_eth_pool) = LockedAstroportVaultRobot::new_wsteth_eth_vault(
             &runner,
-            old_contract,
+            LockedAstroportVaultRobot::<'_>::contract(&runner, UNOPTIMIZED_PATH),
             token_factory_fee,
-            treasury.address(),
-            performance_fee,
+            Some(FeeConfig {
+                fee_rate: Decimal::percent(5),
+                fee_recipients: vec![(treasury.address(), Decimal::percent(100))],
+            }),
+            None,
+            None,
             &dependencies,
             &admin,
         );
 
-        // Upload new contract
+        // Instantiate v0.2.0 contract
+        let init_msg_v0_2_0 = locked_astroport_vault_0_2_0::msg::InstantiateMsg {
+            owner: admin.address(),
+            vault_token_subdenom: "vt".to_string(),
+            pool_addr: wsteth_eth_pool.pair_addr.to_string(),
+            astro_token: AssetInfoUnchecked::cw20(
+                dependencies.astroport_contracts.astro_token.address.clone(),
+            ),
+            astroport_generator: dependencies.astroport_contracts.generator.address.clone(),
+            lock_duration: 14 * 7 * 24 * 3600,
+            reward_tokens: vec![],
+            deposits_enabled: true,
+            treasury: treasury.address(),
+            performance_fee,
+            router: dependencies
+                .cw_dex_router_robot
+                .cw_dex_router
+                .0
+                .to_string()
+                .into(),
+            reward_liquidation_target: wsteth_eth_pool.pool_assets[0].clone().into(),
+            liquidity_helper: dependencies.liquidity_helper_addr.clone().into(),
+            astroport_liquidity_manager: dependencies
+                .astroport_contracts
+                .liquidity_manager
+                .address
+                .clone(),
+        };
+        let wasm = Wasm::new(&runner);
+        let contract_addr = wasm
+            .instantiate(
+                code_id_v0_2_0,
+                &init_msg_v0_2_0,
+                Some(&admin.address()),
+                Some("old contract"),
+                &[coin(10_000_000u128, "uosmo")],
+                &admin,
+            )
+            .unwrap()
+            .data
+            .address;
+
+        // Query state from v0.2.0 contract
+        let old_staking = wasm
+            .query::<_, locked_astroport_vault_0_2_0::state::StateResponse>(
+                &contract_addr,
+                &locked_astroport_vault_0_2_0::msg::QueryMsg::VaultExtension(
+                    locked_astroport_vault_0_2_0::msg::ExtensionQueryMsg::Apollo(
+                        locked_astroport_vault_0_2_0::msg::ApolloExtensionQueryMsg::State {},
+                    ),
+                ),
+            )
+            .unwrap()
+            .staking;
+        #[allow(deprecated)]
+        let lp_token_addr = old_staking.lp_token_addr.clone();
+
+        // Upload v0.4.0 code
         let new_contract = LockedAstroportVaultRobot::<'_>::contract(&runner, UNOPTIMIZED_PATH);
-        let new_code_id = runner.store_code(new_contract, &admin).unwrap();
+        let code_id_v0_4_0 = runner.store_code(new_contract, &admin).unwrap();
 
         // Migrate
         runner
             .execute::<_, MsgMigrateContractResponse>(
                 MsgMigrateContract {
                     sender: admin.address(),
-                    contract: robot.vault_addr.clone(),
-                    code_id: new_code_id,
-                    msg: to_json_binary(&Empty {}).unwrap().0,
+                    contract: contract_addr.clone(),
+                    code_id: code_id_v0_4_0,
+                    msg: to_json_binary(&MigrateMsg {
+                        incentives_contract: dependencies
+                            .astroport_contracts
+                            .incentives
+                            .address
+                            .clone(),
+                    })
+                    .unwrap()
+                    .0,
                 },
                 "/cosmwasm.wasm.v1.MsgMigrateContract",
                 &admin,
@@ -75,7 +158,7 @@ mod test {
         let config = robot
             .wasm()
             .query::<_, Config>(
-                &robot.vault_addr,
+                &contract_addr,
                 &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
                     ApolloExtensionQueryMsg::Config {},
                 )),
@@ -93,6 +176,24 @@ mod test {
         assert_eq!(
             FeeConfig::<String>::from(config.withdrawal_fee),
             FeeConfig::default()
+        );
+
+        // Query state from contract
+        let state: StateResponse = robot
+            .wasm()
+            .query(
+                &contract_addr,
+                &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
+                    ApolloExtensionQueryMsg::State {},
+                )),
+            )
+            .unwrap();
+
+        // Check that the staking struct was migrated correctly
+        assert_eq!(state.staking.lp_token_addr, lp_token_addr);
+        assert_eq!(
+            state.staking.incentives.to_string(),
+            dependencies.astroport_contracts.incentives.address
         );
     }
 }

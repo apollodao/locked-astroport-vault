@@ -23,7 +23,8 @@ apollo-cw-asset     = { workspace = true }
 apollo-utils        = { workspace = true }
 cosmwasm-schema     = { workspace = true }
 cosmwasm-std        = { workspace = true }
-cw-dex              = { workspace = true, features = ["astroport"] }
+cw-dex              = { workspace = true }
+cw-dex-astroport    = { workspace = true }
 cw-ownable          = { workspace = true }
 cw-storage-plus     = { workspace = true }
 cw-utils            = { workspace = true }
@@ -43,7 +44,7 @@ schemars            = { workspace = true }
 semver              = { workspace = true }
 
 # For migrating only
-locked-astroport-vault_0_2_0 = { package = "locked-astroport-vault", version = "0.2.0", features = ["library"]}
+locked-astroport-vault_0_2_0 = { package = "locked-astroport-vault", version = "0.2.0", features = ["library"] }
 
 [dev-dependencies]
 cw-it                               = { workspace = true, features = ["astroport"] }
@@ -51,6 +52,3 @@ cw-vault-standard-test-helpers      = { workspace = true, features = ["lockup", 
 proptest                            = { workspace = true }
 test-case                           = { workspace = true }
 locked-astroport-vault-test-helpers = { workspace = true }
-
-# For migration testing
-locked-astroport-vault-test-helpers_0_2_0 = { package = "locked-astroport-vault-test-helpers", version = "0.2.0", features = ["osmosis-test-tube"] }

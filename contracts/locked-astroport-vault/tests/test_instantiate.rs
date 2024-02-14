@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
-use apollo_cw_asset::AssetInfo;
 use cosmwasm_std::{Addr, Coins};
-use cw_dex::astroport::AstroportStaking;
+use cw_dex_astroport::AstroportStaking;
 use cw_it::traits::CwItRunner;
 use cw_ownable::Ownership;
 use cw_vault_standard::VaultStandardInfoResponse;
@@ -72,10 +71,9 @@ fn test_instantiation() {
             vault_token_supply: 0u128.into(),
             staking: AstroportStaking {
                 lp_token_addr: base_pool.lp_token_addr,
-                generator_addr: Addr::unchecked(
-                    &dependencies.astroport_contracts.generator.address
-                ),
-                astro_token: AssetInfo::native("uastro"),
+                incentives: Addr::unchecked(
+                    dependencies.astroport_contracts.incentives.address.clone()
+                )
             },
             vault_token_denom: format!("factory/{}/testVaultToken", robot.vault_addr),
         }

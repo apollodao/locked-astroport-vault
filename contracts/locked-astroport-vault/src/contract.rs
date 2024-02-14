@@ -2,22 +2,22 @@
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, Event, MessageInfo, QueryRequest,
-    Reply, Response, StdResult, SubMsg, Uint128, WasmQuery,
+    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
+    Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
-use cw_dex::astroport::{astroport, AstroportPool, AstroportStaking};
-use cw_utils::{ensure_from_older_version, Duration};
+use cw2::ensure_from_older_version;
+use cw_dex_astroport::{astroport, AstroportPool, AstroportStaking};
+use cw_utils::Duration;
 use cw_vault_standard::extensions::force_unlock::ForceUnlockExecuteMsg;
 use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
-use semver::Version;
 
 use crate::error::{ContractError, ContractResponse};
 use crate::execute;
 use crate::helpers::{self, IntoInternalCall};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
-    ExtensionQueryMsg, InstantiateMsg, InternalMsg, QueryMsg,
+    ExtensionQueryMsg, InstantiateMsg, InternalMsg, MigrateMsg, QueryMsg,
 };
 use crate::query::{
     query_force_withdraw_whitelist, query_state, query_unlocking_position,
@@ -94,8 +94,7 @@ pub fn instantiate(
     // Store staking info
     let staking = AstroportStaking {
         lp_token_addr: pair_info.liquidity_token,
-        generator_addr: deps.api.addr_validate(&msg.astroport_generator)?,
-        astro_token: msg.astro_token.check(deps.api)?,
+        incentives: deps.api.addr_validate(&msg.astroport_incentives_addr)?,
     };
     STAKING.save(deps.storage, &staking)?;
 
@@ -319,20 +318,27 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+pub fn migrate(mut deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    let incentives_contract = deps.api.addr_validate(&msg.incentives_contract)?;
+
     let old_version = ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // If old version is less than v0.2.0, migration is unsupported
-    if old_version < Version::new(0, 2, 0) {
-        return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-            "Cannot migrate from a version of the contract before v0.2.0",
-        )));
+    match old_version.to_string().as_str() {
+        "0.2.0" => {
+            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
+            crate::migrations::migrate_from_0_3_0_to_0_4_0(deps.branch(), incentives_contract)?;
+        }
+        "0.3.0" => {
+            crate::migrations::migrate_from_0_3_0_to_0_4_0(deps.branch(), incentives_contract)?;
+        }
+        _ => {
+            return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
+                "Cannot migrate from a version of the contract before v0.2.0",
+            )))
+        }
     }
 
-    // Migrate from v0.2.0 to v0.3.0
-    if old_version == Version::new(0, 2, 0) && CONTRACT_VERSION == "0.3.0" {
-        crate::migrations::migrate_from_0_2_0_to_0_3_0(deps)?;
-    }
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     Ok(Response::default())
 }

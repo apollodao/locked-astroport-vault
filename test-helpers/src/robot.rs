@@ -5,9 +5,8 @@ use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
-use cw_dex::astroport::astroport::factory::PairType;
-use cw_dex::astroport::AstroportPool;
-use cw_dex::Pool;
+use cw_dex_astroport::astroport::factory::PairType;
+use cw_dex_astroport::AstroportPool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
 use cw_it::astroport::robot::AstroportTestRobot;
 use cw_it::astroport::utils::{create_astroport_pair, AstroportContracts};
@@ -337,8 +336,6 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 .into(),
             reward_liquidation_target: ntrn.into(),
             pool_addr: axl_ntrn_pair,
-            astro_token: apollo_cw_asset::AssetInfoUnchecked::native("uastro"),
-            astroport_generator: dependencies.astroport_contracts.generator.address.clone(),
             liquidity_helper: LiquidityHelperUnchecked::new(
                 dependencies.liquidity_helper_addr.clone(),
             ),
@@ -347,6 +344,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 .liquidity_manager
                 .address
                 .clone(),
+            astroport_incentives_addr: dependencies.astroport_contracts.incentives.address.clone(),
         };
 
         (
@@ -543,10 +541,9 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 .into(),
             reward_liquidation_target: eth.into(),
             pool_addr: wsteth_eth_pair,
-            astro_token: apollo_cw_asset::AssetInfoUnchecked::native("uastro"),
-            astroport_generator: astroport_contracts.generator.address.clone(),
             liquidity_helper: LiquidityHelperUnchecked::new(liquidity_helper_addr.clone()),
             astroport_liquidity_manager: astroport_contracts.liquidity_manager.address.clone(),
+            astroport_incentives_addr: astroport_contracts.incentives.address.clone(),
         };
 
         (
@@ -955,6 +952,7 @@ impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a
     }
 }
 
+#[allow(deprecated)]
 fn swap_operation(
     pair_addr: &str,
     lp_addr: &str,
@@ -963,7 +961,8 @@ fn swap_operation(
     liquidity_manager: &str,
 ) -> SwapOperationUnchecked {
     SwapOperationUnchecked::new(
-        Pool::Astroport(AstroportPool {
+        #[allow(deprecated)]
+        cw_dex::Pool::Astroport(cw_dex::astroport::AstroportPool {
             pair_addr: Addr::unchecked(pair_addr),
             lp_token_addr: Addr::unchecked(lp_addr),
             pool_assets: vec![from.clone(), to.clone()],
