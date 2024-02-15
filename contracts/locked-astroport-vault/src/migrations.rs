@@ -1,5 +1,7 @@
-use crate::state::{self, FeeConfig, CONFIG};
-use cosmwasm_std::{Addr, Decimal, DepsMut, StdResult};
+use crate::state::{self, FeeConfig, CONFIG, STATE};
+use apollo_utils::responses::merge_responses;
+use cosmwasm_std::{Addr, Decimal, DepsMut, Env, Response, StdResult};
+use cw_dex::traits::{Rewards, Stake, Unstake};
 use cw_dex_astroport::AstroportStaking;
 use cw_storage_plus::Item;
 use locked_astroport_vault_0_2_0::state::Config as Config0_2_0;
@@ -31,16 +33,35 @@ pub fn migrate_from_0_2_0_to_0_3_0(deps: DepsMut) -> StdResult<()> {
 }
 
 #[allow(deprecated)]
-pub fn migrate_from_0_3_0_to_0_4_0(deps: DepsMut, incentives_contract: Addr) -> StdResult<()> {
+pub fn migrate_from_0_3_0_to_0_4_1(
+    deps: DepsMut,
+    env: Env,
+    incentives_contract: Addr,
+) -> StdResult<Response> {
     let old_staking = locked_astroport_vault_0_2_0::state::STAKING.load(deps.storage)?;
 
     let staking = AstroportStaking {
         #[allow(deprecated)]
-        lp_token_addr: old_staking.lp_token_addr,
+        lp_token_addr: old_staking.lp_token_addr.clone(),
         incentives: incentives_contract,
     };
 
     state::STAKING.save(deps.storage, &staking)?;
 
-    Ok(())
+    // Read total staked amount
+    let state = STATE.load(deps.storage).unwrap();
+    if state.staked_base_tokens.is_zero() {
+        return Ok(Response::default());
+    }
+
+    // Claim all pending rewards from old staking contract
+    let claim_res = old_staking.claim_rewards(deps.as_ref(), &env)?;
+
+    // Unstake entire balance from old staking contract
+    let unstake_res = old_staking.unstake(deps.as_ref(), &env, state.staked_base_tokens)?;
+
+    // Stake entire balance in new staking contract
+    let stake_res = staking.stake(deps.as_ref(), &env, state.staked_base_tokens)?;
+
+    Ok(merge_responses(vec![claim_res, unstake_res, stake_res]))
 }
