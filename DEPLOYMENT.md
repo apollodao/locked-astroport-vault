@@ -127,31 +127,33 @@ Details of deployment on Neutron mainnet `neutron-1`.
 ## Locked Astroport Vault
 
 ### `0.1.0`
-
 - Version: `0.1.0`
 - Checksum: `8c40bc3e73b93d43423e3ebe4fe69b34b1bf46129acebc0f40a48bd9d53edc6e`
 - CodeID: `266`
 - Used optimized wasm built on CI with rust-optimizer 0.13.0.
 
 ### `0.1.1-rc.1`
-
 - Version: `0.1.1-rc.1`
 - Checksum: `6a2c35c6b7ab170c22c2a804a2b698ef9e2edeaf9f2d0d75c6917f42621caf8e`
 - CodeID: `278`
 - Used optimized wasm built locally with cosmwasm/rust-optimizer-arm64:0.13.0.
 
 ### `0.2.0`
-
 - Version: `0.2.0`
 - Checksum: `609cd0175fb2b5cefdc2bb24b8b3c91d783e88458edaa2d0d20f0232ecccfdf6`
 - CodeID: `451`
 - Used optimized wasm built on CI with workspace-optimizer 0.13.0.
 
 ### `0.4.0`
-
 - Version: `0.4.0`
 - Checksum: `d2f3e6ac9a1af422aa5be3701dbe417482720d862c2422684fd4ec8ce6929477`
 - CodeID: `709`
+- Used optimized wasm built on CI with workspace-optimizer 0.13.0.
+
+### `0.4.1
+- Version: `0.4.1`
+- Checksum: `ce5a270bae7ecf44c76a3674c8838f1687cdc09b2b7310e81810b90358eb55e6`
+- CodeID: `714`
 - Used optimized wasm built on CI with workspace-optimizer 0.13.0.
 
 ### AXL/NTRN Unlocked Vault
@@ -172,13 +174,13 @@ Details of deployment on Neutron mainnet `neutron-1`.
 ### PCL wstETH/axlWETH 7d Vault
 
 - Contract Address: `neutron1yvhe4f0q3swtf37pkf9kku59l52nevr3trxs62vah004a08pkl8qlaccc7`
-- CodeID: `451`
+- CodeID: `714`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
 
 ### PCL NTRN/wstETH 7d Vault
 
 - Contract Address: `neutron17vedy2clhctw0654k93m375ud7h5jsy8nj9gnlkjnyd4mcfnfrdql226al`
-- CodeID: `451`
+- CodeID: `714`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
 
 ### PCL stTIA/TIA 0d Capped Vault
