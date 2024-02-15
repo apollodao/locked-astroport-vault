@@ -36,7 +36,7 @@ schemars                = "0.8.12"
 semver                  = "1.0.21"
 
 # Repo packages
-locked-astroport-vault  = { version = "0.4.0", path = "./contracts/locked-astroport-vault" }
+locked-astroport-vault  = { version = "0.4.1", path = "./contracts/locked-astroport-vault" }
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
