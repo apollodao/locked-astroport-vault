@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [0.4.2] - 2024-02-26
+
+### Added
+
+- Added event attributes `staked_base_tokens_after_action` and `vault_token_supply_after_action` to `apollo/vaults/execute_deposit`, `apollo/vaults/execute_redeem`, and `apollo/vaults/execute_compound` events.
+
 # [0.4.1] - 2024-02-14
 
 ### Changed

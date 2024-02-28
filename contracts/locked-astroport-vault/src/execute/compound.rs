@@ -131,9 +131,12 @@ pub fn execute_stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
         Ok::<_, StdError>(state)
     })?;
 
+    let state = STATE.load(deps.storage)?;
     let event = Event::new("apollo/vaults/execute_compound")
         .add_attribute("action", "stake_lps")
-        .add_attribute("amount_to_stake", lp_token_balance.to_string());
+        .add_attribute("amount_to_stake", lp_token_balance.to_string())
+        .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
+        .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 
     Ok(staking_res.add_event(event))
 }

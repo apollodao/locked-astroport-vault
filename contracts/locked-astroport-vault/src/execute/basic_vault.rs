@@ -11,13 +11,13 @@ use optional_struct::Applyable;
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, IsZero};
 use crate::state::{
-    self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, STAKING, VAULT_TOKEN_DENOM,
+    self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, STAKING, STATE, VAULT_TOKEN_DENOM,
 };
 
 use cw_dex::traits::{Stake, Unstake};
 
 pub fn execute_deposit(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: Env,
     amount: Uint128,
     depositor: Addr,
@@ -45,8 +45,12 @@ pub fn execute_deposit(
     let staking_res = staking.stake(deps.as_ref(), &env, asset_after_fee.amount)?;
 
     // Mint vault tokens
-    let (mint_msg, mint_amount) =
-        mint_vault_tokens(deps, env, asset_after_fee.amount, &vault_token_denom)?;
+    let (mint_msg, mint_amount) = mint_vault_tokens(
+        deps.branch(),
+        env,
+        asset_after_fee.amount,
+        &vault_token_denom,
+    )?;
 
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
@@ -55,10 +59,13 @@ pub fn execute_deposit(
     }
     .into();
 
+    let state = STATE.load(deps.storage)?;
     let event = Event::new("apollo/vaults/execute_deposit")
         .add_attribute("deposit_amount", amount)
         .add_attribute("deposit_fee_amount", amount - asset_after_fee.amount)
-        .add_attribute("vault_tokens_minted", mint_amount);
+        .add_attribute("vault_tokens_minted", mint_amount)
+        .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
+        .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 
     Ok(merge_responses(vec![transfer_from_res, staking_res])
         .add_messages(fee_msgs)
@@ -123,11 +130,14 @@ pub fn execute_redeem(
         res.add_event(event)
     };
 
+    let state = STATE.load(deps.storage)?;
     let event = Event::new("apollo/vaults/execute_redeem")
         .add_attribute("is_force_redeem", format!("{}", force_redeem))
         .add_attribute("vault_tokens_redeemed", amount)
         .add_attribute("lp_tokens_claimed", claim_amount)
-        .add_attribute("withdrawal_fee_amount", fee_amount);
+        .add_attribute("withdrawal_fee_amount", fee_amount)
+        .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
+        .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 
     Ok(res
         .add_message(burn_msg)

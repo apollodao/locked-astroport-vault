@@ -188,3 +188,9 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - Contract Address: `neutron1qzf6t478xuutq0ahkm07pl2y2tctreccrlafkrl38k4cafk3rgdq3lfky5`
 - CodeID: `709`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
+
+### XYK (stTIA/TIA)VT/APOLLO 0d Vault
+
+- Contract Address: `neutron19h6eltj6dem7a6jp6r2plwl95fgcryxeylvnm8ezlglezxzzkzrsnkj006`
+- CodeID: `714`
+- Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`

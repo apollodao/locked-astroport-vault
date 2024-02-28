@@ -33,7 +33,7 @@ pub fn migrate_from_0_2_0_to_0_3_0(deps: DepsMut) -> StdResult<()> {
 }
 
 #[allow(deprecated)]
-pub fn migrate_from_0_3_0_to_0_4_1(
+pub fn migrate_from_0_3_0_to_current(
     deps: DepsMut,
     env: Env,
     incentives_contract: Addr,

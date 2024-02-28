@@ -3,7 +3,7 @@ use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
     to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
-    Response, StdResult, SubMsg, Uint128, WasmQuery,
+    Response, StdError, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw2::ensure_from_older_version;
 use cw_dex_astroport::{astroport, AstroportPool, AstroportStaking};
@@ -326,15 +326,22 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
     let res = match old_version.to_string().as_str() {
         "0.2.0" => {
             crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
-            crate::migrations::migrate_from_0_3_0_to_0_4_1(deps.branch(), env, incentives_contract)?
+            crate::migrations::migrate_from_0_3_0_to_current(
+                deps.branch(),
+                env,
+                incentives_contract,
+            )?
         }
-        "0.3.0" => {
-            crate::migrations::migrate_from_0_3_0_to_0_4_1(deps.branch(), env, incentives_contract)?
-        }
+        "0.3.0" => crate::migrations::migrate_from_0_3_0_to_current(
+            deps.branch(),
+            env,
+            incentives_contract,
+        )?,
+        "0.4.0" | "0.4.1" => Response::default(),
         _ => {
-            return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-                "Cannot migrate from a version of the contract other than v0.2.0 or v0.3.0",
-            )))
+            return Err(StdError::generic_err(
+                "Cannot migrate from a version of the contract other than v0.2.0, v0.3.0, v0.4.0, or v0.4.1",
+            ).into())
         }
     };
 

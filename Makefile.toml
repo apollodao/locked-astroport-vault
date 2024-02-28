@@ -123,7 +123,7 @@ command = "cargo"
 args = [
     "build",
     "-p",
-    "locked-astroport-vault@0.4.1",
+    "locked-astroport-vault@0.4.2",
     "--target",
     "wasm32-unknown-unknown",
     "--lib",

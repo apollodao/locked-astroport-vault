@@ -28,7 +28,7 @@ mod test {
 
     #[allow(deprecated)]
     #[test]
-    fn test_migrate_from_0_2_0_to_0_4_1() {
+    fn test_migrate_from_0_2_0_to_current() {
         let owned_runner = get_test_runner();
         let runner = owned_runner.as_ref();
         let admin = LockedAstroportVaultRobot::new_admin(&runner);
@@ -158,9 +158,9 @@ mod test {
         #[allow(deprecated)]
         let lp_token_addr = old_staking.lp_token_addr.clone();
 
-        // Upload v0.4.1 code
+        // Upload current code
         let new_contract = LockedAstroportVaultRobot::<'_>::contract(&runner, UNOPTIMIZED_PATH);
-        let code_id_v0_4_1 = runner.store_code(new_contract, &admin).unwrap();
+        let code_id_current = runner.store_code(new_contract, &admin).unwrap();
 
         // Migrate
         runner
@@ -168,7 +168,7 @@ mod test {
                 MsgMigrateContract {
                     sender: admin.address(),
                     contract: contract_addr.clone(),
-                    code_id: code_id_v0_4_1,
+                    code_id: code_id_current,
                     msg: to_json_binary(&MigrateMsg {
                         incentives_contract: dependencies
                             .astroport_contracts
