@@ -331,6 +331,7 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
         "0.3.0" => {
             crate::migrations::migrate_from_0_3_0_to_0_4_1(deps.branch(), env, incentives_contract)?
         }
+        "0.4.1" => Response::default(),
         _ => {
             return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
                 "Cannot migrate from a version of the contract other than v0.2.0 or v0.3.0",
