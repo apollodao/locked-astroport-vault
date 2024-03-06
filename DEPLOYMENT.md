@@ -150,11 +150,17 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - CodeID: `709`
 - Used optimized wasm built on CI with workspace-optimizer 0.13.0.
 
-### `0.4.1
+### `0.4.1`
 - Version: `0.4.1`
 - Checksum: `ce5a270bae7ecf44c76a3674c8838f1687cdc09b2b7310e81810b90358eb55e6`
 - CodeID: `714`
 - Used optimized wasm built on CI with workspace-optimizer 0.13.0.
+
+### `0.4.2`
+ - Version: `0.4.2`
+ - Checksum: `1F86C5A4456E3B93E8DC3888B50D7115F9FA0937AA2461CB8D14FC8596EBF486`
+ - CodeID: `766`
+ - Used optimized wasm built on CI with workspace-optimizer 0.13.0.
 
 ### AXL/NTRN Unlocked Vault
 
@@ -186,11 +192,11 @@ Details of deployment on Neutron mainnet `neutron-1`.
 ### PCL stTIA/TIA 0d Capped Vault
 
 - Contract Address: `neutron1qzf6t478xuutq0ahkm07pl2y2tctreccrlafkrl38k4cafk3rgdq3lfky5`
-- CodeID: `709`
+- CodeID: `766`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
 
 ### XYK (stTIA/TIA)VT/APOLLO 0d Vault
 
 - Contract Address: `neutron19h6eltj6dem7a6jp6r2plwl95fgcryxeylvnm8ezlglezxzzkzrsnkj006`
-- CodeID: `714`
+- CodeID: `766`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
