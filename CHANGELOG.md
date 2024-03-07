@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added event attributes `staked_base_tokens_after_action` and `vault_token_supply_after_action` to `apollo/vaults/execute_deposit`, `apollo/vaults/execute_redeem`, and `apollo/vaults/execute_compound` events.
 
+### Changed
+
+- Bumped `cw-it` to `0.3.1`.
+
 # [0.4.1] - 2024-02-14
 
 ### Changed
