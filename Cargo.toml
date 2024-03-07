@@ -40,8 +40,8 @@ locked-astroport-vault  = { version = "0.4.2", path = "./contracts/locked-astrop
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-cw-it                               = { version = "0.3.0", features = ["astroport"] }
-cw-vault-standard-test-helpers      = { version = "0.4.0", features = ["lockup", "force-unlock"] }
+cw-it                               = { version = "0.3.1", features = ["astroport"] }
+cw-vault-standard-test-helpers      = { version = "0.4.1", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 astroport-liquidity-helper          = "0.3.0"
