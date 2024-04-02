@@ -109,12 +109,13 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - Used optimized wasm downloaded from [Github Releases v0.2.0](https://github.com/apollodao/neutron-reward-distributor/releases/tag/v0.2.0).
 - CodeID: `499`
 
-### Reward Distributor for wstETH/axlWETH 7d Locked Vault
+### AXL/NTRN XYK LP Token Reward Distributor for wstETH/axlWETH 7d Locked Vault
 
 - CodeID: `499`
 - Contract Address: `neutron1hztlr9f5gesalqqzzdd0klr2pmvrzrxpv9ae53rzv22ycgrzng4stag887`
+- Distributes AXL/NTRN XYK LP Tokens to wstETH/axlWETH 7d Locked Vault.
 
-### Reward Distributor for NTRN/wstETH 7d Locked Vault
+### AXL/NTRN XYK LP Token Reward Distributor for NTRN/wstETH 7d Locked Vault
 
 - CodeID: `499`
 - Contract Address: `neutron1qv9t4s9hzv3vphe6f5grffv5n0uag49qjfw9n4r66v769cq48fwqhtdhsq`
@@ -123,6 +124,18 @@ Details of deployment on Neutron mainnet `neutron-1`.
 
 - CodeID: `499`
 - Contract Address: `neutron1vhgyz0ttwcxpt8q9kyr4uy5fktmq284jjfma90q87a49zrcn7nfs98w8eg`
+
+### AXL/NTRN PCL LP Token Reward Distributor for wstETH/axlWETH 7d Locked Vault
+
+- CodeID: `499`
+- Contract Address: `neutron14kxnd6yg757qfvu35jnuwl9dnpnz3suuf5v3cq9vjp8vg4md4pps7s4r00`
+- Distributes AXL/NTRN PCL LP Tokens to wstETH/axlWETH 7d Locked Vault.
+
+### AXL/NTRN PCL LP Token Reward Distributor for NTRN/wstETH 7d Locked Vault
+
+- CodeID: `499`
+- Contract Address: `neutron1de02gv7h3mneph7eyfal850pxr3hluf2vuwnfjrswzauvxv43tqssqs4r7`
+- Distributes AXL/NTRN PCL LP Tokens to NTRN/wstETH 7d Locked Vault.
 
 ## Locked Astroport Vault
 
