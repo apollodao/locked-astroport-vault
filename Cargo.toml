@@ -6,9 +6,20 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 license = "BUSL-1.1"
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
 
 [workspace.dependencies]
 apollo-cw-asset         = "0.1.2"
@@ -36,7 +47,7 @@ schemars                = "0.8.12"
 semver                  = "1.0.21"
 
 # Repo packages
-locked-astroport-vault  = { version = "0.4.2", path = "./contracts/locked-astroport-vault" }
+locked-astroport-vault  = { version = "0.4.3", path = "./contracts/locked-astroport-vault" }
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
