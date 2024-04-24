@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Added release profile to `Cargo.toml` with `overflow-checks = true` to prevent overflows in release builds.
+- Added release profile to `Cargo.toml` with `overflow-checks = true` to prevent wrapping on overflows in release builds.
 - Bumped `cosmwasm-std` to `1.5.4`.
 
 # [0.4.2] - 2024-02-26
