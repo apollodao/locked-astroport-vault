@@ -337,7 +337,7 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
             env,
             incentives_contract,
         )?,
-        "0.4.0" | "0.4.1" => Response::default(),
+        "0.4.0" | "0.4.1" | "0.4.2" => Response::default(),
         _ => {
             return Err(StdError::generic_err(
                 "Cannot migrate from a version of the contract other than v0.2.0, v0.3.0, v0.4.0, or v0.4.1",
