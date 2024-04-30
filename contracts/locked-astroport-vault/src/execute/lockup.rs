@@ -25,7 +25,7 @@ pub fn execute_withdraw_unlocked(
     let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(recipient)?;
+    let send_msg = Asset::new(base_token, claim_amount).transfer_msg(recipient)?;
 
     let event = Event::new("apollo/vaults/execute_withdraw_unlocked")
         .add_attribute("lockup_id", format!("{}", lockup_id))
@@ -95,7 +95,7 @@ pub fn execute_force_withdraw_unlocking(
     let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
     // Send LP tokens to recipient
-    let send_msg = Asset::cw20(base_token, claim_amount).transfer_msg(recipient)?;
+    let send_msg = Asset::new(base_token, claim_amount).transfer_msg(recipient)?;
 
     let event = Event::new("apollo/vaults/execute_force_withdraw_unlocking")
         .add_attribute("lockup_id", format!("{}", lockup_id))

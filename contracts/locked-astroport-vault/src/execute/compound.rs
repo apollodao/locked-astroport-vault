@@ -1,4 +1,4 @@
-use apollo_cw_asset::{Asset, AssetInfo, AssetList};
+use apollo_cw_asset::{Asset, AssetList};
 use cosmwasm_std::{attr, to_json_binary, DepsMut, Env, Event, Response, StdError, Uint128};
 
 use crate::error::ContractResponse;
@@ -114,8 +114,7 @@ pub fn execute_stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
 
     // Query LP token balance
-    let lp_token_balance =
-        AssetInfo::cw20(base_token).query_balance(&deps.querier, &env.contract.address)?;
+    let lp_token_balance = base_token.query_balance(&deps.querier, &env.contract.address)?;
 
     // Return with no messages if there are no LP tokens to stake
     if lp_token_balance.is_zero() {
