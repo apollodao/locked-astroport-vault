@@ -1,4 +1,5 @@
 use crate::state::{self, FeeConfig, CONFIG, STATE};
+use apollo_cw_asset::AssetInfo;
 use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{Addr, Decimal, DepsMut, Env, Response, StdResult};
 use cw_dex::traits::{Rewards, Stake, Unstake};
@@ -42,7 +43,7 @@ pub fn migrate_from_0_3_0_to_current(
 
     let staking = AstroportStaking {
         #[allow(deprecated)]
-        lp_token_addr: old_staking.lp_token_addr.clone(),
+        lp_token: AssetInfo::cw20(old_staking.lp_token_addr.clone()),
         incentives: incentives_contract,
     };
 

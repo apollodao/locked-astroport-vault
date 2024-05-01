@@ -1,7 +1,5 @@
 use std::str::FromStr;
 
-use apollo_cw_asset::AssetInfo;
-use cosmwasm_std::testing::MockApi;
 use cosmwasm_std::{Addr, Coins};
 use cw_dex_astroport::AstroportStaking;
 use cw_it::traits::CwItRunner;
@@ -64,16 +62,15 @@ fn test_instantiation() {
 
     // Query vault's non-configurable state
     let state = robot.query_state();
-    let api = MockApi::default();
     assert_eq!(
         state,
         StateResponse {
-            base_token: AssetInfo::from_str(&api, base_pool.lp_token_addr.as_str()),
+            base_token: base_pool.lp_token.clone(),
             pool: base_pool.clone(),
             staked_base_tokens: 0u128.into(),
             vault_token_supply: 0u128.into(),
             staking: AstroportStaking {
-                lp_token_addr: base_pool.lp_token_addr,
+                lp_token: base_pool.lp_token,
                 incentives: Addr::unchecked(
                     dependencies.astroport_contracts.incentives.address.clone()
                 )

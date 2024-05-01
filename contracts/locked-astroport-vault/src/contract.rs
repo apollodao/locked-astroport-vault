@@ -96,7 +96,7 @@ pub fn instantiate(
 
     // Store staking info
     let staking = AstroportStaking {
-        lp_token_addr: cosmwasm_std::Addr::unchecked(pair_info.liquidity_token), /* TODO: Replace AstroportStaking with new version */
+        lp_token: base_token.clone(),
         incentives: deps.api.addr_validate(&msg.astroport_incentives_addr)?,
     };
     STAKING.save(deps.storage, &staking)?;
