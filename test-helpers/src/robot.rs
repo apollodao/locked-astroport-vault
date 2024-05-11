@@ -962,9 +962,9 @@ fn swap_operation(
 ) -> SwapOperationUnchecked {
     SwapOperationUnchecked::new(
         #[allow(deprecated)]
-        cw_dex::Pool::Astroport(cw_dex::astroport::AstroportPool {
+        cw_dex_router::pool::Pool::Astroport(cw_dex_astroport::AstroportPool {
             pair_addr: Addr::unchecked(pair_addr),
-            lp_token_addr: Addr::unchecked(lp_addr),
+            lp_token: AssetInfo::cw20(Addr::unchecked(lp_addr)),
             pool_assets: vec![from.clone(), to.clone()],
             pair_type: PairType::Xyk {},
             liquidity_manager: Addr::unchecked(liquidity_manager),

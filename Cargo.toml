@@ -36,7 +36,7 @@ cw2                     = "1.1.0"
 cw20                    = "1.1.0"
 osmosis-std             = "0.14"
 thiserror               = "1.0.43"
-cw-dex-router           = { version = "0.3.0", features = ["library"] }
+cw-dex-router           = { version = "0.4.1-rc.1", features = ["library", "astroport"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
 liquidity-helper        = "0.3.0"
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
