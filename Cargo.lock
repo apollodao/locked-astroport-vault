@@ -978,6 +978,24 @@ dependencies = [
 
 [[package]]
 name = "cw-dex-astroport"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cc11c6de1f93dbc38e92418c068a835148cf7126b47eb7879e1ef5054721e0b"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "astroport 2.9.5",
+ "astroport 3.11.1",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-dex",
+ "cw-utils 1.0.3",
+ "cw2 1.1.2",
+ "cw20 1.1.2",
+]
+
+[[package]]
+name = "cw-dex-astroport"
 version = "0.2.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32c217056c99f6fa18310c24e7a06f1b5ee489165d066e796ebd136e1ddce90b"
@@ -1024,7 +1042,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-controllers",
  "cw-dex",
- "cw-dex-astroport",
+ "cw-dex-astroport 0.2.0-rc.1",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -2042,7 +2060,39 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault"
-version = "0.4.3"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ca1bacb8bd942e3f05c30e7930ce3cecffe9468e00bc5e14b59bc416c75f228"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-address-like",
+ "cw-dex",
+ "cw-dex-astroport 0.1.1",
+ "cw-dex-router 0.3.1",
+ "cw-item-set",
+ "cw-ownable",
+ "cw-storage-plus 1.2.0",
+ "cw-utils 1.0.3",
+ "cw-vault-standard",
+ "cw2 1.1.2",
+ "cw20 1.1.2",
+ "liquidity-helper",
+ "locked-astroport-vault 0.2.0",
+ "optional_struct",
+ "osmosis-std 0.14.0",
+ "schemars",
+ "semver",
+ "serde",
+ "strum 0.25.0",
+ "thiserror",
+]
+
+[[package]]
+name = "locked-astroport-vault"
+version = "0.5.0"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -2051,7 +2101,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-address-like",
  "cw-dex",
- "cw-dex-astroport",
+ "cw-dex-astroport 0.2.0-rc.1",
  "cw-dex-router 0.4.1-rc.1",
  "cw-it",
  "cw-item-set",
@@ -2064,6 +2114,7 @@ dependencies = [
  "cw20 1.1.2",
  "liquidity-helper",
  "locked-astroport-vault 0.2.0",
+ "locked-astroport-vault 0.4.2",
  "locked-astroport-vault-test-helpers",
  "optional_struct",
  "osmosis-std 0.14.0",
@@ -2078,13 +2129,13 @@ dependencies = [
 
 [[package]]
 name = "locked-astroport-vault-test-helpers"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "apollo-cw-asset",
  "astroport-liquidity-helper",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex-astroport",
+ "cw-dex-astroport 0.2.0-rc.1",
  "cw-dex-router 0.4.1-rc.1",
  "cw-it",
  "cw-ownable",
@@ -2094,7 +2145,7 @@ dependencies = [
  "cw2 1.1.2",
  "cw20 1.1.2",
  "liquidity-helper",
- "locked-astroport-vault 0.4.3",
+ "locked-astroport-vault 0.5.0",
 ]
 
 [[package]]

@@ -1,4 +1,5 @@
 use apollo_cw_asset::AssetInfo;
+use apollo_utils::responses::merge_responses;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
@@ -328,19 +329,24 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
 
     let res = match old_version.to_string().as_str() {
         "0.2.0" => {
-            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
-            crate::migrations::migrate_from_0_3_0_to_current(
+            merge_responses(vec![
+            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?,
+            crate::migrations::migrate_from_0_3_0_to_0_4_x(
                 deps.branch(),
                 env,
                 incentives_contract,
-            )?
+            )?,
+            crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?])
         }
-        "0.3.0" => crate::migrations::migrate_from_0_3_0_to_current(
-            deps.branch(),
-            env,
-            incentives_contract,
-        )?,
-        "0.4.0" | "0.4.1" | "0.4.2" => Response::default(),
+        "0.3.0" => {
+            merge_responses(vec![crate::migrations::migrate_from_0_3_0_to_0_4_x(
+                deps.branch(),
+                env,
+                incentives_contract,
+            )?,
+            crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?])
+        },
+        "0.4.0" | "0.4.1" | "0.4.2" => crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?,
         _ => {
             return Err(StdError::generic_err(
                 "Cannot migrate from a version of the contract other than v0.2.0, v0.3.0, v0.4.0, or v0.4.1",
