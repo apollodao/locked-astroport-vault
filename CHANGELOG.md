@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+### Changed
+
+- Change base token from `Addr` to `AssetInfo`.
+- Bumped `cw-dex-astroport` to `0.2.0-rc.1`.
+- Bumped `cw-dex-router` to `0.4.1-rc.1`.
+
+
 # [0.4.3] - 2024-04-23
 
 ### Changed
