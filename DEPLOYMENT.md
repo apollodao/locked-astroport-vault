@@ -219,3 +219,9 @@ Details of deployment on Neutron mainnet `neutron-1`.
 - Contract Address: `neutron1epwhl0cpmh3kdapl6pvzexdff7c5u5crcempvu6e9h9k88f32tpss46zhh`
 - CodeID: `766`
 - Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
+
+### PCL nobleUSDC/NTRN 0d Vault
+
+- Contract Address: `neutron14xx9hcw0cyw2vtxh586h5usymfyk06jnj677awhntrkxtm72amrsmj5fxt`
+- CodeID: `766`
+- Contract admin: `neutron1qnpwxhrgd8mmsfgql7df6kusgjr3wvm4trl05xu260seelwh845qtqqq9t`
