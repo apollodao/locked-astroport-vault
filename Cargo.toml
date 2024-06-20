@@ -45,14 +45,14 @@ optional_struct         = "0.3.1"
 serde                   = "1.0.171"
 schemars                = "0.8.12"
 semver                  = "1.0.21"
-astroport_v5            = { package = "astroport", version = "5.0.0-rc.1-tokenfactory" }
+astroport_v5 = { package = "astroport", version = "5.0.0-rc.2-tokenfactory" }
 
 # Repo packages
 locked-astroport-vault  = { version = "0.5.0", path = "./contracts/locked-astroport-vault" }
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-cw-it                               = { version = "0.3.1", features = ["astroport"] }
+cw-it = { git = "https://github.com/apollodao/cw-it.git", branch = "dev/astroport-native-lp-tokens", features = ["astroport"] }
 cw-vault-standard-test-helpers      = { version = "0.4.1", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
