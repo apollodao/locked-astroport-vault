@@ -240,7 +240,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let liq_manager =
             Addr::unchecked(&dependencies.astroport_contracts.liquidity_manager.address);
         let axl_ntrn_pool = AstroportPool {
-            lp_token_addr: Addr::unchecked(&axl_ntrn_lp),
+            lp_token: AssetInfo::cw20(Addr::unchecked(&axl_ntrn_lp)),
             pair_addr: Addr::unchecked(&axl_ntrn_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [axl.clone(), ntrn.clone()].to_vec(),
@@ -258,7 +258,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let astro_ntrn_pool = AstroportPool {
-            lp_token_addr: Addr::unchecked(&astro_ntrn_lp),
+            lp_token: AssetInfo::cw20(Addr::unchecked(&astro_ntrn_lp)),
             pair_addr: Addr::unchecked(&astro_ntrn_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [astro.clone(), ntrn.clone()].to_vec(),
@@ -425,7 +425,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
         );
         let wsteth_eth_pool = AstroportPool {
-            lp_token_addr: Addr::unchecked(&wsteth_eth_lp),
+            lp_token: AssetInfo::cw20(Addr::unchecked(&wsteth_eth_lp)),
             pair_addr: Addr::unchecked(&wsteth_eth_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [wsteth.clone(), eth.clone()].to_vec(),
@@ -962,9 +962,9 @@ fn swap_operation(
 ) -> SwapOperationUnchecked {
     SwapOperationUnchecked::new(
         #[allow(deprecated)]
-        cw_dex::Pool::Astroport(cw_dex::astroport::AstroportPool {
+        cw_dex_router::pool::Pool::Astroport(cw_dex_astroport::AstroportPool {
             pair_addr: Addr::unchecked(pair_addr),
-            lp_token_addr: Addr::unchecked(lp_addr),
+            lp_token: AssetInfo::cw20(Addr::unchecked(lp_addr)),
             pool_assets: vec![from.clone(), to.clone()],
             pair_type: PairType::Xyk {},
             liquidity_manager: Addr::unchecked(liquidity_manager),

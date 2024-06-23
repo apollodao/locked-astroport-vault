@@ -1,6 +1,6 @@
 - astroport_liquidity_helper.wasm
-    - Downloaded from [Github Releases v0.3.0](https://github.com/apollodao/liquidity-helpers/releases/tag/v0.3.0)
+    - Version 0.4.0-rc.1 compiled on CI: https://github.com/apollodao/liquidity-helpers/actions/runs/9043102725?pr=33
 - cw_dex_router_astroport.wasm
-    - Downloaded from [Github Releases v0.3.0](https://github.com/apollodao/cw-dex-router/releases/tag/v0.3.0)
+    - Version 0.4.1-rc.1 compiled on CI: https://github.com/apollodao/cw-dex-router/actions/runs/9043021646
 - locked_astroport_vault_0_2_0.wasm
     - Downloaded from [Github Releases v0.2.0](https://github.com/apollodao/locked-astroport-vault/releases/tag/v0.2.0)

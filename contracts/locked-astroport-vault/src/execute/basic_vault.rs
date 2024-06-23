@@ -33,7 +33,7 @@ pub fn execute_deposit(
     }
 
     // Transfer LP tokens from sender
-    let deposit_asset = Asset::cw20(base_token, amount);
+    let deposit_asset = Asset::new(base_token, amount);
     let transfer_from_res = Response::new()
         .add_message(deposit_asset.transfer_from_msg(depositor, &env.contract.address)?);
 
@@ -94,7 +94,7 @@ pub fn execute_redeem(
     let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
 
     // Deduct withdrawal fee if set
-    let claim_asset = Asset::cw20(base_token.clone(), claim_amount);
+    let claim_asset = Asset::new(base_token.clone(), claim_amount);
     let (fee_msgs, asset_after_fee) = cfg.withdrawal_fee.fee_msgs_from_asset(claim_asset, &env)?;
     let fee_amount = claim_amount - asset_after_fee.amount;
     let claim_amount_after_fee = asset_after_fee.amount;
@@ -107,7 +107,7 @@ pub fn execute_redeem(
         let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
         // Send LP tokens to recipient
-        let send_msg = Asset::cw20(base_token, claim_amount_after_fee).transfer_msg(&recipient)?;
+        let send_msg = Asset::new(base_token, claim_amount_after_fee).transfer_msg(&recipient)?;
 
         res.add_message(send_msg)
     } else {

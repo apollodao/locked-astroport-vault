@@ -5,9 +5,9 @@ mod test {
     use std::str::FromStr;
 
     use crate::common::{get_test_runner, DENOM_CREATION_FEE, DEPS_PATH, UNOPTIMIZED_PATH};
-    use apollo_cw_asset::AssetInfoUnchecked;
+    use apollo_cw_asset::{AssetInfo, AssetInfoUnchecked};
     use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal, Uint128};
-    use cw_dex_astroport::astroport_v3::incentives;
+    use cw_dex_astroport::astroport_v5::incentives;
     use cw_it::cw_multi_test::ContractWrapper;
     use cw_it::osmosis_std::types::cosmwasm::wasm::v1::{
         MsgMigrateContract, MsgMigrateContractResponse,
@@ -220,11 +220,20 @@ mod test {
             .unwrap();
 
         // Check that the staking struct was migrated correctly
-        assert_eq!(state.staking.lp_token_addr, lp_token_addr);
+        assert_eq!(
+            state.staking.lp_token,
+            AssetInfo::cw20(lp_token_addr.clone())
+        );
         assert_eq!(
             state.staking.incentives.to_string(),
             dependencies.astroport_contracts.incentives.address
         );
+
+        // Check that the pool struct was migrated correctly
+        assert_eq!(state.pool.lp_token, AssetInfo::cw20(lp_token_addr.clone()));
+
+        // Check that the base token was migrate correctly
+        assert_eq!(state.base_token, AssetInfo::cw20(lp_token_addr));
 
         // Check that the staked amount was migrated correctly
         let staked_amount = state.staked_base_tokens;

@@ -1,5 +1,5 @@
 use crate::claims::Claims;
-use apollo_cw_asset::{Asset, AssetInfoBase, AssetList};
+use apollo_cw_asset::{Asset, AssetInfo, AssetInfoBase, AssetList};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, CosmosMsg, Decimal, Deps, Env, StdError, StdResult, Uint128};
 use cw_address_like::AddressLike;
@@ -24,8 +24,8 @@ pub const POOL: Item<AstroportPool> = Item::new("pool");
 pub const STAKING: Item<AstroportStaking> = Item::new("staking");
 
 /// The base token that is accepted for deposits and that the vault accrues more
-/// of over time. In this case it is an Astroport CW20 LP token.
-pub const BASE_TOKEN: Item<Addr> = Item::new("base_token");
+/// of over time. In this case it is an Astroport LP token.
+pub const BASE_TOKEN: Item<AssetInfo> = Item::new("base_token");
 
 /// The denom of the native vault token that represents shares of the vault.
 pub const VAULT_TOKEN_DENOM: Item<String> = Item::new("vault_token_denom");
@@ -310,8 +310,8 @@ pub struct StateResponse {
     pub staked_base_tokens: Uint128,
     /// The total amount of vault tokens in circulation.
     pub vault_token_supply: Uint128,
-    /// The CW20 token address of the base token.
-    pub base_token: Addr,
+    /// The base token.
+    pub base_token: AssetInfo,
     //// The denom of the native vault token that represents shares of the vault.
     pub vault_token_denom: String,
     /// The address of the Astroport pool that this vault is compounding rewards

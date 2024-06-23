@@ -1,3 +1,5 @@
+use apollo_cw_asset::AssetInfo;
+use apollo_utils::responses::merge_responses;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
@@ -47,7 +49,7 @@ pub fn instantiate(
     // Query pair info from astroport pair
     let pair_info = deps
         .querier
-        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
+        .query::<astroport_v5::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: msg.pool_addr.clone(),
             msg: to_json_binary(&astroport::pair::QueryMsg::Pair {})?,
         }))?;
@@ -81,7 +83,9 @@ pub fn instantiate(
         "factory/{}/{}",
         env.contract.address, msg.vault_token_subdenom
     );
-    BASE_TOKEN.save(deps.storage, &pair_info.liquidity_token)?;
+    let base_token = AssetInfo::from_str(deps.api, &pair_info.liquidity_token);
+
+    BASE_TOKEN.save(deps.storage, &base_token)?;
     VAULT_TOKEN_DENOM.save(deps.storage, &vault_token_denom)?;
     STATE.save(
         deps.storage,
@@ -93,7 +97,7 @@ pub fn instantiate(
 
     // Store staking info
     let staking = AstroportStaking {
-        lp_token_addr: pair_info.liquidity_token,
+        lp_token: base_token.clone(),
         incentives: deps.api.addr_validate(&msg.astroport_incentives_addr)?,
     };
     STAKING.save(deps.storage, &staking)?;
@@ -325,19 +329,24 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
 
     let res = match old_version.to_string().as_str() {
         "0.2.0" => {
-            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
-            crate::migrations::migrate_from_0_3_0_to_current(
+            merge_responses(vec![
+            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?,
+            crate::migrations::migrate_from_0_3_0_to_0_4_x(
                 deps.branch(),
                 env,
                 incentives_contract,
-            )?
+            )?,
+            crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?])
         }
-        "0.3.0" => crate::migrations::migrate_from_0_3_0_to_current(
-            deps.branch(),
-            env,
-            incentives_contract,
-        )?,
-        "0.4.0" | "0.4.1" | "0.4.2" => Response::default(),
+        "0.3.0" => {
+            merge_responses(vec![crate::migrations::migrate_from_0_3_0_to_0_4_x(
+                deps.branch(),
+                env,
+                incentives_contract,
+            )?,
+            crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?])
+        },
+        "0.4.0" | "0.4.1" | "0.4.2" => crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?,
         _ => {
             return Err(StdError::generic_err(
                 "Cannot migrate from a version of the contract other than v0.2.0, v0.3.0, v0.4.0, or v0.4.1",
