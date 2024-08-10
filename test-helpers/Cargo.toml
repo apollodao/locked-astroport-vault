@@ -6,7 +6,7 @@ edition     = { workspace = true }
 license     = { workspace = true }
 
 [features]
-osmosis-test-tube = ["cw-it/osmosis-test-tube"]
+# osmosis-test-tube = ["cw-it/osmosis-test-tube"]
 
 [dependencies]
 apollo-cw-asset                 = { workspace = true }

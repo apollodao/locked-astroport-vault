@@ -1,5 +1,5 @@
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
-use cosmwasm_std::Uint128;
+use cosmwasm_std::{coins, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
@@ -109,8 +109,9 @@ fn force_redeem_works() {
     // Deposit from user, whitelist user for force redeem, then force redeem
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -136,8 +137,9 @@ fn force_redeem_to_recipient_works() {
     // Deposit from user, whitelist user for force redeem, then force redeem
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -165,8 +167,9 @@ fn force_withdraw_unlocking_works() {
     // unlocking
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -197,8 +200,9 @@ fn force_withdraw_unlocking_to_recipient_works() {
     // unlocking
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -236,8 +240,9 @@ fn force_withdraw_unlocking_with_partial_amount_works() {
     // unlocking
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -278,8 +283,9 @@ fn cannot_force_withdraw_unlocking_more_than_position_amount() {
     // Deposit from user, begin unlocking, whitelist user, then call force withdraw
     // unlocking
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,

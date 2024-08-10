@@ -1,3 +1,4 @@
+use cosmwasm_std::coins;
 use cosmwasm_std::{Decimal, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
@@ -22,15 +23,16 @@ pub fn test_compound_vault(
     let bt_balance_in_vault_before_deposit =
         robot.query_convert_to_assets(vt_balance_before_deposit);
 
+    let funds = coins(deposit_amount.u128(), robot.base_token());
+
     // Deposit some funds and assert the vault token balance is correct
     let vt_balance_after_deposit = robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, user, &funds)
         .assert_vt_balance_converted_to_assets_eq(
             user.address(),
             bt_balance_in_vault_before_deposit + deposit_amount,
         )
         .query_vault_token_balance(user.address());
-
     // Donate some reward tokens to the vault to simulate rewards accruing, then
     // compound and check that the base token amount corresponding to the users
     // vault token balance has increased.

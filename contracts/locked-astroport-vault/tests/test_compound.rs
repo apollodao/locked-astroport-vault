@@ -1,5 +1,5 @@
 use common::{default_instantiate, instantiate_vault, VaultSetup, DEPS_PATH};
-use cosmwasm_std::{Decimal, Uint128};
+use cosmwasm_std::{coins, Decimal, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
@@ -53,12 +53,12 @@ fn rewards_are_compounded_when_in_vault_before_first_deposit() {
     );
 
     let deposit_amount = Uint128::new(1_000u128);
-
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     // User's base token balance in vault should be greater than their deposit due
     // to compounding. User's vault token balance should be greated than their
     // deposit times the multiplier, due to the extra tokens from compounding.
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_native_token_balance_gt(
             user.address(),
             robot.vault_token(),

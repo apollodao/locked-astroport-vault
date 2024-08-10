@@ -34,8 +34,6 @@ pub struct InstantiateMsg {
     pub reward_liquidation_target: AssetInfoUnchecked,
     /// Helper for providing liquidity with unbalanced assets.
     pub liquidity_helper: LiquidityHelperUnchecked,
-    /// The address of the astroport liquidity manager contract.
-    pub astroport_liquidity_manager: String,
     /// The fee that is taken on rewards accrued
     pub performance_fee: Option<FeeConfig<String>>,
     /// A fee that is taken on deposits

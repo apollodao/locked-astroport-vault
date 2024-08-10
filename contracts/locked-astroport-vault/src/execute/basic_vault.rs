@@ -1,24 +1,24 @@
-use apollo_cw_asset::Asset;
-use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{
-    coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
-};
-use cw_vault_standard::extensions::lockup::{
-    UNLOCKING_POSITION_ATTR_KEY, UNLOCKING_POSITION_CREATED_EVENT_TYPE,
-};
-use optional_struct::Applyable;
-
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, IsZero};
 use crate::state::{
     self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, STAKING, STATE, VAULT_TOKEN_DENOM,
 };
-
-use cw_dex::traits::{Stake, Unstake};
+use apollo_cw_asset::{Asset, AssetBase};
+use apollo_utils::assets::assert_native_token_received;
+use apollo_utils::responses::merge_responses;
+use cosmwasm_std::{
+    coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+};
+use cw_dex::traits::staking::{Stake, Unstake};
+use cw_vault_standard::extensions::lockup::{
+    UNLOCKING_POSITION_ATTR_KEY, UNLOCKING_POSITION_CREATED_EVENT_TYPE,
+};
+use optional_struct::Applyable;
 
 pub fn execute_deposit(
     mut deps: DepsMut,
     env: Env,
+    info: MessageInfo,
     amount: Uint128,
     depositor: Addr,
     recipient: Addr,
@@ -32,17 +32,21 @@ pub fn execute_deposit(
         return Err(ContractError::DepositsDisabled {});
     }
 
-    // Transfer LP tokens from sender
-    let deposit_asset = Asset::new(base_token, amount);
-    let transfer_from_res = Response::new()
-        .add_message(deposit_asset.transfer_from_msg(depositor, &env.contract.address)?);
+    let deposit_asset: AssetBase<Addr> = Asset::new(base_token.clone(), amount);
 
     // Take deposit fee if set
-    let (fee_msgs, asset_after_fee) = cfg.deposit_fee.fee_msgs_from_asset(deposit_asset, &env)?;
+    let (fee_msgs, asset_after_fee) = cfg
+        .deposit_fee
+        .fee_msgs_from_asset(deposit_asset.clone(), &env)?;
+    println!("deposit_asset in execute_deposit: {:?}", deposit_asset);
+    println!("asset_after_fee {:?}", asset_after_fee);
 
     // Stake deposited LP tokens
     let staking = STAKING.load(deps.storage)?;
+    println!("\nstaking: {:?}", staking);
     let staking_res = staking.stake(deps.as_ref(), &env, asset_after_fee.amount)?;
+    println!("staking_res: {:?}", staking_res);
+    println!("\ninfo in internal msg deposit: {:?}", info);
 
     // Mint vault tokens
     let (mint_msg, mint_amount) = mint_vault_tokens(
@@ -51,13 +55,15 @@ pub fn execute_deposit(
         asset_after_fee.amount,
         &vault_token_denom,
     )?;
-
+    println!("after mint_vault_tokens");
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
         to_address: recipient.to_string(),
         amount: coins(mint_amount.u128(), vault_token_denom),
     }
     .into();
+
+    println!("after send_msg");
 
     let state = STATE.load(deps.storage)?;
     let event = Event::new("apollo/vaults/execute_deposit")
@@ -67,7 +73,9 @@ pub fn execute_deposit(
         .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
         .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 
-    Ok(merge_responses(vec![transfer_from_res, staking_res])
+    println!("after event");
+
+    Ok(merge_responses(vec![staking_res])
         .add_messages(fee_msgs)
         .add_message(mint_msg)
         .add_message(send_msg)

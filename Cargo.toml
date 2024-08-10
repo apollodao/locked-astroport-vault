@@ -26,8 +26,8 @@ apollo-cw-asset         = "0.1.2"
 apollo-utils            = "0.1.1"
 cosmwasm-schema         = "1.1.0"
 cosmwasm-std            = "1.5.5"
-cw-dex                  = { version = "0.5.3" }
-cw-dex-astroport        = { version = "0.2.0-rc.1" }
+cw-dex                  = { git = "https://github.com/apollodao/cw-dex.git", rev = "1bc26423607bfaee59d059e608c8460d42646291" }
+cw-dex-astroport        = { git = "https://github.com/apollodao/cw-dex.git", rev = "1bc26423607bfaee59d059e608c8460d42646291" }
 cw-ownable              = "0.5.1"
 cw-storage-plus         = "1.1.0"
 cw-utils                = "1.0.1"
@@ -36,7 +36,7 @@ cw2                     = "1.1.0"
 cw20                    = "1.1.0"
 osmosis-std             = "0.14"
 thiserror               = "1.0.43"
-cw-dex-router           = { version = "0.4.1-rc.1", features = ["library", "astroport"] }
+cw-dex-router           = { git = "https://github.com/apollodao/cw-dex-router.git", rev = "dd8aa8c5d608967b98a3fad47edd78f7f3c8c824", features = ["library", "astroport"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
 liquidity-helper        = "0.3.0"
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
@@ -45,16 +45,16 @@ optional_struct         = "0.3.1"
 serde                   = "1.0.171"
 schemars                = "0.8.12"
 semver                  = "1.0.21"
-astroport_v5 = { package = "astroport", version = "5.1.0" }
+astroport_v5 = { package = "astroport", version = "5.2.0" }
 
 # Repo packages
 locked-astroport-vault  = { version = "0.5.0", path = "./contracts/locked-astroport-vault" }
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-cw-it               = { git = "https://github.com/apollodao/cw-it.git", branch = "dev/astroport-native-lp-tokens", features = ["astroport"] }
-cw-vault-standard-test-helpers      = { git = "https://github.com/apollodao/cw-vault-standard.git", branch = "dev/0.4.x-bump-cw-it",  features = ["lockup", "force-unlock"] }
+cw-it = { git = "https://github.com/apollodao/cw-it.git", rev = "5224cf7582981800b2b982cc6aff9b7e1cce61d3", features = ["astroport"]}
+cw-vault-standard-test-helpers      = { git = "https://github.com/apollodao/cw-vault-standard.git", rev = "40da9d3417ea828c1ce5b7daba28e51686b561bd",  features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 astroport-liquidity-helper          = "0.3.0"
-
+apollo-cw-multi-test = { git = "https://github.com/apollodao/cw-multi-test.git", rev = "7e7bc2b91a8199c47815b45ef23b3ab07390ae3a",features = ["stargate"] }

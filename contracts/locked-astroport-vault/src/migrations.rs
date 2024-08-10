@@ -57,7 +57,7 @@ pub fn migrate_from_0_4_x_to_current(deps: DepsMut) -> StdResult<Response> {
     let old_pool = locked_astroport_vault_0_4_2::state::POOL.load(deps.storage)?;
     let pool = AstroportPool {
         lp_token: AssetInfo::cw20(old_pool.lp_token_addr),
-        liquidity_manager: old_pool.liquidity_manager,
+        liquidity_manager: Some(old_pool.liquidity_manager),
         pair_addr: old_pool.pair_addr,
         pair_type: old_pool.pair_type,
         pool_assets: old_pool.pool_assets,

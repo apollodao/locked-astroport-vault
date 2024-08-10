@@ -1,10 +1,11 @@
-use std::str::FromStr;
-
+use apollo_cw_multi_test::BasicAppBuilder;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Coin, Decimal};
+use cosmwasm_std::{Coin, Decimal, Empty};
 use cw_dex_astroport::AstroportPool;
-use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler};
+use cw_it::cw_multi_test::{StargateKeeper, StargateMessageHandler, WasmKeeper};
+use cw_it::multi_test::api::MockApiBech32;
 use cw_it::multi_test::modules::TokenFactory;
+use cw_it::multi_test::test_addresses::MockAddressGenerator;
 use cw_it::multi_test::MultiTestRunner;
 use cw_it::test_tube::{Account, SigningAccount};
 use cw_it::traits::CwItRunner;
@@ -13,6 +14,7 @@ use locked_astroport_vault::state::FeeConfig;
 use locked_astroport_vault_test_helpers::robot::{
     LockedAstroportVaultRobot, LockedVaultDependencies,
 };
+use std::str::FromStr;
 
 #[cfg(feature = "osmosis-test-tube")]
 use cw_it::osmosis_test_tube::OsmosisTestApp;
@@ -40,7 +42,21 @@ pub fn get_test_runner<'a>() -> OwnedTestRunner<'a> {
             let mut stargate_keeper = StargateKeeper::new();
             TOKEN_FACTORY.register_msgs(&mut stargate_keeper);
 
-            OwnedTestRunner::MultiTest(MultiTestRunner::new_with_stargate("osmo", stargate_keeper))
+            let wasm_keeper: WasmKeeper<Empty, Empty> =
+                WasmKeeper::new().with_address_generator(MockAddressGenerator);
+
+            let app = BasicAppBuilder::<Empty, Empty>::new()
+                .with_api(MockApiBech32::new("osmo"))
+                .with_stargate(stargate_keeper)
+                .with_wasm(wasm_keeper)
+                .build(|_, _, _| {});
+
+            let multi_test_runner = MultiTestRunner {
+                app,
+                address_prefix: "osmo",
+            };
+
+            OwnedTestRunner::MultiTest(multi_test_runner)
         }
         #[cfg(feature = "osmosis-test-tube")]
         "osmosis-test-app" => OwnedTestRunner::OsmosisTestApp(OsmosisTestApp::new()),

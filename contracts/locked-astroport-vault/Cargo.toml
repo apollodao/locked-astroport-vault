@@ -16,7 +16,7 @@ default = []
 library = []
 # Enables running tests against the OsmosisTestApp.
 # Disabled by default as it breaks vs-code debugging via multi-test.
-osmosis-test-tube = ["cw-it/osmosis-test-tube"]
+# osmosis-test-tube = ["cw-it/osmosis-test-tube"]
 
 [dependencies]
 apollo-cw-asset     = { workspace = true }
@@ -54,3 +54,4 @@ cw-vault-standard-test-helpers      = { workspace = true, features = ["lockup", 
 proptest                            = { workspace = true }
 test-case                           = { workspace = true }
 locked-astroport-vault-test-helpers = { workspace = true }
+apollo-cw-multi-test                = { workspace = true, features = ["stargate"] }

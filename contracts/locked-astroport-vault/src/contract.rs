@@ -1,11 +1,12 @@
-use apollo_cw_asset::AssetInfo;
+use apollo_cw_asset::{Asset, AssetBase, AssetInfo};
+use apollo_utils::assets::assert_native_token_received;
 use apollo_utils::responses::merge_responses;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
-    Response, StdError, StdResult, SubMsg, Uint128, WasmQuery,
+    to_json_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest,
+    Reply, Response, StdError, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw2::ensure_from_older_version;
 use cw_dex_astroport::{astroport, AstroportPool, AstroportStaking};
@@ -54,13 +55,7 @@ pub fn instantiate(
             msg: to_json_binary(&astroport::pair::QueryMsg::Pair {})?,
         }))?;
 
-    // Store pool info
-    let liquidity_manager = deps.api.addr_validate(&msg.astroport_liquidity_manager)?;
-    let pool = AstroportPool::new(
-        deps.as_ref(),
-        deps.api.addr_validate(&msg.pool_addr)?,
-        liquidity_manager,
-    )?;
+    let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?, None)?;
     POOL.save(deps.storage, &pool)?;
 
     // Create, validate and store config
@@ -129,6 +124,23 @@ pub fn execute(
             );
 
             let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
+
+            let base_token = BASE_TOKEN.load(deps.storage)?;
+
+            let base_token_balance =
+                base_token.query_balance(&deps.querier, &env.contract.address)?;
+
+            println!("\nenv.contract.address: {:?}", env.contract.address);
+            println!(
+                "\ncontract_address base_token_balance: {:?}",
+                base_token_balance
+            );
+
+            let deposit_asset: AssetBase<Addr> = Asset::new(base_token, amount);
+
+            println!("\ninfo: {:?}", info);
+            assert_native_token_received(&info, &deposit_asset)?;
+
             let deposit_msg = InternalMsg::Deposit {
                 amount,
                 depositor: info.sender,
@@ -219,7 +231,7 @@ pub fn execute(
                         depositor,
                         recipient,
                     } => execute::basic_vault::execute_deposit(
-                        deps, env, amount, depositor, recipient,
+                        deps, env, info, amount, depositor, recipient,
                     ),
                     InternalMsg::Redeem { recipient, amount } => {
                         execute::basic_vault::execute_redeem(
