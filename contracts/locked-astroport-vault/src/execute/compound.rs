@@ -8,7 +8,11 @@ use crate::state::{BASE_TOKEN, CONFIG, POOL, STAKING, STATE};
 
 use cw_dex::traits::{Rewards, Stake};
 
-pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
+pub fn execute_compound(
+    deps: DepsMut,
+    env: Env,
+    discount_deposit: Option<Asset>,
+) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
 
     // Claim any pending rewards
@@ -24,7 +28,7 @@ pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
     let provide_msg = InternalMsg::ProvideLiquidity {}.into_internal_call(&env, vec![])?;
 
     // Stake LP tokens
-    let stake_msg = InternalMsg::StakeLps {}.into_internal_call(&env, vec![])?;
+    let stake_msg = InternalMsg::StakeLps { discount_deposit }.into_internal_call(&env, vec![])?;
 
     Ok(claim_rewards_res
         .add_message(sell_msg)
@@ -109,20 +113,30 @@ pub fn execute_provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
         .add_event(event))
 }
 
-pub fn execute_stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
+pub fn execute_stake_lps(
+    deps: DepsMut,
+    env: Env,
+    discount_deposit: Option<Asset>,
+) -> ContractResponse {
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let staking = STAKING.load(deps.storage)?;
 
     // Query LP token balance
     let lp_token_balance = base_token.query_balance(&deps.querier, &env.contract.address)?;
 
+    let stake_amount = if let Some(discount_deposit) = discount_deposit {
+        lp_token_balance.saturating_sub(discount_deposit.amount)
+    } else {
+        lp_token_balance
+    };
+
     // Return with no messages if there are no LP tokens to stake
-    if lp_token_balance.is_zero() {
+    if stake_amount.is_zero() {
         return Ok(Response::default());
     }
 
     // Stake LP tokens
-    let staking_res = staking.stake(deps.as_ref(), &env, lp_token_balance)?;
+    let staking_res = staking.stake(deps.as_ref(), &env, stake_amount)?;
 
     // Update total staked amount
     STATE.update(deps.storage, |mut state| {

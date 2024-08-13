@@ -8,10 +8,10 @@ use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
+use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use locked_astroport_vault::msg::{ExecuteMsg, ExtensionExecuteMsg, InternalMsg};
 use locked_astroport_vault::state::ConfigUpdates;
 use strum::EnumCount;
-use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 
 pub mod common;
 
@@ -88,7 +88,12 @@ fn internal_msg_can_only_be_called_by_contract() {
     let user = robot.new_user(&admin);
 
     let msgs: [InternalMsg; InternalMsg::COUNT] = [
-        InternalMsg::StakeLps {},
+        InternalMsg::Compound {
+            discount_deposit: None,
+        },
+        InternalMsg::StakeLps {
+            discount_deposit: None,
+        },
         InternalMsg::ProvideLiquidity {},
         InternalMsg::SellTokens {},
         InternalMsg::Deposit {

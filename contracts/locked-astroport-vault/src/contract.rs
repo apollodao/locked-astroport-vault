@@ -116,13 +116,6 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
-            // Call contract itself first to compound, but as a SubMsg so that we can still
-            // deposit if the compound fails
-            let compound_msg = SubMsg::reply_on_error(
-                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
-                COMPOUND_REPLY_ID,
-            );
-
             let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
 
             let base_token = BASE_TOKEN.load(deps.storage)?;
@@ -138,8 +131,19 @@ pub fn execute(
 
             let deposit_asset: AssetBase<Addr> = Asset::new(base_token, amount);
 
+            let receive_res = apollo_utils::assets::receive_asset(&info, &env, &deposit_asset)?;
+
+            // Call contract itself first to compound, but as a SubMsg so that we can still
+            // deposit if the compound fails
+            let compound_msg = SubMsg::reply_on_error(
+                InternalMsg::Compound {
+                    discount_deposit: Some(deposit_asset.clone()),
+                }
+                .into_internal_call(&env, vec![])?,
+                COMPOUND_REPLY_ID,
+            );
+
             println!("\ninfo: {:?}", info);
-            assert_native_token_received(&info, &deposit_asset)?;
 
             let deposit_msg = InternalMsg::Deposit {
                 amount,
@@ -148,9 +152,12 @@ pub fn execute(
             }
             .into_internal_call(&env, vec![])?;
 
-            Ok(Response::new()
-                .add_submessage(compound_msg)
-                .add_message(deposit_msg))
+            Ok(merge_responses(vec![
+                receive_res,
+                Response::new()
+                    .add_submessage(compound_msg)
+                    .add_message(deposit_msg),
+            ]))
         }
         ExecuteMsg::Redeem { recipient, amount } => {
             // Call contract itself first to compound, but as a SubMsg so that we can still
@@ -221,11 +228,16 @@ pub fn execute(
                 }
 
                 match msg {
+                    InternalMsg::Compound { discount_deposit } => {
+                        execute::compound::execute_compound(deps, env, discount_deposit)
+                    }
                     InternalMsg::SellTokens {} => execute::compound::execute_sell_tokens(deps, env),
                     InternalMsg::ProvideLiquidity {} => {
                         execute::compound::execute_provide_liquidity(deps, env)
                     }
-                    InternalMsg::StakeLps {} => execute::compound::execute_stake_lps(deps, env),
+                    InternalMsg::StakeLps { discount_deposit } => {
+                        execute::compound::execute_stake_lps(deps, env, discount_deposit)
+                    }
                     InternalMsg::Deposit {
                         amount,
                         depositor,
@@ -250,7 +262,7 @@ pub fn execute(
                     execute::basic_vault::execute_update_config(deps, info, updates)
                 }
                 ApolloExtensionExecuteMsg::Compound {} => {
-                    execute::compound::execute_compound(deps, env)
+                    execute::compound::execute_compound(deps, env, None)
                 }
             },
         },
