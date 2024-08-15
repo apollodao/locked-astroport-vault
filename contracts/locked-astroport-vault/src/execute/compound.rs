@@ -14,7 +14,6 @@ pub fn execute_compound(
     discount_deposit: Option<Asset>,
 ) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
-
     // Claim any pending rewards
     let claim_rewards_res = staking
         .claim_rewards(deps.as_ref(), &env)

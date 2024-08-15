@@ -231,20 +231,20 @@ dependencies = [
 
 [[package]]
 name = "astroport-liquidity-helper"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bd13ad5ebce0d85559f4df12a5891b9822ae3287232029f554b9d8298cef554"
+version = "0.4.0-rc.2"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
+ "astroport 3.12.2",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-bigint",
- "cw-dex 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-dex 0.5.3 (git+https://github.com/apollodao/cw-dex.git?rev=835756eed2d8428aae9269ae9eba2fca41d55473)",
+ "cw-dex-astroport 0.2.0-rc.1 (git+https://github.com/apollodao/cw-dex.git?rev=835756eed2d8428aae9269ae9eba2fca41d55473)",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper",
+ "liquidity-helper 0.4.0-rc.2",
  "semver",
  "thiserror",
 ]
@@ -496,6 +496,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d965446196e3b7decd44aa7ee49e31d630118f90ef12f97900f262eb915c951d"
 
 [[package]]
+name = "bindgen"
+version = "0.69.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a00dc851838a2120612785d195287475a3ac45514741da670b735818822129a0"
+dependencies = [
+ "bitflags 2.6.0",
+ "cexpr",
+ "clang-sys",
+ "itertools 0.10.5",
+ "lazy_static",
+ "lazycell",
+ "log",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "rustc-hash",
+ "shlex",
+ "syn 2.0.72",
+ "which",
+]
+
+[[package]]
 name = "bip32"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -602,6 +625,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "504bdec147f2cc13c8b57ed9401fd8a147cc66b67ad5cb241394244f2c947549"
 
 [[package]]
+name = "cexpr"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fac387a98bb7c37292057cffc56d62ecb629900026402633ae9160df93a8766"
+dependencies = [
+ "nom",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -614,6 +646,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "clang-sys"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b023947811758c97c59bf9d1c188fd619ad4718dcaa767947df1cadb14f39f4"
+dependencies = [
+ "glob",
+ "libc",
+ "libloading",
 ]
 
 [[package]]
@@ -964,6 +1007,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-dex"
+version = "0.5.3"
+source = "git+https://github.com/apollodao/cw-dex.git?rev=835756eed2d8428aae9269ae9eba2fca41d55473#835756eed2d8428aae9269ae9eba2fca41d55473"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-utils 1.0.3",
+ "cw20 1.1.2",
+ "thiserror",
+]
+
+[[package]]
 name = "cw-dex-astroport"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1000,6 +1057,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-dex-astroport"
+version = "0.2.0-rc.1"
+source = "git+https://github.com/apollodao/cw-dex.git?rev=835756eed2d8428aae9269ae9eba2fca41d55473#835756eed2d8428aae9269ae9eba2fca41d55473"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "astroport 2.9.5",
+ "astroport 5.2.0",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-dex 0.5.3 (git+https://github.com/apollodao/cw-dex.git?rev=835756eed2d8428aae9269ae9eba2fca41d55473)",
+ "cw-utils 1.0.3",
+ "cw2 1.1.2",
+ "cw20 1.1.2",
+ "osmosis-std 0.22.0",
+]
+
+[[package]]
 name = "cw-dex-router"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1028,7 +1103,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-controllers",
  "cw-dex 0.5.3 (git+https://github.com/apollodao/cw-dex.git?rev=1bc26423607bfaee59d059e608c8460d42646291)",
- "cw-dex-astroport 0.2.0-rc.1",
+ "cw-dex-astroport 0.2.0-rc.1 (git+https://github.com/apollodao/cw-dex.git?rev=1bc26423607bfaee59d059e608c8460d42646291)",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -1038,7 +1113,7 @@ dependencies = [
 [[package]]
 name = "cw-it"
 version = "0.4.0-rc.2"
-source = "git+https://github.com/apollodao/cw-it.git?rev=5224cf7582981800b2b982cc6aff9b7e1cce61d3#5224cf7582981800b2b982cc6aff9b7e1cce61d3"
+source = "git+https://github.com/apollodao/cw-it.git?rev=362c71a8f1603622ce291b2c49da093c02caeaec#362c71a8f1603622ce291b2c49da093c02caeaec"
 dependencies = [
  "anyhow",
  "apollo-cw-multi-test",
@@ -1063,6 +1138,7 @@ dependencies = [
  "cosmwasm-std",
  "cw20 0.15.1",
  "osmosis-std 0.25.0",
+ "osmosis-test-tube",
  "paste",
  "prost 0.12.6",
  "regex",
@@ -1177,7 +1253,7 @@ dependencies = [
 [[package]]
 name = "cw-vault-standard"
 version = "0.4.1"
-source = "git+https://github.com/apollodao/cw-vault-standard.git?rev=40da9d3417ea828c1ce5b7daba28e51686b561bd#40da9d3417ea828c1ce5b7daba28e51686b561bd"
+source = "git+https://github.com/apollodao/cw-vault-standard.git?rev=f415c0b3d6265719162224557b209dfe649de8a7#f415c0b3d6265719162224557b209dfe649de8a7"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -1189,7 +1265,7 @@ dependencies = [
 [[package]]
 name = "cw-vault-standard-test-helpers"
 version = "0.5.0"
-source = "git+https://github.com/apollodao/cw-vault-standard.git?rev=40da9d3417ea828c1ce5b7daba28e51686b561bd#40da9d3417ea828c1ce5b7daba28e51686b561bd"
+source = "git+https://github.com/apollodao/cw-vault-standard.git?rev=f415c0b3d6265719162224557b209dfe649de8a7#f415c0b3d6265719162224557b209dfe649de8a7"
 dependencies = [
  "cosmwasm-std",
  "cw-it",
@@ -1688,6 +1764,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40ecd4077b5ae9fd2e9e169b102c6c330d0605168eb0e8bf79952b256dbefffd"
 
 [[package]]
+name = "glob"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+
+[[package]]
 name = "group"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1774,6 +1856,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
+]
+
+[[package]]
+name = "home"
+version = "0.5.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3d1354bf6b7235cb4a0576c2619fd4ed18183f689b12b006a0ee7329eeff9a5"
+dependencies = [
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1966,10 +2057,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
+name = "lazycell"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
+
+[[package]]
 name = "libc"
 version = "0.2.155"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
+
+[[package]]
+name = "libloading"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
+dependencies = [
+ "cfg-if",
+ "windows-targets 0.48.5",
+]
 
 [[package]]
 name = "libm"
@@ -2003,6 +2110,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "liquidity-helper"
+version = "0.4.0-rc.1"
+source = "git+https://github.com/apollodao/liquidity-helpers.git?rev=cb9a8918a916b7e98199e728970acd4cbe06132e#cb9a8918a916b7e98199e728970acd4cbe06132e"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw20 1.1.2",
+]
+
+[[package]]
+name = "liquidity-helper"
+version = "0.4.0-rc.2"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw20 1.1.2",
+]
+
+[[package]]
 name = "locked-astroport-vault"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2022,7 +2152,7 @@ dependencies = [
  "cw-vault-standard 0.3.3",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper",
+ "liquidity-helper 0.3.2",
  "optional_struct",
  "osmosis-std 0.14.0",
  "schemars",
@@ -2052,7 +2182,7 @@ dependencies = [
  "cw-vault-standard 0.3.3",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper",
+ "liquidity-helper 0.3.2",
  "locked-astroport-vault 0.2.0",
  "optional_struct",
  "osmosis-std 0.14.0",
@@ -2075,7 +2205,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-address-like",
  "cw-dex 0.5.3 (git+https://github.com/apollodao/cw-dex.git?rev=1bc26423607bfaee59d059e608c8460d42646291)",
- "cw-dex-astroport 0.2.0-rc.1",
+ "cw-dex-astroport 0.2.0-rc.1 (git+https://github.com/apollodao/cw-dex.git?rev=1bc26423607bfaee59d059e608c8460d42646291)",
  "cw-dex-router 0.3.1 (git+https://github.com/apollodao/cw-dex-router.git?rev=dd8aa8c5d608967b98a3fad47edd78f7f3c8c824)",
  "cw-it",
  "cw-item-set",
@@ -2086,7 +2216,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper",
+ "liquidity-helper 0.4.0-rc.1",
  "locked-astroport-vault 0.2.0",
  "locked-astroport-vault 0.4.2",
  "locked-astroport-vault-test-helpers",
@@ -2109,7 +2239,7 @@ dependencies = [
  "astroport-liquidity-helper",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex-astroport 0.2.0-rc.1",
+ "cw-dex-astroport 0.2.0-rc.1 (git+https://github.com/apollodao/cw-dex.git?rev=1bc26423607bfaee59d059e608c8460d42646291)",
  "cw-dex-router 0.3.1 (git+https://github.com/apollodao/cw-dex-router.git?rev=dd8aa8c5d608967b98a3fad47edd78f7f3c8c824)",
  "cw-it",
  "cw-ownable",
@@ -2118,7 +2248,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper",
+ "liquidity-helper 0.4.0-rc.1",
  "locked-astroport-vault 0.5.0",
 ]
 
@@ -2391,6 +2521,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "osmosis-test-tube"
+version = "25.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5eb35dcc9adc1b39e23dfae07c9f04a60187fde57a52b7762434ea6548581a1a"
+dependencies = [
+ "base64",
+ "bindgen",
+ "cosmrs",
+ "cosmwasm-std",
+ "osmosis-std 0.25.0",
+ "prost 0.12.6",
+ "serde",
+ "serde_json",
+ "test-tube",
+ "thiserror",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2545,6 +2693,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77957b295656769bb8ad2b6a6b09d897d94f05c41b069aede1fcdaa675eaea04"
 dependencies = [
  "zerocopy",
+]
+
+[[package]]
+name = "prettyplease"
+version = "0.2.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f12335488a2f3b0a83b14edad48dca9879ce89b2edd10e80237e4e852dd645e"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -2887,6 +3045,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "719b953e2095829ee67db738b3bfa9fa368c94900df327b3f07fe6e794d2fe1f"
 
 [[package]]
+name = "rustc-hash"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
+
+[[package]]
 name = "rustix"
 version = "0.38.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3209,6 +3373,12 @@ dependencies = [
  "cpufeatures",
  "digest 0.10.7",
 ]
+
+[[package]]
+name = "shlex"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "signature"
@@ -3994,6 +4164,18 @@ checksum = "77afa9a11836342370f4817622a2f0f418b134426d91a82dfb48f532d2ec13ef"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "which"
+version = "4.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87ba24419a2078cd2b0f2ede2691b6c66d8e47836da3b6db8265ebad47afbfc7"
+dependencies = [
+ "either",
+ "home",
+ "once_cell",
+ "rustix",
 ]
 
 [[package]]

@@ -38,7 +38,7 @@ osmosis-std             = "0.14"
 thiserror               = "1.0.43"
 cw-dex-router           = { git = "https://github.com/apollodao/cw-dex-router.git", rev = "dd8aa8c5d608967b98a3fad47edd78f7f3c8c824", features = ["library", "astroport"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
-liquidity-helper        = "0.3.0"
+liquidity-helper        = { git = "https://github.com/apollodao/liquidity-helpers.git", rev = "cb9a8918a916b7e98199e728970acd4cbe06132e" }
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
 cw-address-like         = "1.0.4"
 optional_struct         = "0.3.1"
@@ -52,9 +52,9 @@ locked-astroport-vault  = { version = "0.5.0", path = "./contracts/locked-astrop
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-cw-it = { git = "https://github.com/apollodao/cw-it.git", rev = "5224cf7582981800b2b982cc6aff9b7e1cce61d3", features = ["astroport"]}
-cw-vault-standard-test-helpers      = { git = "https://github.com/apollodao/cw-vault-standard.git", rev = "40da9d3417ea828c1ce5b7daba28e51686b561bd",  features = ["lockup", "force-unlock"] }
+cw-it = { git = "https://github.com/apollodao/cw-it.git", rev = "362c71a8f1603622ce291b2c49da093c02caeaec", features = ["astroport"]}
+cw-vault-standard-test-helpers      = { git = "https://github.com/apollodao/cw-vault-standard.git", rev = "f415c0b3d6265719162224557b209dfe649de8a7",  features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
-astroport-liquidity-helper          = "0.3.0"
+astroport-liquidity-helper          = { path = "../liquidity-helpers/contracts/astroport-liquidity-helper" } #= { git = "https://github.com/apollodao/liquidity-helpers.git", package = "astroport-liquidity-helper", rev = "cb9a8918a916b7e98199e728970acd4cbe06132e" }
 apollo-cw-multi-test = { git = "https://github.com/apollodao/cw-multi-test.git", rev = "7e7bc2b91a8199c47815b45ef23b3ab07390ae3a",features = ["stargate"] }

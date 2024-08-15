@@ -16,7 +16,7 @@ default = []
 library = []
 # Enables running tests against the OsmosisTestApp.
 # Disabled by default as it breaks vs-code debugging via multi-test.
-# osmosis-test-tube = ["cw-it/osmosis-test-tube"]
+osmosis-test-tube = ["cw-it/osmosis-test-tube"]
 
 [dependencies]
 apollo-cw-asset     = { workspace = true }

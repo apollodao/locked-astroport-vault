@@ -38,15 +38,10 @@ pub fn execute_deposit(
     let (fee_msgs, asset_after_fee) = cfg
         .deposit_fee
         .fee_msgs_from_asset(deposit_asset.clone(), &env)?;
-    println!("deposit_asset in execute_deposit: {:?}", deposit_asset);
-    println!("asset_after_fee {:?}", asset_after_fee);
 
     // Stake deposited LP tokens
     let staking = STAKING.load(deps.storage)?;
-    println!("\nstaking: {:?}", staking);
     let staking_res = staking.stake(deps.as_ref(), &env, asset_after_fee.amount)?;
-    println!("staking_res: {:?}", staking_res);
-    println!("\ninfo in internal msg deposit: {:?}", info);
 
     // Mint vault tokens
     let (mint_msg, mint_amount) = mint_vault_tokens(
@@ -55,15 +50,13 @@ pub fn execute_deposit(
         asset_after_fee.amount,
         &vault_token_denom,
     )?;
-    println!("after mint_vault_tokens");
+
     // Send minted vault tokens to recipient
     let send_msg: CosmosMsg = BankMsg::Send {
         to_address: recipient.to_string(),
         amount: coins(mint_amount.u128(), vault_token_denom),
     }
     .into();
-
-    println!("after send_msg");
 
     let state = STATE.load(deps.storage)?;
     let event = Event::new("apollo/vaults/execute_deposit")
@@ -72,8 +65,6 @@ pub fn execute_deposit(
         .add_attribute("vault_tokens_minted", mint_amount)
         .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
         .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
-
-    println!("after event");
 
     Ok(merge_responses(vec![staking_res])
         .add_messages(fee_msgs)

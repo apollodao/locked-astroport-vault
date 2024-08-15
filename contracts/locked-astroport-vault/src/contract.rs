@@ -123,12 +123,6 @@ pub fn execute(
             let base_token_balance =
                 base_token.query_balance(&deps.querier, &env.contract.address)?;
 
-            println!("\nenv.contract.address: {:?}", env.contract.address);
-            println!(
-                "\ncontract_address base_token_balance: {:?}",
-                base_token_balance
-            );
-
             let deposit_asset: AssetBase<Addr> = Asset::new(base_token, amount);
 
             let receive_res = apollo_utils::assets::receive_asset(&info, &env, &deposit_asset)?;
@@ -142,8 +136,6 @@ pub fn execute(
                 .into_internal_call(&env, vec![])?,
                 COMPOUND_REPLY_ID,
             );
-
-            println!("\ninfo: {:?}", info);
 
             let deposit_msg = InternalMsg::Deposit {
                 amount,
@@ -354,7 +346,7 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
     let res = match old_version.to_string().as_str() {
         "0.2.0" => {
             merge_responses(vec![
-            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?,
+            // crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?,
             crate::migrations::migrate_from_0_3_0_to_0_4_x(
                 deps.branch(),
                 env,
