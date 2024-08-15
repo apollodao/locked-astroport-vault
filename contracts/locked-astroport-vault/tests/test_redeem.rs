@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use common::instantiate_axlr_ntrn_vault;
-use cosmwasm_std::{Coins, Decimal, Uint128};
+use cosmwasm_std::{coins, Coins, Decimal, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::test_tube::Account;
 use cw_it::traits::CwItRunner;
@@ -41,8 +41,9 @@ fn test_redeem_with_lockup() {
     // instead a claim has been created.
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -98,8 +99,9 @@ fn test_redeem_without_lockup() {
     // as before depositing, since we have no lockup on this vault.
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -138,8 +140,9 @@ fn withdrawal_fee_works_without_lockup() {
     // assert again. Assert user's and treasury's balances are correct.
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -186,8 +189,9 @@ fn withdrawal_fee_with_multiple_recipients_works_without_lockup() {
     // assert again. Assert user's and treasury's balances are correct.
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -235,8 +239,9 @@ fn withdrawal_fee_works_with_lockup() {
 
     // Deposit some funds and then redeem.
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .redeem(
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
             None,
@@ -279,8 +284,9 @@ fn withdrawal_fee_with_multiple_recipients_works_with_lockup() {
 
     // Deposit some funds and then redeem.
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .redeem(
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
             None,

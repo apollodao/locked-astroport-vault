@@ -1,24 +1,24 @@
-use apollo_cw_asset::Asset;
-use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{
-    coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
-};
-use cw_vault_standard::extensions::lockup::{
-    UNLOCKING_POSITION_ATTR_KEY, UNLOCKING_POSITION_CREATED_EVENT_TYPE,
-};
-use optional_struct::Applyable;
-
 use crate::error::{ContractError, ContractResponse};
 use crate::helpers::{self, burn_vault_tokens, mint_vault_tokens, IsZero};
 use crate::state::{
     self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, STAKING, STATE, VAULT_TOKEN_DENOM,
 };
-
-use cw_dex::traits::{Stake, Unstake};
+use apollo_cw_asset::{Asset, AssetBase};
+use apollo_utils::assets::assert_native_token_received;
+use apollo_utils::responses::merge_responses;
+use cosmwasm_std::{
+    coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+};
+use cw_dex::traits::staking::{Stake, Unstake};
+use cw_vault_standard::extensions::lockup::{
+    UNLOCKING_POSITION_ATTR_KEY, UNLOCKING_POSITION_CREATED_EVENT_TYPE,
+};
+use optional_struct::Applyable;
 
 pub fn execute_deposit(
     mut deps: DepsMut,
     env: Env,
+    info: MessageInfo,
     amount: Uint128,
     depositor: Addr,
     recipient: Addr,
@@ -32,13 +32,12 @@ pub fn execute_deposit(
         return Err(ContractError::DepositsDisabled {});
     }
 
-    // Transfer LP tokens from sender
-    let deposit_asset = Asset::cw20(base_token, amount);
-    let transfer_from_res = Response::new()
-        .add_message(deposit_asset.transfer_from_msg(depositor, &env.contract.address)?);
+    let deposit_asset: AssetBase<Addr> = Asset::new(base_token.clone(), amount);
 
     // Take deposit fee if set
-    let (fee_msgs, asset_after_fee) = cfg.deposit_fee.fee_msgs_from_asset(deposit_asset, &env)?;
+    let (fee_msgs, asset_after_fee) = cfg
+        .deposit_fee
+        .fee_msgs_from_asset(deposit_asset.clone(), &env)?;
 
     // Stake deposited LP tokens
     let staking = STAKING.load(deps.storage)?;
@@ -67,7 +66,7 @@ pub fn execute_deposit(
         .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
         .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 
-    Ok(merge_responses(vec![transfer_from_res, staking_res])
+    Ok(merge_responses(vec![staking_res])
         .add_messages(fee_msgs)
         .add_message(mint_msg)
         .add_message(send_msg)
@@ -94,7 +93,7 @@ pub fn execute_redeem(
     let (burn_msg, claim_amount) = burn_vault_tokens(deps.branch(), &env, amount, &vt_denom)?;
 
     // Deduct withdrawal fee if set
-    let claim_asset = Asset::cw20(base_token.clone(), claim_amount);
+    let claim_asset = Asset::new(base_token.clone(), claim_amount);
     let (fee_msgs, asset_after_fee) = cfg.withdrawal_fee.fee_msgs_from_asset(claim_asset, &env)?;
     let fee_amount = claim_amount - asset_after_fee.amount;
     let claim_amount_after_fee = asset_after_fee.amount;
@@ -107,7 +106,7 @@ pub fn execute_redeem(
         let res = staking.unstake(deps.as_ref(), &env, claim_amount)?;
 
         // Send LP tokens to recipient
-        let send_msg = Asset::cw20(base_token, claim_amount_after_fee).transfer_msg(&recipient)?;
+        let send_msg = Asset::new(base_token, claim_amount_after_fee).transfer_msg(&recipient)?;
 
         res.add_message(send_msg)
     } else {

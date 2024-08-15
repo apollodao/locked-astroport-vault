@@ -1,9 +1,12 @@
+use apollo_cw_asset::{Asset, AssetBase, AssetInfo};
+use apollo_utils::assets::assert_native_token_received;
+use apollo_utils::responses::merge_responses;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
-    to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
-    Response, StdError, StdResult, SubMsg, Uint128, WasmQuery,
+    to_json_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest,
+    Reply, Response, StdError, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw2::ensure_from_older_version;
 use cw_dex_astroport::{astroport, AstroportPool, AstroportStaking};
@@ -47,18 +50,12 @@ pub fn instantiate(
     // Query pair info from astroport pair
     let pair_info = deps
         .querier
-        .query::<astroport::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
+        .query::<astroport_v5::asset::PairInfo>(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: msg.pool_addr.clone(),
             msg: to_json_binary(&astroport::pair::QueryMsg::Pair {})?,
         }))?;
 
-    // Store pool info
-    let liquidity_manager = deps.api.addr_validate(&msg.astroport_liquidity_manager)?;
-    let pool = AstroportPool::new(
-        deps.as_ref(),
-        deps.api.addr_validate(&msg.pool_addr)?,
-        liquidity_manager,
-    )?;
+    let pool = AstroportPool::new(deps.as_ref(), deps.api.addr_validate(&msg.pool_addr)?, None)?;
     POOL.save(deps.storage, &pool)?;
 
     // Create, validate and store config
@@ -81,7 +78,9 @@ pub fn instantiate(
         "factory/{}/{}",
         env.contract.address, msg.vault_token_subdenom
     );
-    BASE_TOKEN.save(deps.storage, &pair_info.liquidity_token)?;
+    let base_token = AssetInfo::from_str(deps.api, &pair_info.liquidity_token);
+
+    BASE_TOKEN.save(deps.storage, &base_token)?;
     VAULT_TOKEN_DENOM.save(deps.storage, &vault_token_denom)?;
     STATE.save(
         deps.storage,
@@ -93,7 +92,7 @@ pub fn instantiate(
 
     // Store staking info
     let staking = AstroportStaking {
-        lp_token_addr: pair_info.liquidity_token,
+        lp_token: base_token.clone(),
         incentives: deps.api.addr_validate(&msg.astroport_incentives_addr)?,
     };
     STAKING.save(deps.storage, &staking)?;
@@ -117,14 +116,27 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
+            let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
+
+            let base_token = BASE_TOKEN.load(deps.storage)?;
+
+            let base_token_balance =
+                base_token.query_balance(&deps.querier, &env.contract.address)?;
+
+            let deposit_asset: AssetBase<Addr> = Asset::new(base_token, amount);
+
+            let receive_res = apollo_utils::assets::receive_asset(&info, &env, &deposit_asset)?;
+
             // Call contract itself first to compound, but as a SubMsg so that we can still
             // deposit if the compound fails
             let compound_msg = SubMsg::reply_on_error(
-                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
+                InternalMsg::Compound {
+                    discount_deposit: Some(deposit_asset.clone()),
+                }
+                .into_internal_call(&env, vec![])?,
                 COMPOUND_REPLY_ID,
             );
 
-            let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
             let deposit_msg = InternalMsg::Deposit {
                 amount,
                 depositor: info.sender,
@@ -132,9 +144,12 @@ pub fn execute(
             }
             .into_internal_call(&env, vec![])?;
 
-            Ok(Response::new()
-                .add_submessage(compound_msg)
-                .add_message(deposit_msg))
+            Ok(merge_responses(vec![
+                receive_res,
+                Response::new()
+                    .add_submessage(compound_msg)
+                    .add_message(deposit_msg),
+            ]))
         }
         ExecuteMsg::Redeem { recipient, amount } => {
             // Call contract itself first to compound, but as a SubMsg so that we can still
@@ -205,17 +220,22 @@ pub fn execute(
                 }
 
                 match msg {
+                    InternalMsg::Compound { discount_deposit } => {
+                        execute::compound::execute_compound(deps, env, discount_deposit)
+                    }
                     InternalMsg::SellTokens {} => execute::compound::execute_sell_tokens(deps, env),
                     InternalMsg::ProvideLiquidity {} => {
                         execute::compound::execute_provide_liquidity(deps, env)
                     }
-                    InternalMsg::StakeLps {} => execute::compound::execute_stake_lps(deps, env),
+                    InternalMsg::StakeLps { discount_deposit } => {
+                        execute::compound::execute_stake_lps(deps, env, discount_deposit)
+                    }
                     InternalMsg::Deposit {
                         amount,
                         depositor,
                         recipient,
                     } => execute::basic_vault::execute_deposit(
-                        deps, env, amount, depositor, recipient,
+                        deps, env, info, amount, depositor, recipient,
                     ),
                     InternalMsg::Redeem { recipient, amount } => {
                         execute::basic_vault::execute_redeem(
@@ -234,7 +254,7 @@ pub fn execute(
                     execute::basic_vault::execute_update_config(deps, info, updates)
                 }
                 ApolloExtensionExecuteMsg::Compound {} => {
-                    execute::compound::execute_compound(deps, env)
+                    execute::compound::execute_compound(deps, env, None)
                 }
             },
         },
@@ -325,19 +345,24 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
 
     let res = match old_version.to_string().as_str() {
         "0.2.0" => {
-            crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?;
-            crate::migrations::migrate_from_0_3_0_to_current(
+            merge_responses(vec![
+            // crate::migrations::migrate_from_0_2_0_to_0_3_0(deps.branch())?,
+            crate::migrations::migrate_from_0_3_0_to_0_4_x(
                 deps.branch(),
                 env,
                 incentives_contract,
-            )?
+            )?,
+            crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?])
         }
-        "0.3.0" => crate::migrations::migrate_from_0_3_0_to_current(
-            deps.branch(),
-            env,
-            incentives_contract,
-        )?,
-        "0.4.0" | "0.4.1" => Response::default(),
+        "0.3.0" => {
+            merge_responses(vec![crate::migrations::migrate_from_0_3_0_to_0_4_x(
+                deps.branch(),
+                env,
+                incentives_contract,
+            )?,
+            crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?])
+        },
+        "0.4.0" | "0.4.1" | "0.4.2" => crate::migrations::migrate_from_0_4_x_to_current(deps.branch())?,
         _ => {
             return Err(StdError::generic_err(
                 "Cannot migrate from a version of the contract other than v0.2.0, v0.3.0, v0.4.0, or v0.4.1",

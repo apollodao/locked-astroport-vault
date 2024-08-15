@@ -1,5 +1,5 @@
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
-use cosmwasm_std::{attr, coin, Uint128};
+use cosmwasm_std::{attr, coin, coins, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
@@ -27,8 +27,9 @@ fn withdrawing_from_vault_with_lockup_works() {
     // try to withdraw before it has unlocked, should fail. Then fast forward
     // time and try withdrawing again.
     let base_token_balance = robot.query_base_token_balance(user.address());
+    let funds = coins(base_token_balance.u128(), robot.base_token());
     robot
-        .deposit_cw20(base_token_balance, None, Unwrap::Ok, &user)
+        .deposit_native(base_token_balance, None, Unwrap::Ok, &user, &funds)
         .assert_base_token_balance_eq(user.address(), 0u128)
         .unlock(
             base_token_balance * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -53,8 +54,9 @@ fn unlocking_position_event_emitted_when_vault_has_lockup() {
     let user = robot.new_user(&admin);
 
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     let vault_token_balance = robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .query_vault_token_balance(user.address());
 
     let res = robot

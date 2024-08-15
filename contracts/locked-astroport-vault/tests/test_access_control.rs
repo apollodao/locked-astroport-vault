@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{coins, Addr, Uint128};
 use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::Account;
@@ -8,6 +8,7 @@ use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 use common::{default_instantiate, get_test_runner, DEPS_PATH};
+use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
 use locked_astroport_vault::msg::{ExecuteMsg, ExtensionExecuteMsg, InternalMsg};
 use locked_astroport_vault::state::ConfigUpdates;
 use strum::EnumCount;
@@ -87,7 +88,12 @@ fn internal_msg_can_only_be_called_by_contract() {
     let user = robot.new_user(&admin);
 
     let msgs: [InternalMsg; InternalMsg::COUNT] = [
-        InternalMsg::StakeLps {},
+        InternalMsg::Compound {
+            discount_deposit: None,
+        },
+        InternalMsg::StakeLps {
+            discount_deposit: None,
+        },
         InternalMsg::ProvideLiquidity {},
         InternalMsg::SellTokens {},
         InternalMsg::Deposit {
@@ -127,8 +133,9 @@ fn force_redeem_can_only_be_called_by_whitelisted_address() {
     // Deposit from user, then try to force redeem, should fail. Then whitelist user
     // and try again.
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .force_redeem_all(None, Unwrap::Err("Unauthorized"), &user)
         .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
         .force_redeem_all(None, Unwrap::Ok, &user);
@@ -146,8 +153,9 @@ fn force_withdraw_unlocking_can_only_be_called_by_whitelisted_address() {
     // Deposit from user, call unlock, then try to force withdraw unlocking, should
     // fail. Then whitelist user and try again.
     let deposit_amount = Uint128::new(100);
+    let funds = coins(deposit_amount.u128(), robot.base_token());
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit_native(deposit_amount, None, Unwrap::Ok, &user, &funds)
         .unlock_all(Unwrap::Ok, &user)
         .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Err("Unauthorized"), &user)
         .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)

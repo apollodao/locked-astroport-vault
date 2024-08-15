@@ -1,4 +1,4 @@
-use apollo_cw_asset::AssetInfoUnchecked;
+use apollo_cw_asset::{Asset, AssetInfoUnchecked};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{to_json_binary, Addr, Coin, CosmosMsg, Env, StdResult, Uint128};
 use cw_dex_router::helpers::CwDexRouterUnchecked;
@@ -34,8 +34,6 @@ pub struct InstantiateMsg {
     pub reward_liquidation_target: AssetInfoUnchecked,
     /// Helper for providing liquidity with unbalanced assets.
     pub liquidity_helper: LiquidityHelperUnchecked,
-    /// The address of the astroport liquidity manager contract.
-    pub astroport_liquidity_manager: String,
     /// The fee that is taken on rewards accrued
     pub performance_fee: Option<FeeConfig<String>>,
     /// A fee that is taken on deposits
@@ -47,12 +45,24 @@ pub struct InstantiateMsg {
 #[cw_serde]
 #[derive(EnumCount)]
 pub enum InternalMsg {
+    /// Compound the vault
+    Compound {
+        /// The amount of base tokens not to stake. This is used to subtract
+        /// the amount of base tokens that are being deposited so that we don't
+        /// try to stake the same amount twice.
+        discount_deposit: Option<Asset>,
+    },
     /// Sell reward tokens
     SellTokens {},
     /// Provide liquidity to the pool
     ProvideLiquidity {},
     /// Stake LP tokens
-    StakeLps {},
+    StakeLps {
+        /// The amount of base tokens not to stake. This is used to subtract
+        /// the amount of base tokens that are being deposited so that we don't
+        /// try to stake the same amount twice.
+        discount_deposit: Option<Asset>,
+    },
     /// Deposit into the vault after compounding
     Deposit {
         /// The amount of base tokens to deposit.
