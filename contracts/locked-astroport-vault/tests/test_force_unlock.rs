@@ -110,7 +110,7 @@ fn force_redeem_works() {
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -137,7 +137,7 @@ fn force_redeem_to_recipient_works() {
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -166,7 +166,7 @@ fn force_withdraw_unlocking_works() {
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -198,7 +198,7 @@ fn force_withdraw_unlocking_to_recipient_works() {
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -237,7 +237,7 @@ fn force_withdraw_unlocking_with_partial_amount_works() {
     let balance_before_deposit = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), balance_before_deposit - deposit_amount)
         .assert_vault_token_balance_eq(
             user.address(),
@@ -279,7 +279,7 @@ fn cannot_force_withdraw_unlocking_more_than_position_amount() {
     // unlocking
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,

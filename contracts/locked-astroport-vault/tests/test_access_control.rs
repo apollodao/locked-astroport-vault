@@ -132,7 +132,7 @@ fn force_redeem_can_only_be_called_by_whitelisted_address() {
     // and try again.
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .force_redeem_all(None, Unwrap::Err("Unauthorized"), &user)
         .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)
         .force_redeem_all(None, Unwrap::Ok, &user);
@@ -151,7 +151,7 @@ fn force_withdraw_unlocking_can_only_be_called_by_whitelisted_address() {
     // fail. Then whitelist user and try again.
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .unlock_all(Unwrap::Ok, &user)
         .force_withdraw_unlocking(0, None::<Uint128>, None, Unwrap::Err("Unauthorized"), &user)
         .update_force_withdraw_whitelist(vec![user.address()], vec![], Unwrap::Ok, &admin)

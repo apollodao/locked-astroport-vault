@@ -30,7 +30,7 @@ fn test_deposit() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = base_token_balance / Uint128::new(2);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -53,7 +53,7 @@ fn can_only_deposit_when_despoits_enabled() {
     // Deposit, should work
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -70,7 +70,7 @@ fn can_only_deposit_when_despoits_enabled() {
     );
 
     //Deposit, should fail
-    robot.deposit_cw20(
+    robot.deposit(
         deposit_amount,
         None,
         Unwrap::Err("Deposits are disabled"),
@@ -102,7 +102,7 @@ fn deposit_fee_works() {
     let expected_amount =
         deposit_amount * (Decimal::one() - fee_rate) * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(user.address(), expected_amount)
         .assert_total_vault_token_supply_eq(expected_amount)
         .assert_total_vault_assets_eq(deposit_amount * (Decimal::one() - fee_rate))
@@ -137,7 +137,7 @@ fn deposit_fee_works_with_multiple_recipients() {
     let expected_amount =
         deposit_amount * (Decimal::one() - fee_rate) * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(user.address(), expected_amount)
         .assert_total_vault_token_supply_eq(expected_amount)
         .assert_total_vault_assets_eq(deposit_amount * (Decimal::one() - fee_rate))
@@ -184,7 +184,7 @@ fn deposit_fee_works_with_vault_as_recipient() {
         deposit_amount * (Decimal::one() - fee_rate) * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
     robot
         .assert_base_token_balance_eq(robot.vault_addr.clone(), Uint128::zero())
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(user.address(), expected_amount)
         .assert_total_vault_token_supply_eq(expected_amount)
         .assert_total_vault_assets_eq(deposit_amount * (Decimal::one() - fee_rate))

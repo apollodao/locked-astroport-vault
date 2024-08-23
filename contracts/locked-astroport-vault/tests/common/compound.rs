@@ -24,7 +24,7 @@ pub fn test_compound_vault(
 
     // Deposit some funds and assert the vault token balance is correct
     let vt_balance_after_deposit = robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, user)
+        .deposit(deposit_amount, None, Unwrap::Ok, user)
         .assert_vt_balance_converted_to_assets_eq(
             user.address(),
             bt_balance_in_vault_before_deposit + deposit_amount,

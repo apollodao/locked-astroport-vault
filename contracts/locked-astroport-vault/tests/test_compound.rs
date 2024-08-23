@@ -58,7 +58,7 @@ fn rewards_are_compounded_when_in_vault_before_first_deposit() {
     // to compounding. User's vault token balance should be greated than their
     // deposit times the multiplier, due to the extra tokens from compounding.
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_native_token_balance_gt(
             user.address(),
             robot.vault_token(),

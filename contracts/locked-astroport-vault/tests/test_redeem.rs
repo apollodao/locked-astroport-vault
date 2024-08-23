@@ -42,7 +42,7 @@ fn test_redeem_with_lockup() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -99,7 +99,7 @@ fn test_redeem_without_lockup() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -139,7 +139,7 @@ fn withdrawal_fee_works_without_lockup() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -187,7 +187,7 @@ fn withdrawal_fee_with_multiple_recipients_works_without_lockup() {
     let base_token_balance = robot.query_base_token_balance(user.address());
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .assert_vault_token_balance_eq(
             user.address(),
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -236,7 +236,7 @@ fn withdrawal_fee_works_with_lockup() {
     // Deposit some funds and then redeem.
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .redeem(
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
             None,
@@ -280,7 +280,7 @@ fn withdrawal_fee_with_multiple_recipients_works_with_lockup() {
     // Deposit some funds and then redeem.
     let deposit_amount = Uint128::new(100);
     robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .redeem(
             deposit_amount * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
             None,
