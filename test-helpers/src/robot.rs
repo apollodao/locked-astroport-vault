@@ -7,7 +7,7 @@ use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint12
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex_astroport::astroport::asset::AssetInfo as AstroAssetInfo;
 use cw_dex_astroport::astroport::factory::PairType;
-use cw_dex_astroport::astroport_v2::factory::PairType as PairTypeV2;
+
 use cw_dex_astroport::AstroportPool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
 use cw_it::astroport::robot::AstroportTestRobot;
@@ -24,7 +24,7 @@ use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
 use cw_utils::Duration;
 use cw_vault_standard::extensions::lockup::{LockupQueryMsg, UnlockingPosition};
-use cw_vault_standard::VaultStandardInfoResponse;
+use cw_vault_standard::{VaultInfoResponse, VaultStandardInfoResponse, VaultStandardQueryMsg};
 use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
 use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
@@ -73,6 +73,7 @@ pub struct LockedAstroportVaultRobot<'a> {
     pub runner: &'a TestRunner<'a>,
     pub vault_addr: String,
     pub astroport_contracts: AstroportContracts,
+    pub base_token_is_cw20: bool,
 }
 
 impl<'a> LockedAstroportVaultRobot<'a> {
@@ -207,10 +208,18 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .data
             .address;
 
+        let vault_info: VaultInfoResponse = wasm
+            .query(&vault_addr, &VaultStandardQueryMsg::<Empty>::Info {})
+            .unwrap();
+        let base_token = vault_info.base_token;
+        let base_token_is_cw20 =
+            base_token.starts_with(signer.prefix()) || base_token.starts_with("contract");
+
         Self {
             runner,
             vault_addr,
             astroport_contracts: dependencies.astroport_contracts.clone(),
+            base_token_is_cw20,
         }
     }
 
@@ -671,11 +680,6 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         self
     }
 
-    /// Whether or not the vault's base token is a cw20 token
-    pub fn base_token_is_cw20(&self, prefix: &str) -> bool {
-        self.base_token().starts_with(prefix) || self.base_token().starts_with("contract")
-    }
-
     /// Create a new testing account with some base token balance.
     pub fn new_user(&self, admin: &SigningAccount) -> SigningAccount {
         let user = self
@@ -683,7 +687,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .init_account(&[coin(1_000_000_000_000_000, "uosmo")])
             .unwrap();
 
-        if self.base_token_is_cw20(admin.prefix()) {
+        if self.base_token_is_cw20 {
             self.send_cw20(
                 Uint128::new(1_000_000),
                 &self.base_token(),
@@ -710,7 +714,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         unwrap_choice: Unwrap,
         signer: &SigningAccount,
     ) -> &Self {
-        if self.base_token_is_cw20(signer.prefix()) {
+        if self.base_token_is_cw20 {
             self.increase_cw20_allowance(&self.base_token(), &self.vault_addr, amount, signer)
                 .deposit_with_funds(amount, recipient, &[], unwrap_choice, signer)
         } else {
@@ -1036,15 +1040,19 @@ impl<'a> CwVaultStandardRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<
     }
 
     fn query_base_token_balance(&self, address: impl Into<String>) -> Uint128 {
-        self.wasm()
-            .query::<_, cw20::BalanceResponse>(
-                &self.base_token(),
-                &Cw20QueryMsg::Balance {
-                    address: address.into(),
-                },
-            )
-            .unwrap()
-            .balance
+        if self.base_token_is_cw20 {
+            self.wasm()
+                .query::<_, cw20::BalanceResponse>(
+                    &self.base_token(),
+                    &Cw20QueryMsg::Balance {
+                        address: address.into(),
+                    },
+                )
+                .unwrap()
+                .balance
+        } else {
+            self.query_native_token_balance(address, self.base_token())
+        }
     }
 }
 
