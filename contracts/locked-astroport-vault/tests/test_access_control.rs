@@ -87,11 +87,15 @@ fn internal_msg_can_only_be_called_by_contract() {
     let user = robot.new_user(&admin);
 
     let msgs: [InternalMsg; InternalMsg::COUNT] = [
-        InternalMsg::StakeLps {},
+        InternalMsg::Compound {
+            discount_deposit: Uint128::zero(),
+        },
+        InternalMsg::StakeLps {
+            discount_tokens: Uint128::zero(),
+        },
         InternalMsg::ProvideLiquidity {},
         InternalMsg::SellTokens {},
         InternalMsg::Deposit {
-            depositor: Addr::unchecked(user.address()),
             recipient: Addr::unchecked(user.address()),
             amount: Uint128::new(420),
         },

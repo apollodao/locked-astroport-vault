@@ -1,5 +1,4 @@
 use apollo_cw_asset::Asset;
-use apollo_utils::responses::merge_responses;
 use cosmwasm_std::{
     coins, Addr, BankMsg, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
 };
@@ -20,7 +19,6 @@ pub fn execute_deposit(
     mut deps: DepsMut,
     env: Env,
     amount: Uint128,
-    depositor: Addr,
     recipient: Addr,
 ) -> ContractResponse {
     let cfg = CONFIG.load(deps.storage)?;
@@ -32,12 +30,8 @@ pub fn execute_deposit(
         return Err(ContractError::DepositsDisabled {});
     }
 
-    // Transfer LP tokens from sender
-    let deposit_asset = Asset::new(base_token, amount);
-    let transfer_from_res = Response::new()
-        .add_message(deposit_asset.transfer_from_msg(depositor, &env.contract.address)?);
-
     // Take deposit fee if set
+    let deposit_asset = Asset::new(base_token, amount);
     let (fee_msgs, asset_after_fee) = cfg.deposit_fee.fee_msgs_from_asset(deposit_asset, &env)?;
 
     // Stake deposited LP tokens
@@ -67,7 +61,7 @@ pub fn execute_deposit(
         .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
         .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 
-    Ok(merge_responses(vec![transfer_from_res, staking_res])
+    Ok(staking_res
         .add_messages(fee_msgs)
         .add_message(mint_msg)
         .add_message(send_msg)

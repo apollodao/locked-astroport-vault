@@ -1,5 +1,5 @@
-use apollo_cw_asset::AssetInfo;
-use apollo_utils::responses::merge_responses;
+use apollo_cw_asset::{Asset, AssetInfo};
+use apollo_utils::assets::receive_asset;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
@@ -55,7 +55,10 @@ pub fn instantiate(
         }))?;
 
     // Store pool info
-    let liquidity_manager = deps.api.addr_validate(&msg.astroport_liquidity_manager)?;
+    let liquidity_manager = msg
+        .astroport_liquidity_manager
+        .map(|x| deps.api.addr_validate(&x))
+        .transpose()?;
     let pool = AstroportPool::new(
         deps.as_ref(),
         deps.api.addr_validate(&msg.pool_addr)?,
@@ -121,22 +124,28 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit { amount, recipient } => {
+            let base_token = BASE_TOKEN.load(deps.storage)?;
+            let deposited = Asset::new(base_token.clone(), amount);
+            let transfer_res = receive_asset(&info, &env, &deposited)?;
+
+            let discount_deposit = if base_token.is_native() {
+                Uint128::zero()
+            } else {
+                amount
+            };
+
             // Call contract itself first to compound, but as a SubMsg so that we can still
             // deposit if the compound fails
             let compound_msg = SubMsg::reply_on_error(
-                ApolloExtensionExecuteMsg::Compound {}.into_internal_call(&env, vec![])?,
+                InternalMsg::Compound { discount_deposit }.into_internal_call(&env, vec![])?,
                 COMPOUND_REPLY_ID,
             );
 
             let recipient = helpers::unwrap_recipient(recipient, &info, deps.api)?;
-            let deposit_msg = InternalMsg::Deposit {
-                amount,
-                depositor: info.sender,
-                recipient,
-            }
-            .into_internal_call(&env, vec![])?;
+            let deposit_msg =
+                InternalMsg::Deposit { amount, recipient }.into_internal_call(&env, vec![])?;
 
-            Ok(Response::new()
+            Ok(transfer_res
                 .add_submessage(compound_msg)
                 .add_message(deposit_msg))
         }
@@ -209,18 +218,19 @@ pub fn execute(
                 }
 
                 match msg {
+                    InternalMsg::Compound { discount_deposit } => {
+                        execute::compound::execute_compound(deps, env, discount_deposit)
+                    }
                     InternalMsg::SellTokens {} => execute::compound::execute_sell_tokens(deps, env),
                     InternalMsg::ProvideLiquidity {} => {
                         execute::compound::execute_provide_liquidity(deps, env)
                     }
-                    InternalMsg::StakeLps {} => execute::compound::execute_stake_lps(deps, env),
-                    InternalMsg::Deposit {
-                        amount,
-                        depositor,
-                        recipient,
-                    } => execute::basic_vault::execute_deposit(
-                        deps, env, amount, depositor, recipient,
-                    ),
+                    InternalMsg::StakeLps { discount_tokens } => {
+                        execute::compound::execute_stake_lps(deps, env, discount_tokens)
+                    }
+                    InternalMsg::Deposit { amount, recipient } => {
+                        execute::basic_vault::execute_deposit(deps, env, amount, recipient)
+                    }
                     InternalMsg::Redeem { recipient, amount } => {
                         execute::basic_vault::execute_redeem(
                             deps, env, info, amount, recipient, false,
@@ -238,7 +248,7 @@ pub fn execute(
                     execute::basic_vault::execute_update_config(deps, info, updates)
                 }
                 ApolloExtensionExecuteMsg::Compound {} => {
-                    execute::compound::execute_compound(deps, env)
+                    execute::compound::execute_compound(deps, env, Uint128::zero())
                 }
             },
         },
