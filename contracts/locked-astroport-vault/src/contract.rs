@@ -128,16 +128,13 @@ pub fn execute(
             let deposited = Asset::new(base_token.clone(), amount);
             let transfer_res = receive_asset(&info, &env, &deposited)?;
 
-            let discount_deposit = if base_token.is_native() {
-                Uint128::zero()
-            } else {
-                amount
-            };
-
             // Call contract itself first to compound, but as a SubMsg so that we can still
             // deposit if the compound fails
             let compound_msg = SubMsg::reply_on_error(
-                InternalMsg::Compound { discount_deposit }.into_internal_call(&env, vec![])?,
+                InternalMsg::Compound {
+                    discount_deposit: amount,
+                }
+                .into_internal_call(&env, vec![])?,
                 COMPOUND_REPLY_ID,
             );
 
