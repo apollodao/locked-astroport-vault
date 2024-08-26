@@ -59,9 +59,9 @@ dependencies = [
 
 [[package]]
 name = "apollo-cw-multi-test"
-version = "0.19.0-rc.1"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7c7f08fd29e20927635f8b976e9689f5b681bc8536f6b563bd8b728a606cc2c"
+checksum = "c4d9d50055381538d90ed418227d5cf4906db896f5db26fd0a77e45aaa3f7fc7"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
@@ -252,7 +252,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-bigint",
- "cw-dex-astroport 0.3.0-rc.2",
+ "cw-dex-astroport",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -1047,21 +1047,6 @@ dependencies = [
 
 [[package]]
 name = "cw-dex"
-version = "0.5.4-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5361520415a7939d601f9cd61b7fa737312ce701cbcdfb9214f5052beadc5863"
-dependencies = [
- "apollo-cw-asset",
- "apollo-utils",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-utils 1.0.3",
- "cw20 1.1.2",
- "thiserror",
-]
-
-[[package]]
-name = "cw-dex"
 version = "0.6.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6762ad056b67ff42d5717ac6023be13a1b7ffe1ea64d4523dc8fe8789d79046d"
@@ -1070,24 +1055,6 @@ dependencies = [
  "cosmwasm-std",
  "cw-utils 1.0.3",
  "thiserror",
-]
-
-[[package]]
-name = "cw-dex-astroport"
-version = "0.2.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ba163435386ed54cc618ef4a3ed33d930ccb7a27b0e89a06092b439d098af59"
-dependencies = [
- "apollo-cw-asset",
- "apollo-utils",
- "astroport 2.9.5",
- "astroport 5.3.0",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-dex 0.5.4-rc.1",
- "cw-utils 1.0.3",
- "cw2 1.1.2",
- "cw20 1.1.2",
 ]
 
 [[package]]
@@ -1102,7 +1069,7 @@ dependencies = [
  "astroport 5.3.0",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex 0.6.0-rc.5",
+ "cw-dex",
  "cw-utils 1.0.3",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -1110,17 +1077,17 @@ dependencies = [
 
 [[package]]
 name = "cw-dex-router"
-version = "0.4.1-rc.2"
+version = "0.5.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0de4964ccc1c0db8eff977316cf880c45862d4baf09a6adfd303adfa6c4df6a7"
+checksum = "0894280911fae46f5657dc7ca31c9911d0cbbcbed9190b348b88bd8ebf2413df"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-controllers",
- "cw-dex 0.5.4-rc.1",
- "cw-dex-astroport 0.2.0-rc.3",
+ "cw-dex",
+ "cw-dex-astroport",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -1129,9 +1096,9 @@ dependencies = [
 
 [[package]]
 name = "cw-it"
-version = "0.4.0-rc.9"
+version = "0.4.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4f0e15a5fc769308daaa282cfd04ad5dda2b30d59dd849e75cf087df193f77a"
+checksum = "e6838d7d4c7a2fb46d684fdac96fb3aac9bf660703456fe8b0046d751c17e975"
 dependencies = [
  "anyhow",
  "apollo-cw-multi-test",
@@ -2152,8 +2119,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-address-like",
- "cw-dex 0.5.4-rc.1",
- "cw-dex-astroport 0.2.0-rc.3",
+ "cw-dex-astroport",
  "cw-dex-router",
  "cw-it",
  "cw-item-set",
@@ -2185,7 +2151,7 @@ dependencies = [
  "astroport-liquidity-helper",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex-astroport 0.2.0-rc.3",
+ "cw-dex-astroport",
  "cw-dex-router",
  "cw-it",
  "cw-ownable",
