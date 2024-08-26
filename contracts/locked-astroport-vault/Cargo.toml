@@ -23,7 +23,6 @@ apollo-cw-asset     = { workspace = true }
 apollo-utils        = { workspace = true }
 cosmwasm-schema     = { workspace = true }
 cosmwasm-std        = { workspace = true }
-cw-dex              = { workspace = true }
 cw-dex-astroport    = { workspace = true }
 cw-ownable          = { workspace = true }
 cw-storage-plus     = { workspace = true }
