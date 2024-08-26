@@ -37,8 +37,7 @@ cw2                     = "1.1.0"
 cw20                    = "1.1.0"
 osmosis-std             = "0.14"
 thiserror               = "1.0.43"
-# cw-dex-router           = { version = "0.4.1-rc.1", features = ["library", "astroport"] }
-cw-dex-router           = { path = "../cw-dex-router", features = ["library", "astroport"] }
+cw-dex-router           = { version = "0.4.1-rc.2", features = ["library", "astroport"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
 liquidity-helper        = "0.3.0"
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
@@ -54,10 +53,8 @@ locked-astroport-vault  = { version = "0.5.0", path = "./contracts/locked-astrop
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-# cw-it                               = { version = "0.4.0-rc.8", features = ["astroport"] }
-cw-it                               = { version = "0.3.1", features = ["astroport"] }
-# cw-vault-standard-test-helpers      = { version = "0.5.0-rc.1", features = ["lockup", "force-unlock"] }
-cw-vault-standard-test-helpers      = { version = "0.4.1", features = ["lockup", "force-unlock"] }
+cw-it                               = { version = "0.4.0-rc.9", features = ["astroport"] }
+cw-vault-standard-test-helpers      = { version = "0.5.0-rc.2", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
 # astroport-liquidity-helper          = "0.3.0"

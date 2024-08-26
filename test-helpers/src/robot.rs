@@ -8,7 +8,6 @@ use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex_astroport::astroport::asset::AssetInfo as AstroAssetInfo;
 use cw_dex_astroport::astroport::factory::PairType;
 
-use cw_dex_astroport::astroport_v2::factory::PairType as PairTypeV2;
 use cw_dex_astroport::AstroportPool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
 use cw_it::astroport::robot::AstroportTestRobot;
@@ -247,18 +246,18 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let (axl_ntrn_pair, axl_ntrn_lp) = create_astroport_pair(
             runner,
             &dependencies.astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&axl),
-                // asset_info_to_astroport_v5_assetinfo(&ntrn),
-                axl.clone().into(),
-                ntrn.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&axl),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                // axl.clone().into(),
+                // ntrn.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let axl_ntrn_lp = asset_info_from_str(&axl_ntrn_lp, signer.prefix());
         let axl_ntrn_pool = AstroportPool {
@@ -277,18 +276,18 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let (astro_ntrn_pair, astro_ntrn_lp) = create_astroport_pair(
             runner,
             &dependencies.astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&astro),
-                // asset_info_to_astroport_v5_assetinfo(&ntrn),
-                astro.clone().into(),
-                ntrn.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&astro),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                // astro.clone().into(),
+                // ntrn.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let astro_ntrn_lp = asset_info_from_str(&astro_ntrn_lp, signer.prefix());
         let astro_ntrn_pool = AstroportPool {
@@ -459,18 +458,18 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let (wsteth_eth_pair, wsteth_eth_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&wsteth),
-                // asset_info_to_astroport_v5_assetinfo(&eth),
-                wsteth.clone().into(),
-                eth.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&wsteth),
+                asset_info_to_astroport_v5_assetinfo(&eth),
+                // wsteth.clone().into(),
+                // eth.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let wsteth_eth_lp = asset_info_from_str(&wsteth_eth_lp, signer.prefix());
         let wsteth_eth_pool = AstroportPool {
@@ -488,72 +487,72 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let (astro_usdc_pair, astro_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&astro),
-                // asset_info_to_astroport_v5_assetinfo(&usdc),
-                astro.clone().into(),
-                usdc.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&astro),
+                asset_info_to_astroport_v5_assetinfo(&usdc),
+                // astro.clone().into(),
+                // usdc.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let astro_usdc_lp = asset_info_from_str(&astro_usdc_lp, signer.prefix());
 
         let (ntrn_usdc_pair, ntrn_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&ntrn),
-                // asset_info_to_astroport_v5_assetinfo(&usdc),
-                ntrn.clone().into(),
-                usdc.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                asset_info_to_astroport_v5_assetinfo(&usdc),
+                // ntrn.clone().into(),
+                // usdc.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let ntrn_usdc_lp = asset_info_from_str(&ntrn_usdc_lp, signer.prefix());
 
         let (eth_usdc_pair, eth_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&eth),
-                // asset_info_to_astroport_v5_assetinfo(&usdc),
-                eth.clone().into(),
-                usdc.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&eth),
+                asset_info_to_astroport_v5_assetinfo(&usdc),
+                // eth.clone().into(),
+                // usdc.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let eth_usdc_lp = asset_info_from_str(&eth_usdc_lp, signer.prefix());
 
         let (axl_ntrn_pair, axl_ntrn_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
-            // PairType::Xyk {},
-            PairTypeV2::Xyk {},
+            PairType::Xyk {},
+            // PairTypeV2::Xyk {},
             [
-                // asset_info_to_astroport_v5_assetinfo(&axl),
-                // asset_info_to_astroport_v5_assetinfo(&ntrn),
-                axl.clone().into(),
-                ntrn.clone().into(),
+                asset_info_to_astroport_v5_assetinfo(&axl),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                // axl.clone().into(),
+                // ntrn.clone().into(),
             ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
-            // &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
         let axl_ntrn_lp = asset_info_from_str(&axl_ntrn_lp, signer.prefix());
 
