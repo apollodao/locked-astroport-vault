@@ -13,7 +13,7 @@ use crate::state::{
     self, ConfigUnchecked, ConfigUpdates, BASE_TOKEN, CONFIG, STAKING, STATE, VAULT_TOKEN_DENOM,
 };
 
-use cw_dex::traits::{Stake, Unstake};
+use cw_dex_astroport::cw_dex::traits::{Stake, Unstake};
 
 pub fn execute_deposit(
     mut deps: DepsMut,

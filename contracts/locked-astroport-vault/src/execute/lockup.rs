@@ -5,7 +5,7 @@ use crate::error::{ContractError, ContractResponse};
 use crate::helpers::unwrap_recipient;
 use crate::state::{self, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, STAKING};
 
-use cw_dex::traits::Unstake;
+use cw_dex_astroport::cw_dex::traits::Unstake;
 
 pub fn execute_withdraw_unlocked(
     deps: DepsMut,

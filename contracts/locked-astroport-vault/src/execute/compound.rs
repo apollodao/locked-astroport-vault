@@ -6,7 +6,7 @@ use crate::helpers::IntoInternalCall;
 use crate::msg::InternalMsg;
 use crate::state::{BASE_TOKEN, CONFIG, POOL, STAKING, STATE};
 
-use cw_dex::traits::{Rewards, Stake};
+use cw_dex_astroport::cw_dex::traits::{Rewards, Stake};
 
 pub fn execute_compound(deps: DepsMut, env: Env, discount_deposit: Uint128) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
