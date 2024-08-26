@@ -244,7 +244,7 @@ dependencies = [
 
 [[package]]
 name = "astroport-liquidity-helper"
-version = "0.4.0-rc.1"
+version = "0.4.0-rc.2"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -252,12 +252,11 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-bigint",
- "cw-dex",
- "cw-dex-astroport",
+ "cw-dex-astroport 0.3.0-rc.2",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper 0.4.0-rc.1",
+ "liquidity-helper 0.4.0-rc.2",
  "semver",
  "thiserror",
 ]
@@ -1062,6 +1061,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-dex"
+version = "0.6.0-rc.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6762ad056b67ff42d5717ac6023be13a1b7ffe1ea64d4523dc8fe8789d79046d"
+dependencies = [
+ "apollo-cw-asset",
+ "cosmwasm-std",
+ "cw-utils 1.0.3",
+ "thiserror",
+]
+
+[[package]]
 name = "cw-dex-astroport"
 version = "0.2.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1073,7 +1084,25 @@ dependencies = [
  "astroport 5.3.0",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex",
+ "cw-dex 0.5.4-rc.1",
+ "cw-utils 1.0.3",
+ "cw2 1.1.2",
+ "cw20 1.1.2",
+]
+
+[[package]]
+name = "cw-dex-astroport"
+version = "0.3.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b4c3886c9673478cb57e3b9aeb4b1c442fa6ec05beaa7cd947cde53593dd4ef"
+dependencies = [
+ "apollo-cw-asset",
+ "apollo-utils",
+ "astroport 2.9.5",
+ "astroport 5.3.0",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-dex 0.6.0-rc.5",
  "cw-utils 1.0.3",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -1090,8 +1119,8 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-controllers",
- "cw-dex",
- "cw-dex-astroport",
+ "cw-dex 0.5.4-rc.1",
+ "cw-dex-astroport 0.2.0-rc.3",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
@@ -2090,9 +2119,7 @@ checksum = "01cda141df6706de531b6c46c3a33ecca755538219bd484262fa09410c13539c"
 
 [[package]]
 name = "liquidity-helper"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2ecc84f826057d7c317d0f0946a6dc27aed0a8bd94fd0d168e9e81e4f1a5781"
+version = "0.4.0-rc.2"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -2103,7 +2130,9 @@ dependencies = [
 
 [[package]]
 name = "liquidity-helper"
-version = "0.4.0-rc.1"
+version = "0.4.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "643b0d3b852e8555227d0152a87aa8771e852766eab031e3a958e12a704b38f1"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -2123,8 +2152,8 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-address-like",
- "cw-dex",
- "cw-dex-astroport",
+ "cw-dex 0.5.4-rc.1",
+ "cw-dex-astroport 0.2.0-rc.3",
  "cw-dex-router",
  "cw-it",
  "cw-item-set",
@@ -2135,7 +2164,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper 0.3.2",
+ "liquidity-helper 0.4.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "locked-astroport-vault-test-helpers",
  "optional_struct",
  "osmosis-std 0.14.0",
@@ -2156,7 +2185,7 @@ dependencies = [
  "astroport-liquidity-helper",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-dex-astroport",
+ "cw-dex-astroport 0.2.0-rc.3",
  "cw-dex-router",
  "cw-it",
  "cw-ownable",
@@ -2165,7 +2194,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper 0.3.2",
+ "liquidity-helper 0.4.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "locked-astroport-vault",
 ]
 

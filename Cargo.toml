@@ -39,7 +39,7 @@ osmosis-std             = "0.14"
 thiserror               = "1.0.43"
 cw-dex-router           = { version = "0.4.1-rc.2", features = ["library", "astroport"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
-liquidity-helper        = "0.3.0"
+liquidity-helper        = "0.4.0-rc.2"
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
 cw-address-like         = "1.0.4"
 optional_struct         = "0.3.1"
