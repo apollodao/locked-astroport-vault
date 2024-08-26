@@ -173,7 +173,4 @@ pub type ExecuteMsg = cw_vault_standard::VaultStandardExecuteMsg<ExtensionExecut
 pub type QueryMsg = cw_vault_standard::VaultStandardQueryMsg<ExtensionQueryMsg>;
 
 #[cw_serde]
-pub struct MigrateMsg {
-    /// The address of the astroport incentives contract.
-    pub incentives_contract: String,
-}
+pub struct MigrateMsg {}

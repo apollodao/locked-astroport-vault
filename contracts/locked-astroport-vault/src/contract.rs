@@ -5,7 +5,7 @@ use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
     to_json_binary, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, Reply,
-    Response, StdError, StdResult, SubMsg, Uint128, WasmQuery,
+    Response, StdResult, SubMsg, Uint128, WasmQuery,
 };
 use cw2::ensure_from_older_version;
 use cw_dex_astroport::{astroport, AstroportPool, AstroportStaking};
@@ -329,22 +329,10 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(mut deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-    let _incentives_contract = deps.api.addr_validate(&msg.incentives_contract)?;
-
-    let old_version = ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-    let res = match old_version.to_string().as_str() {
-        "0.4.3" => crate::migrations::migrate_from_0_4_3_to_current(deps.branch())?,
-        _ => {
-            return Err(StdError::generic_err(
-                "Cannot migrate from a version of the contract other than v0.4.3",
-            )
-            .into())
-        }
-    };
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    Ok(res)
+    Ok(Response::new())
 }

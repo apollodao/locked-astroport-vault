@@ -22,7 +22,3 @@ pub mod helpers;
 /// Contains the Claims struct for storing claims on locked LP tokens
 /// (UnlockingPositions).
 pub mod claims;
-
-/// Contains functions for migrating the contract state from older to newer
-/// versions.
-pub mod migrations;
