@@ -49,7 +49,7 @@ fn test_instantiation() {
     assert_eq!(
         vault_standard_info,
         VaultStandardInfoResponse {
-            version: 0,
+            version: "0.4.1-rc.1".to_string(),
             extensions: vec![
                 "internal".to_string(),
                 "lockup".to_string(),

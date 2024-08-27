@@ -108,6 +108,7 @@ impl IntoInternalCall for ApolloExtensionExecuteMsg {
 #[cw_serde]
 #[derive(EnumVariantNames)]
 #[strum(serialize_all = "kebab-case")]
+#[allow(clippy::large_enum_variant)]
 pub enum ExtensionExecuteMsg {
     /// Execute an internal message (can only be called by the contract itself
     Internal(InternalMsg),

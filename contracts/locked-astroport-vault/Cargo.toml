@@ -52,4 +52,4 @@ locked-astroport-vault-test-helpers = { workspace = true }
 
 # astroport-liquidity-manager depends on astroport-pair-stable@3.4.1, but that version does not
 # compile, so we import =3.4.0 to avoid importing the broken version
-astroport-pair-stable_v3_4_0 = { package = "astroport-pair-stable", version = "=3.4.0",  features = ["library"] }
+# astroport-pair-stable_v3_4_0 = { package = "astroport-pair-stable", version = "=3.4.0",  features = ["library"] }

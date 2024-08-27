@@ -15,7 +15,6 @@ use cw_vault_standard::extensions::lockup::LockupExecuteMsg;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::MsgCreateDenom;
 
 use crate::error::{ContractError, ContractResponse};
-use crate::execute;
 use crate::helpers::{self, IntoInternalCall};
 use crate::msg::{
     ApolloExtensionExecuteMsg, ApolloExtensionQueryMsg, ExecuteMsg, ExtensionExecuteMsg,
@@ -29,6 +28,7 @@ use crate::state::{
     ConfigUnchecked, VaultState, BASE_TOKEN, CONFIG, FORCE_WITHDRAW_WHITELIST, POOL, STAKING,
     STATE, VAULT_TOKEN_DENOM,
 };
+use crate::{execute, query};
 
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -257,7 +257,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::VaultStandardInfo {} => to_json_binary(&query_vault_standard_info(deps)?),
         QueryMsg::Info {} => to_json_binary(&query_vault_info(deps)?),
+        #[allow(deprecated)]
         QueryMsg::PreviewDeposit { .. } => unimplemented!("Cannot reliably preview deposit"),
+        #[allow(deprecated)]
         QueryMsg::PreviewRedeem { .. } => unimplemented!("Cannot reliably preview redeem"),
         QueryMsg::TotalAssets {} => {
             let state = STATE.load(deps.storage)?;
@@ -272,6 +274,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::ConvertToAssets { amount } => {
             to_json_binary(&helpers::convert_to_assets(deps, amount))
+        }
+        QueryMsg::VaultTokenExchangeRate { quote_denom } => {
+            to_json_binary(&query::vault_token_exchange_rate(deps, quote_denom)?)
         }
         QueryMsg::VaultExtension(ext_msg) => match ext_msg {
             ExtensionQueryMsg::Lockup(lockup_msg) => match lockup_msg {

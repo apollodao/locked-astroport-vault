@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
+use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Decimal, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
 use cw_dex_astroport::astroport::asset::AssetInfo as AstroAssetInfo;
 use cw_dex_astroport::astroport::factory::PairType;
@@ -986,6 +986,16 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 &QueryMsg::VaultExtension(ExtensionQueryMsg::Apollo(
                     ApolloExtensionQueryMsg::State {},
                 )),
+            )
+            .unwrap()
+    }
+
+    pub fn query_vault_token_exchange_rate(&self, quote_denom: impl Into<String>) -> Decimal {
+        let quote_denom = quote_denom.into();
+        self.wasm()
+            .query::<_, Decimal>(
+                &self.vault_addr,
+                &QueryMsg::VaultTokenExchangeRate { quote_denom },
             )
             .unwrap()
     }
