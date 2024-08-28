@@ -1,4 +1,4 @@
-use apollo_cw_asset::{Asset, AssetInfo, AssetList};
+use apollo_cw_asset::{Asset, AssetList};
 use cosmwasm_std::{attr, to_json_binary, DepsMut, Env, Event, Response, StdError, Uint128};
 
 use crate::error::ContractResponse;
@@ -6,9 +6,9 @@ use crate::helpers::IntoInternalCall;
 use crate::msg::InternalMsg;
 use crate::state::{BASE_TOKEN, CONFIG, POOL, STAKING, STATE};
 
-use cw_dex::traits::{Rewards, Stake};
+use cw_dex_astroport::cw_dex::traits::{Rewards, Stake};
 
-pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
+pub fn execute_compound(deps: DepsMut, env: Env, discount_deposit: Uint128) -> ContractResponse {
     let staking = STAKING.load(deps.storage)?;
 
     // Claim any pending rewards
@@ -24,7 +24,10 @@ pub fn execute_compound(deps: DepsMut, env: Env) -> ContractResponse {
     let provide_msg = InternalMsg::ProvideLiquidity {}.into_internal_call(&env, vec![])?;
 
     // Stake LP tokens
-    let stake_msg = InternalMsg::StakeLps {}.into_internal_call(&env, vec![])?;
+    let stake_msg = InternalMsg::StakeLps {
+        discount_tokens: discount_deposit,
+    }
+    .into_internal_call(&env, vec![])?;
 
     Ok(claim_rewards_res
         .add_message(sell_msg)
@@ -109,32 +112,33 @@ pub fn execute_provide_liquidity(deps: DepsMut, env: Env) -> ContractResponse {
         .add_event(event))
 }
 
-pub fn execute_stake_lps(deps: DepsMut, env: Env) -> ContractResponse {
+pub fn execute_stake_lps(deps: DepsMut, env: Env, discount_tokens: Uint128) -> ContractResponse {
     let base_token = BASE_TOKEN.load(deps.storage)?;
     let staking = STAKING.load(deps.storage)?;
 
     // Query LP token balance
-    let lp_token_balance =
-        AssetInfo::cw20(base_token).query_balance(&deps.querier, &env.contract.address)?;
+    let lp_token_balance = base_token.query_balance(&deps.querier, &env.contract.address)?;
+
+    let stake_amount = lp_token_balance.checked_sub(discount_tokens)?;
 
     // Return with no messages if there are no LP tokens to stake
-    if lp_token_balance.is_zero() {
+    if stake_amount.is_zero() {
         return Ok(Response::default());
     }
 
     // Stake LP tokens
-    let staking_res = staking.stake(deps.as_ref(), &env, lp_token_balance)?;
+    let staking_res = staking.stake(deps.as_ref(), &env, stake_amount)?;
 
     // Update total staked amount
     STATE.update(deps.storage, |mut state| {
-        state.staked_base_tokens += lp_token_balance;
+        state.staked_base_tokens += stake_amount;
         Ok::<_, StdError>(state)
     })?;
 
     let state = STATE.load(deps.storage)?;
     let event = Event::new("apollo/vaults/execute_compound")
         .add_attribute("action", "stake_lps")
-        .add_attribute("amount_to_stake", lp_token_balance.to_string())
+        .add_attribute("amount_to_stake", stake_amount.to_string())
         .add_attribute("staked_base_tokens_after_action", state.staked_base_tokens)
         .add_attribute("vault_token_supply_after_action", state.vault_token_supply);
 

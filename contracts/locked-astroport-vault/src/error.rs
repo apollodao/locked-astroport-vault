@@ -1,5 +1,5 @@
 use cosmwasm_std::{Coin, OverflowError, StdError};
-use cw_dex::CwDexError;
+use cw_dex_astroport::cw_dex::CwDexError;
 use cw_ownable::OwnershipError;
 
 #[derive(Debug, thiserror::Error)]

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [0.5.0] - 2024-08-28
+
+### Changed
+
+- Change base token from `Addr` to `AssetInfo` to support Astroport native LP tokens.
+- Bumped `cw-dex-astroport` to `0.2.0`.
+- Bumped `cw-dex-router` to `0.5.0`.
+- Bumped `cw-vault-standard` to `0.4.1`.
+- Bumped `liquidity-helper` to `0.4.0`.
+- Bumped `astroport-liquidity-helper` to `0.4.0`.
+- Bumped `cw-it` to `0.4.0`.
+
+
 # [0.4.3] - 2024-04-23
 
 ### Changed

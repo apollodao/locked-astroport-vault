@@ -3,9 +3,11 @@ use std::str::FromStr;
 
 use apollo_cw_asset::AssetInfo;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Empty, Uint128};
+use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Coins, Decimal, Empty, Uint128};
 use cw20::{Cw20ExecuteMsg, Cw20QueryMsg};
+use cw_dex_astroport::astroport::asset::AssetInfo as AstroAssetInfo;
 use cw_dex_astroport::astroport::factory::PairType;
+
 use cw_dex_astroport::AstroportPool;
 use cw_dex_router::operations::{SwapOperationUnchecked, SwapOperationsListUnchecked};
 use cw_it::astroport::robot::AstroportTestRobot;
@@ -22,7 +24,7 @@ use cw_it::{Artifact, ContractType, TestRunner};
 use cw_ownable::Ownership;
 use cw_utils::Duration;
 use cw_vault_standard::extensions::lockup::{LockupQueryMsg, UnlockingPosition};
-use cw_vault_standard::VaultStandardInfoResponse;
+use cw_vault_standard::{VaultInfoResponse, VaultStandardInfoResponse, VaultStandardQueryMsg};
 use cw_vault_standard_test_helpers::traits::force_unlock::ForceUnlockVaultRobot;
 use cw_vault_standard_test_helpers::traits::lockup::LockedVaultRobot;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
@@ -53,6 +55,8 @@ pub const DEFAULT_COINS: &str = "1000000000000000000uosmo,1000000000000000000uws
 
 pub const INITIAL_LIQ: u128 = 1_000_000_000_000_000u128;
 
+pub const DENOM_CREATION_FEE: &str = "10000000uosmo";
+
 /// Contracts that are required for the LockedAstroportVaultRobot to function.
 pub struct LockedVaultDependencies<'a> {
     pub astroport_contracts: AstroportContracts,
@@ -69,6 +73,7 @@ pub struct LockedAstroportVaultRobot<'a> {
     pub runner: &'a TestRunner<'a>,
     pub vault_addr: String,
     pub astroport_contracts: AstroportContracts,
+    pub base_token_is_cw20: bool,
 }
 
 impl<'a> LockedAstroportVaultRobot<'a> {
@@ -203,10 +208,18 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .data
             .address;
 
+        let vault_info: VaultInfoResponse = wasm
+            .query(&vault_addr, &VaultStandardQueryMsg::<Empty>::Info {})
+            .unwrap();
+        let base_token = vault_info.base_token;
+        let base_token_is_cw20 =
+            base_token.starts_with(signer.prefix()) || base_token.starts_with("contract");
+
         Self {
             runner,
             vault_addr,
             astroport_contracts: dependencies.astroport_contracts.clone(),
+            base_token_is_cw20,
         }
     }
 
@@ -226,25 +239,37 @@ impl<'a> LockedAstroportVaultRobot<'a> {
         let axl = AssetInfo::native(AXL_DENOM.to_string());
         let ntrn = AssetInfo::native(NTRN_DENOM.to_string());
         let astro = AssetInfo::native(ASTRO_DENOM.to_string());
+        let liq_manager =
+            Addr::unchecked(&dependencies.astroport_contracts.liquidity_manager.address);
 
         // Create AXL/NTRN astroport pool
         let (axl_ntrn_pair, axl_ntrn_lp) = create_astroport_pair(
             runner,
             &dependencies.astroport_contracts.factory.address,
             PairType::Xyk {},
-            [axl.clone().into(), ntrn.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&axl),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                // axl.clone().into(),
+                // ntrn.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
-        let liq_manager =
-            Addr::unchecked(&dependencies.astroport_contracts.liquidity_manager.address);
+        let axl_ntrn_lp = asset_info_from_str(&axl_ntrn_lp, signer.prefix());
         let axl_ntrn_pool = AstroportPool {
-            lp_token_addr: Addr::unchecked(&axl_ntrn_lp),
+            lp_token: axl_ntrn_lp.clone(),
             pair_addr: Addr::unchecked(&axl_ntrn_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [axl.clone(), ntrn.clone()].to_vec(),
-            liquidity_manager: liq_manager.clone(),
+            liquidity_manager: if axl_ntrn_lp.is_native() {
+                None
+            } else {
+                Some(liq_manager.clone())
+            },
         };
 
         // Create ASTRO/NTRN astroport pool
@@ -252,17 +277,29 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             runner,
             &dependencies.astroport_contracts.factory.address,
             PairType::Xyk {},
-            [astro.clone().into(), ntrn.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&astro),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                // astro.clone().into(),
+                // ntrn.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
+        let astro_ntrn_lp = asset_info_from_str(&astro_ntrn_lp, signer.prefix());
         let astro_ntrn_pool = AstroportPool {
-            lp_token_addr: Addr::unchecked(&astro_ntrn_lp),
+            lp_token: astro_ntrn_lp.clone(),
             pair_addr: Addr::unchecked(&astro_ntrn_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [astro.clone(), ntrn.clone()].to_vec(),
-            liquidity_manager: liq_manager.clone(),
+            liquidity_manager: if astro_ntrn_lp.is_native() {
+                None
+            } else {
+                Some(liq_manager.clone())
+            },
         };
 
         // Set routes in cw-dex-router
@@ -339,11 +376,11 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             liquidity_helper: LiquidityHelperUnchecked::new(
                 dependencies.liquidity_helper_addr.clone(),
             ),
-            astroport_liquidity_manager: dependencies
-                .astroport_contracts
-                .liquidity_manager
-                .address
-                .clone(),
+            astroport_liquidity_manager: if axl_ntrn_lp.is_native() {
+                None
+            } else {
+                Some(liq_manager.to_string())
+            },
             astroport_incentives_addr: dependencies.astroport_contracts.incentives.address.clone(),
         };
 
@@ -414,63 +451,113 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             liquidity_helper_addr,
         } = dependencies;
 
+        let liq_manager =
+            Addr::unchecked(&dependencies.astroport_contracts.liquidity_manager.address);
+
         // Create astroport pairs
         let (wsteth_eth_pair, wsteth_eth_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
             PairType::Xyk {},
-            [wsteth.clone().into(), eth.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&wsteth),
+                asset_info_to_astroport_v5_assetinfo(&eth),
+                // wsteth.clone().into(),
+                // eth.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
+        let wsteth_eth_lp = asset_info_from_str(&wsteth_eth_lp, signer.prefix());
         let wsteth_eth_pool = AstroportPool {
-            lp_token_addr: Addr::unchecked(&wsteth_eth_lp),
+            lp_token: wsteth_eth_lp.clone(),
             pair_addr: Addr::unchecked(&wsteth_eth_pair),
             pair_type: PairType::Xyk {},
             pool_assets: [wsteth.clone(), eth.clone()].to_vec(),
-            liquidity_manager: Addr::unchecked(&astroport_contracts.liquidity_manager.address),
+            liquidity_manager: if wsteth_eth_lp.is_native() {
+                None
+            } else {
+                Some(liq_manager.clone())
+            },
         };
+
         let (astro_usdc_pair, astro_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
             PairType::Xyk {},
-            [astro.clone().into(), usdc.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&astro),
+                asset_info_to_astroport_v5_assetinfo(&usdc),
+                // astro.clone().into(),
+                // usdc.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
+        let astro_usdc_lp = asset_info_from_str(&astro_usdc_lp, signer.prefix());
+
         let (ntrn_usdc_pair, ntrn_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
             PairType::Xyk {},
-            [ntrn.clone().into(), usdc.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                asset_info_to_astroport_v5_assetinfo(&usdc),
+                // ntrn.clone().into(),
+                // usdc.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
+        let ntrn_usdc_lp = asset_info_from_str(&ntrn_usdc_lp, signer.prefix());
+
         let (eth_usdc_pair, eth_usdc_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
             PairType::Xyk {},
-            [eth.clone().into(), usdc.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&eth),
+                asset_info_to_astroport_v5_assetinfo(&usdc),
+                // eth.clone().into(),
+                // usdc.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
+        let eth_usdc_lp = asset_info_from_str(&eth_usdc_lp, signer.prefix());
+
         let (axl_ntrn_pair, axl_ntrn_lp) = create_astroport_pair(
             runner,
             &astroport_contracts.factory.address,
             PairType::Xyk {},
-            [axl.clone().into(), ntrn.clone().into()],
+            // PairTypeV2::Xyk {},
+            [
+                asset_info_to_astroport_v5_assetinfo(&axl),
+                asset_info_to_astroport_v5_assetinfo(&ntrn),
+                // axl.clone().into(),
+                // ntrn.clone().into(),
+            ],
             None,
             signer,
             Some([Uint128::from(INITIAL_LIQ), Uint128::from(INITIAL_LIQ)]),
+            &[Coin::from_str(DENOM_CREATION_FEE).unwrap()],
         );
+        let axl_ntrn_lp = asset_info_from_str(&axl_ntrn_lp, signer.prefix());
 
         // Set routes in cw-dex-router
         // WSTETH <-> ETH
-        let liq_manager = astroport_contracts.liquidity_manager.address.clone();
         cw_dex_router_robot.set_path(
             eth.clone().into(),
             wsteth.clone().into(),
@@ -479,7 +566,7 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                 &wsteth_eth_lp,
                 &eth,
                 &wsteth,
-                &liq_manager,
+                liq_manager.as_ref(),
             )]),
             true,
             signer,
@@ -489,8 +576,20 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             ntrn.clone().into(),
             eth.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc, &liq_manager),
-                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth, &liq_manager),
+                swap_operation(
+                    &ntrn_usdc_pair,
+                    &ntrn_usdc_lp,
+                    &ntrn,
+                    &usdc,
+                    liq_manager.as_ref(),
+                ),
+                swap_operation(
+                    &eth_usdc_pair,
+                    &eth_usdc_lp,
+                    &usdc,
+                    &eth,
+                    liq_manager.as_ref(),
+                ),
             ]),
             true,
             signer,
@@ -505,9 +604,15 @@ impl<'a> LockedAstroportVaultRobot<'a> {
                     &astro_usdc_lp,
                     &astro,
                     &usdc,
-                    &liq_manager,
+                    liq_manager.as_ref(),
                 ),
-                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth, &liq_manager),
+                swap_operation(
+                    &eth_usdc_pair,
+                    &eth_usdc_lp,
+                    &usdc,
+                    &eth,
+                    liq_manager.as_ref(),
+                ),
             ]),
             true,
             signer,
@@ -517,9 +622,27 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             axl.clone().into(),
             eth.clone().into(),
             SwapOperationsListUnchecked::new(vec![
-                swap_operation(&axl_ntrn_pair, &axl_ntrn_lp, &axl, &ntrn, &liq_manager),
-                swap_operation(&ntrn_usdc_pair, &ntrn_usdc_lp, &ntrn, &usdc, &liq_manager),
-                swap_operation(&eth_usdc_pair, &eth_usdc_lp, &usdc, &eth, &liq_manager),
+                swap_operation(
+                    &axl_ntrn_pair,
+                    &axl_ntrn_lp,
+                    &axl,
+                    &ntrn,
+                    liq_manager.as_ref(),
+                ),
+                swap_operation(
+                    &ntrn_usdc_pair,
+                    &ntrn_usdc_lp,
+                    &ntrn,
+                    &usdc,
+                    liq_manager.as_ref(),
+                ),
+                swap_operation(
+                    &eth_usdc_pair,
+                    &eth_usdc_lp,
+                    &usdc,
+                    &eth,
+                    liq_manager.as_ref(),
+                ),
             ]),
             true,
             signer,
@@ -542,7 +665,11 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             reward_liquidation_target: eth.into(),
             pool_addr: wsteth_eth_pair,
             liquidity_helper: LiquidityHelperUnchecked::new(liquidity_helper_addr.clone()),
-            astroport_liquidity_manager: astroport_contracts.liquidity_manager.address.clone(),
+            astroport_liquidity_manager: if wsteth_eth_lp.is_native() {
+                None
+            } else {
+                Some(liq_manager.to_string())
+            },
             astroport_incentives_addr: astroport_contracts.incentives.address.clone(),
         };
 
@@ -603,14 +730,40 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .init_account(&[coin(1_000_000_000_000_000, "uosmo")])
             .unwrap();
 
-        self.send_cw20(
-            Uint128::new(1_000_000),
-            &self.base_token(),
-            &user.address(),
-            admin,
-        );
+        if self.base_token_is_cw20 {
+            self.send_cw20(
+                Uint128::new(1_000_000),
+                &self.base_token(),
+                &user.address(),
+                admin,
+            );
+        } else {
+            self.send_native_tokens(
+                admin,
+                user.address(),
+                Uint128::new(1_000_000),
+                self.base_token(),
+            );
+        }
 
         user
+    }
+
+    /// Deposit base tokens into the vault
+    pub fn deposit(
+        &self,
+        amount: Uint128,
+        recipient: Option<String>,
+        unwrap_choice: Unwrap,
+        signer: &SigningAccount,
+    ) -> &Self {
+        if self.base_token_is_cw20 {
+            self.increase_cw20_allowance(&self.base_token(), &self.vault_addr, amount, signer)
+                .deposit_with_funds(amount, recipient, &[], unwrap_choice, signer)
+        } else {
+            CwVaultStandardRobot::deposit(self, amount, recipient, unwrap_choice, signer);
+            self
+        }
     }
 
     /// Increase CW20 allowance and deposit into the vault.
@@ -837,6 +990,16 @@ impl<'a> LockedAstroportVaultRobot<'a> {
             .unwrap()
     }
 
+    pub fn query_vault_token_exchange_rate(&self, quote_denom: impl Into<String>) -> Decimal {
+        let quote_denom = quote_denom.into();
+        self.wasm()
+            .query::<_, Decimal>(
+                &self.vault_addr,
+                &QueryMsg::VaultTokenExchangeRate { quote_denom },
+            )
+            .unwrap()
+    }
+
     // Assertions //
 
     /// Asserts that value a and b are equal, or off by only one.
@@ -930,15 +1093,19 @@ impl<'a> CwVaultStandardRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<
     }
 
     fn query_base_token_balance(&self, address: impl Into<String>) -> Uint128 {
-        self.wasm()
-            .query::<_, cw20::BalanceResponse>(
-                &self.base_token(),
-                &Cw20QueryMsg::Balance {
-                    address: address.into(),
-                },
-            )
-            .unwrap()
-            .balance
+        if self.base_token_is_cw20 {
+            self.wasm()
+                .query::<_, cw20::BalanceResponse>(
+                    &self.base_token(),
+                    &Cw20QueryMsg::Balance {
+                        address: address.into(),
+                    },
+                )
+                .unwrap()
+                .balance
+        } else {
+            self.query_native_token_balance(address, self.base_token())
+        }
     }
 }
 
@@ -955,21 +1122,46 @@ impl<'a> AstroportTestRobot<'a, TestRunner<'a>> for LockedAstroportVaultRobot<'a
 #[allow(deprecated)]
 fn swap_operation(
     pair_addr: &str,
-    lp_addr: &str,
+    lp_token: &AssetInfo,
     from: &AssetInfo,
     to: &AssetInfo,
     liquidity_manager: &str,
 ) -> SwapOperationUnchecked {
+    let liquidity_manager = if lp_token.is_native() {
+        None
+    } else {
+        Some(Addr::unchecked(liquidity_manager))
+    };
+
     SwapOperationUnchecked::new(
         #[allow(deprecated)]
-        cw_dex::Pool::Astroport(cw_dex::astroport::AstroportPool {
+        cw_dex_router::pool::Pool::Astroport(cw_dex_astroport::AstroportPool {
             pair_addr: Addr::unchecked(pair_addr),
-            lp_token_addr: Addr::unchecked(lp_addr),
+            lp_token: lp_token.clone(),
             pool_assets: vec![from.clone(), to.clone()],
             pair_type: PairType::Xyk {},
-            liquidity_manager: Addr::unchecked(liquidity_manager),
+            liquidity_manager,
         }),
         from.into(),
         to.into(),
     )
+}
+
+pub fn asset_info_to_astroport_v5_assetinfo(asset: &AssetInfo) -> AstroAssetInfo {
+    match asset {
+        AssetInfo::Native(denom) => AstroAssetInfo::NativeToken {
+            denom: denom.clone(),
+        },
+        AssetInfo::Cw20(contract_addr) => AstroAssetInfo::Token {
+            contract_addr: contract_addr.clone(),
+        },
+    }
+}
+
+pub fn asset_info_from_str(asset: &str, addr_prefix: &str) -> AssetInfo {
+    if asset.starts_with(addr_prefix) || asset.starts_with("contract") {
+        AssetInfo::Cw20(Addr::unchecked(asset))
+    } else {
+        AssetInfo::Native(asset.to_string())
+    }
 }

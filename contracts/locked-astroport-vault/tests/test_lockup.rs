@@ -28,7 +28,7 @@ fn withdrawing_from_vault_with_lockup_works() {
     // time and try withdrawing again.
     let base_token_balance = robot.query_base_token_balance(user.address());
     robot
-        .deposit_cw20(base_token_balance, None, Unwrap::Ok, &user)
+        .deposit(base_token_balance, None, Unwrap::Ok, &user)
         .assert_base_token_balance_eq(user.address(), 0u128)
         .unlock(
             base_token_balance * INITIAL_VAULT_TOKENS_PER_BASE_TOKEN,
@@ -54,7 +54,7 @@ fn unlocking_position_event_emitted_when_vault_has_lockup() {
 
     let deposit_amount = Uint128::new(100);
     let vault_token_balance = robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, &user)
+        .deposit(deposit_amount, None, Unwrap::Ok, &user)
         .query_vault_token_balance(user.address());
 
     let res = robot

@@ -23,7 +23,6 @@ apollo-cw-asset     = { workspace = true }
 apollo-utils        = { workspace = true }
 cosmwasm-schema     = { workspace = true }
 cosmwasm-std        = { workspace = true }
-cw-dex              = { workspace = true }
 cw-dex-astroport    = { workspace = true }
 cw-ownable          = { workspace = true }
 cw-storage-plus     = { workspace = true }
@@ -42,13 +41,15 @@ optional_struct     = { workspace = true }
 serde               = { workspace = true }
 schemars            = { workspace = true }
 semver              = { workspace = true }
-
-# For migrating only
-locked-astroport-vault_0_2_0 = { package = "locked-astroport-vault", version = "0.2.0", features = ["library"] }
+astroport_v5        = { workspace = true }
 
 [dev-dependencies]
-cw-it                               = { workspace = true, features = ["astroport", "osmosis-test-tube"] }
+cw-it                               = { workspace = true, features = ["astroport"] }
 cw-vault-standard-test-helpers      = { workspace = true, features = ["lockup", "force-unlock"] }
 proptest                            = { workspace = true }
 test-case                           = { workspace = true }
-locked-astroport-vault-test-helpers = { workspace = true, features = ["osmosis-test-tube"]}
+locked-astroport-vault-test-helpers = { workspace = true }
+
+# astroport-liquidity-manager depends on astroport-pair-stable@3.4.1, but that version does not
+# compile, so we import =3.4.0 to avoid importing the broken version
+# astroport-pair-stable_v3_4_0 = { package = "astroport-pair-stable", version = "=3.4.0",  features = ["library"] }

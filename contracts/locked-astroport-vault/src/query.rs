@@ -1,9 +1,10 @@
-use cosmwasm_std::{Addr, Deps, Order, StdResult};
+use cosmwasm_std::{Addr, Decimal, Deps, Order, StdError, StdResult};
 use cw_storage_plus::Bound;
 use cw_vault_standard::extensions::lockup::UnlockingPosition;
 use cw_vault_standard::{VaultInfoResponse, VaultStandardInfoResponse};
 use strum::VariantNames;
 
+use crate::helpers::INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
 use crate::msg::ExtensionExecuteMsg;
 use crate::state::{
     self, StateResponse, BASE_TOKEN, FORCE_WITHDRAW_WHITELIST, POOL, STAKING, STATE,
@@ -15,7 +16,7 @@ pub const DEFAULT_LIMIT: u32 = 10;
 
 pub fn query_vault_standard_info(_deps: Deps) -> StdResult<VaultStandardInfoResponse> {
     Ok(VaultStandardInfoResponse {
-        version: 0,
+        version: "0.4.1-rc.1".to_string(),
         extensions: ExtensionExecuteMsg::VARIANTS
             .iter()
             .map(|s| s.to_string())
@@ -83,4 +84,25 @@ pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
         vault_token_supply: state.vault_token_supply,
         staking: STAKING.load(deps.storage)?,
     })
+}
+
+pub fn vault_token_exchange_rate(deps: Deps, quote_denom: String) -> StdResult<Decimal> {
+    let state = STATE.load(deps.storage)?;
+    let base_token = BASE_TOKEN.load(deps.storage)?;
+
+    if quote_denom == base_token.to_string() {
+        if state.vault_token_supply.is_zero() {
+            Ok(Decimal::from_ratio(
+                1u128,
+                INITIAL_VAULT_TOKENS_PER_BASE_TOKEN.u128(),
+            ))
+        } else {
+            Ok(Decimal::from_ratio(
+                state.staked_base_tokens,
+                state.vault_token_supply,
+            ))
+        }
+    } else {
+        Err(StdError::generic_err("Locked Astroport Vault only supports vault token exchange rate quoted in the base token"))
+    }
 }

@@ -3,6 +3,7 @@ use cw_it::helpers::Unwrap;
 use cw_it::robot::TestRobot;
 use cw_it::test_tube::{Account, SigningAccount};
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
+use locked_astroport_vault::helpers::INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 
 /// Desposits `deposit_amount` base tokens into the vault, donates some of each
@@ -24,7 +25,7 @@ pub fn test_compound_vault(
 
     // Deposit some funds and assert the vault token balance is correct
     let vt_balance_after_deposit = robot
-        .deposit_cw20(deposit_amount, None, Unwrap::Ok, user)
+        .deposit(deposit_amount, None, Unwrap::Ok, user)
         .assert_vt_balance_converted_to_assets_eq(
             user.address(),
             bt_balance_in_vault_before_deposit + deposit_amount,
@@ -65,5 +66,27 @@ pub fn test_compound_vault(
         }
 
         base_token_balance_in_vault = robot.query_convert_to_assets(vt_balance_after_deposit);
+    }
+
+    // Assert that the vault token exchange rate has increased
+    let state = robot.query_state();
+    let new_vault_token_exchange_rate = robot.query_vault_token_exchange_rate(robot.base_token());
+    assert_eq!(
+        new_vault_token_exchange_rate,
+        Decimal::from_ratio(
+            state.staked_base_tokens.u128(),
+            state.vault_token_supply.u128()
+        )
+    );
+
+    let initial_vault_token_exchange_rate =
+        Decimal::from_ratio(1u128, INITIAL_VAULT_TOKENS_PER_BASE_TOKEN.u128());
+    if fee < Decimal::percent(100) {
+        assert!(new_vault_token_exchange_rate > initial_vault_token_exchange_rate);
+    } else {
+        assert_eq!(
+            new_vault_token_exchange_rate,
+            initial_vault_token_exchange_rate
+        );
     }
 }

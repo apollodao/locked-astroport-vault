@@ -49,7 +49,7 @@ fn test_instantiation() {
     assert_eq!(
         vault_standard_info,
         VaultStandardInfoResponse {
-            version: 0,
+            version: "0.4.1-rc.1".to_string(),
             extensions: vec![
                 "internal".to_string(),
                 "lockup".to_string(),
@@ -65,12 +65,12 @@ fn test_instantiation() {
     assert_eq!(
         state,
         StateResponse {
-            base_token: base_pool.lp_token_addr.clone(),
+            base_token: base_pool.lp_token.clone(),
             pool: base_pool.clone(),
             staked_base_tokens: 0u128.into(),
             vault_token_supply: 0u128.into(),
             staking: AstroportStaking {
-                lp_token_addr: base_pool.lp_token_addr,
+                lp_token: base_pool.lp_token,
                 incentives: Addr::unchecked(
                     dependencies.astroport_contracts.incentives.address.clone()
                 )

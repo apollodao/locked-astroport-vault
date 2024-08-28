@@ -35,7 +35,7 @@ pub struct InstantiateMsg {
     /// Helper for providing liquidity with unbalanced assets.
     pub liquidity_helper: LiquidityHelperUnchecked,
     /// The address of the astroport liquidity manager contract.
-    pub astroport_liquidity_manager: String,
+    pub astroport_liquidity_manager: Option<String>,
     /// The fee that is taken on rewards accrued
     pub performance_fee: Option<FeeConfig<String>>,
     /// A fee that is taken on deposits
@@ -47,20 +47,27 @@ pub struct InstantiateMsg {
 #[cw_serde]
 #[derive(EnumCount)]
 pub enum InternalMsg {
+    /// Compounds the vault but does not compound the recently deposited tokens
+    Compound {
+        /// The amount of base tokens that were just deposited and should not be
+        /// compounded
+        discount_deposit: Uint128,
+    },
     /// Sell reward tokens
     SellTokens {},
     /// Provide liquidity to the pool
     ProvideLiquidity {},
     /// Stake LP tokens
-    StakeLps {},
+    StakeLps {
+        /// The amount of base tokens that should not be staked. Used to
+        /// discount the amount of tokens that were just deposited so we
+        /// don't try to stake them twice.
+        discount_tokens: Uint128,
+    },
     /// Deposit into the vault after compounding
     Deposit {
         /// The amount of base tokens to deposit.
         amount: Uint128,
-        /// The original caller of the contract. We can't use info.sender, since
-        /// this is an internal call, so that would be the contract
-        /// itself.
-        depositor: Addr,
         /// The recipient of the vault token.
         recipient: Addr,
     },
@@ -101,6 +108,7 @@ impl IntoInternalCall for ApolloExtensionExecuteMsg {
 #[cw_serde]
 #[derive(EnumVariantNames)]
 #[strum(serialize_all = "kebab-case")]
+#[allow(clippy::large_enum_variant)]
 pub enum ExtensionExecuteMsg {
     /// Execute an internal message (can only be called by the contract itself
     Internal(InternalMsg),
@@ -166,7 +174,4 @@ pub type ExecuteMsg = cw_vault_standard::VaultStandardExecuteMsg<ExtensionExecut
 pub type QueryMsg = cw_vault_standard::VaultStandardQueryMsg<ExtensionQueryMsg>;
 
 #[cw_serde]
-pub struct MigrateMsg {
-    /// The address of the astroport incentives contract.
-    pub incentives_contract: String,
-}
+pub struct MigrateMsg {}

@@ -1,6 +1,7 @@
 use cosmwasm_std::{Decimal, Uint128};
 use cw_it::test_tube::Account;
 use cw_vault_standard_test_helpers::traits::CwVaultStandardRobot;
+use locked_astroport_vault::helpers::INITIAL_VAULT_TOKENS_PER_BASE_TOKEN;
 use locked_astroport_vault_test_helpers::robot::LockedAstroportVaultRobot;
 use proptest::prelude::*;
 use proptest::proptest;
@@ -36,6 +37,13 @@ proptest! {
         let (robot, _treasury) = instantiate_vault(&runner, &admin, setup, fee, &dependencies);
 
         let deposit_amount = Uint128::new(1_000_000u128);
+
+        // Assert that initial vault token exchange rate is correct
+        let vault_token_exchange_rate = robot.query_vault_token_exchange_rate(robot.base_token());
+        assert_eq!(
+            vault_token_exchange_rate,
+            Decimal::from_ratio(1u128, INITIAL_VAULT_TOKENS_PER_BASE_TOKEN.u128())
+        );
 
         let mut last_vault_token_amount_received = Uint128::MAX;
         for _ in 0..10 {

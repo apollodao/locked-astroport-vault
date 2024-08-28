@@ -11,7 +11,7 @@ use cw_it::traits::CwItRunner;
 use cw_it::{OwnedTestRunner, TestRunner};
 use locked_astroport_vault::state::FeeConfig;
 use locked_astroport_vault_test_helpers::robot::{
-    LockedAstroportVaultRobot, LockedVaultDependencies,
+    LockedAstroportVaultRobot, LockedVaultDependencies, DENOM_CREATION_FEE,
 };
 
 #[cfg(feature = "osmosis-test-tube")]
@@ -21,8 +21,6 @@ pub mod compound;
 
 pub const UNOPTIMIZED_PATH: &str = "../../target/wasm32-unknown-unknown/release";
 pub const DEPS_PATH: &str = "tests/test_artifacts";
-
-pub const DENOM_CREATION_FEE: &str = "10000000uosmo";
 
 const TOKEN_FACTORY: &TokenFactory =
     &TokenFactory::new("factory", 32, 16, 59 + 16, DENOM_CREATION_FEE);
@@ -35,7 +33,7 @@ pub enum VaultSetup {
 }
 
 pub fn get_test_runner<'a>() -> OwnedTestRunner<'a> {
-    match option_env!("TEST_RUNNER").unwrap_or("multi-test") {
+    let test_runner = match option_env!("TEST_RUNNER").unwrap_or("multi-test") {
         "multi-test" => {
             let mut stargate_keeper = StargateKeeper::new();
             TOKEN_FACTORY.register_msgs(&mut stargate_keeper);
@@ -45,7 +43,9 @@ pub fn get_test_runner<'a>() -> OwnedTestRunner<'a> {
         #[cfg(feature = "osmosis-test-tube")]
         "osmosis-test-app" => OwnedTestRunner::OsmosisTestApp(OsmosisTestApp::new()),
         _ => panic!("Unsupported test runner type"),
-    }
+    };
+    println!("Using test runner: {:?}", test_runner.to_string());
+    test_runner
 }
 
 pub fn default_instantiate<'a>(
