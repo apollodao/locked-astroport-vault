@@ -115,6 +115,7 @@ pub fn instantiate(
     Ok(Response::new().add_message(create_denom_msg))
 }
 
+#[allow(deprecated)]
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,

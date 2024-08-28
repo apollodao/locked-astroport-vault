@@ -26,18 +26,18 @@ apollo-cw-asset         = "0.1.2"
 apollo-utils            = "0.1.1"
 cosmwasm-schema         = "1.1.0"
 cosmwasm-std            = "1.5.5"
-cw-dex-astroport        = { version = "0.3.0-rc.2" }
+cw-dex-astroport        = { version = "0.2.0" }
 cw-ownable              = "0.5.1"
 cw-storage-plus         = "1.1.0"
 cw-utils                = "1.0.1"
-cw-vault-standard       = { version = "0.4.1-rc.1", features = ["lockup", "force-unlock"] }
+cw-vault-standard       = { version = "0.4.1", features = ["lockup", "force-unlock"] }
 cw2                     = "1.1.0"
 cw20                    = "1.1.0"
 osmosis-std             = "0.14"
 thiserror               = "1.0.43"
-cw-dex-router           = { version = "0.5.0-rc.1", features = ["library", "astroport"] }
+cw-dex-router           = { version = "0.5.0", features = ["library", "astroport"] }
 strum                   = { version = "0.25.0", features = ["derive"] }
-liquidity-helper        = "0.4.0-rc.2"
+liquidity-helper        = "0.4.0"
 cw-item-set             = { version = "0.7.1", default-features = false, features = ["iterator"] }
 cw-address-like         = "1.0.4"
 optional_struct         = "0.3.1"
@@ -51,8 +51,8 @@ locked-astroport-vault  = { version = "0.5.0", path = "./contracts/locked-astrop
 locked-astroport-vault-test-helpers = { path = "./test-helpers" }
 
 # Dev dependencies
-cw-it                               = { version = "0.4.0-rc.10", features = ["astroport"] }
-cw-vault-standard-test-helpers      = { version = "0.5.0-rc.1", features = ["lockup", "force-unlock"] }
+cw-it                               = { version = "0.4.0", features = ["astroport"] }
+cw-vault-standard-test-helpers      = { version = "0.5.0", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
-astroport-liquidity-helper          = "0.4.0-rc.2"
+astroport-liquidity-helper          = "0.4.0"

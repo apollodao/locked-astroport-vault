@@ -232,9 +232,9 @@ dependencies = [
 
 [[package]]
 name = "astroport-liquidity-helper"
-version = "0.4.0-rc.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65536a18e01a0f6b06e38f3c5d58449abd05d52a2b931064485dcb180ba854a0"
+checksum = "3904a07944c092dfc1b0f02678d42d1c93004f84a7be45027f8244a74204cea8"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1036,9 +1036,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex"
-version = "0.6.0-rc.5"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6762ad056b67ff42d5717ac6023be13a1b7ffe1ea64d4523dc8fe8789d79046d"
+checksum = "89eb32bee4a3d10876a0253e5319daef1f31efbefaa65e53ecf66f877222c238"
 dependencies = [
  "apollo-cw-asset",
  "cosmwasm-std",
@@ -1048,9 +1048,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex-astroport"
-version = "0.3.0-rc.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b4c3886c9673478cb57e3b9aeb4b1c442fa6ec05beaa7cd947cde53593dd4ef"
+checksum = "7801d73c7f270e89785b72f61da6b04ca8da34ae99abb9803e43fbdd0c4bdf78"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1066,9 +1066,9 @@ dependencies = [
 
 [[package]]
 name = "cw-dex-router"
-version = "0.5.0-rc.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0894280911fae46f5657dc7ca31c9911d0cbbcbed9190b348b88bd8ebf2413df"
+checksum = "498ee3809466eba9319c765a3ac116a9069dd86a710bf3903ca42a218e31eb86"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -1085,9 +1085,9 @@ dependencies = [
 
 [[package]]
 name = "cw-it"
-version = "0.4.0-rc.10"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6838d7d4c7a2fb46d684fdac96fb3aac9bf660703456fe8b0046d751c17e975"
+checksum = "b20b25efb4f3dc5b085d16b3bd086276dd3410cca6fcabe1485569a23f821b9e"
 dependencies = [
  "anyhow",
  "apollo-cw-multi-test",
@@ -1214,9 +1214,9 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard"
-version = "0.4.1-rc.1"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23219b0935ce023f3330adb298e5673ba5b60390f5126d2e0f7c692c2dd61fee"
+checksum = "43fbbb3afa851140ffe148a8f31fca921d9ba4542709a1b8b7271de940e0b688"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -1227,9 +1227,9 @@ dependencies = [
 
 [[package]]
 name = "cw-vault-standard-test-helpers"
-version = "0.5.0-rc.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "187c1cb07c7c678005ef002921948c8f6787f1c566eb538483d763387c79b931"
+checksum = "c0b698d56ee7ce3b524be2c19d8beae4bd3d61d16d80855007bfaf13f1f88572"
 dependencies = [
  "cosmwasm-std",
  "cw-it",
@@ -2062,9 +2062,9 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
 name = "liquidity-helper"
-version = "0.4.0-rc.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "643b0d3b852e8555227d0152a87aa8771e852766eab031e3a958e12a704b38f1"
+checksum = "4f57d37cab7b9bdf52426a000ff6930a0240cb8214a1c311996f0cf7dfb83c6b"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
