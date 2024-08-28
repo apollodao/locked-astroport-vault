@@ -233,6 +233,8 @@ dependencies = [
 [[package]]
 name = "astroport-liquidity-helper"
 version = "0.4.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65536a18e01a0f6b06e38f3c5d58449abd05d52a2b931064485dcb180ba854a0"
 dependencies = [
  "apollo-cw-asset",
  "apollo-utils",
@@ -244,7 +246,7 @@ dependencies = [
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper 0.4.0-rc.2",
+ "liquidity-helper",
  "semver",
  "thiserror",
 ]
@@ -2061,17 +2063,6 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 [[package]]
 name = "liquidity-helper"
 version = "0.4.0-rc.2"
-dependencies = [
- "apollo-cw-asset",
- "apollo-utils",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw20 1.1.2",
-]
-
-[[package]]
-name = "liquidity-helper"
-version = "0.4.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "643b0d3b852e8555227d0152a87aa8771e852766eab031e3a958e12a704b38f1"
 dependencies = [
@@ -2103,7 +2094,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper 0.4.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "liquidity-helper",
  "locked-astroport-vault-test-helpers",
  "optional_struct",
  "osmosis-std 0.14.0",
@@ -2133,7 +2124,7 @@ dependencies = [
  "cw-vault-standard-test-helpers",
  "cw2 1.1.2",
  "cw20 1.1.2",
- "liquidity-helper 0.4.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "liquidity-helper",
  "locked-astroport-vault",
 ]
 

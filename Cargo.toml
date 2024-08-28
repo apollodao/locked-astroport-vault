@@ -55,5 +55,4 @@ cw-it                               = { version = "0.4.0-rc.10", features = ["as
 cw-vault-standard-test-helpers      = { version = "0.5.0-rc.1", features = ["lockup", "force-unlock"] }
 proptest                            = "1.2.0"
 test-case                           = "3.1.0"
-# astroport-liquidity-helper          = "0.3.0"
-astroport-liquidity-helper          = { path = "../liquidity-helpers/contracts/astroport-liquidity-helper" }
+astroport-liquidity-helper          = "0.4.0-rc.2"
