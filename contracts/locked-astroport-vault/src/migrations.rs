@@ -1,6 +1,6 @@
-use crate::state::{self, FeeConfig, CONFIG, STATE};
+use crate::state::{self, FeeConfig, BASE_TOKEN, CONFIG, STAKING, STATE};
 use apollo_utils::responses::merge_responses;
-use cosmwasm_std::{Addr, Decimal, DepsMut, Env, Response, StdResult};
+use cosmwasm_std::{Addr, Decimal, DepsMut, Env, Response, StdResult, Uint128};
 use cw_dex::traits::{Rewards, Stake, Unstake};
 use cw_dex_astroport::AstroportStaking;
 use cw_storage_plus::Item;
@@ -33,7 +33,7 @@ pub fn migrate_from_0_2_0_to_0_3_0(deps: DepsMut) -> StdResult<()> {
 }
 
 #[allow(deprecated)]
-pub fn migrate_from_0_3_0_to_current(
+pub fn migrate_from_0_3_0_to_v0_4_1(
     deps: DepsMut,
     env: Env,
     incentives_contract: Addr,
@@ -64,4 +64,29 @@ pub fn migrate_from_0_3_0_to_current(
     let stake_res = staking.stake(deps.as_ref(), &env, state.staked_base_tokens)?;
 
     Ok(merge_responses(vec![claim_res, unstake_res, stake_res]))
+}
+
+/// Migrates the contract from v0.4.1 to v0.4.4.
+///
+/// Withdraws any remaining assets from the old generator contract and migrates
+/// to the new generator contract. Some funds were left in the old generator
+/// contract after the migration from 0.3.0 to 0.4.1, so we need to withdraw
+/// them and deposit them into the new generator contract.
+pub fn migrate_from_v0_4_1_to_v0_4_4(
+    deps: DepsMut,
+    env: Env,
+    old_generator: Addr,
+    amount: Uint128,
+) -> StdResult<Response> {
+    let base_token = BASE_TOKEN.load(deps.storage)?;
+    let old_staking = AstroportStaking {
+        lp_token_addr: base_token.clone(),
+        incentives: old_generator,
+    };
+    let unstake_res = old_staking.unstake(deps.as_ref(), &env, amount)?;
+
+    let new_staking = STAKING.load(deps.storage)?;
+    let stake_res = new_staking.stake(deps.as_ref(), &env, amount)?;
+
+    Ok(merge_responses(vec![unstake_res, stake_res]))
 }

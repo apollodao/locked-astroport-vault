@@ -167,6 +167,8 @@ pub type QueryMsg = cw_vault_standard::VaultStandardQueryMsg<ExtensionQueryMsg>;
 
 #[cw_serde]
 pub struct MigrateMsg {
-    /// The address of the astroport incentives contract.
-    pub incentives_contract: String,
+    /// The address of the old generator contract.
+    pub old_generator: String,
+    /// The amount of base tokens to migrate.
+    pub amount: Uint128,
 }
